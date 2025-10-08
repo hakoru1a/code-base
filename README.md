@@ -1,0 +1,318 @@
+# CodeBase - Enterprise .NET 9 Application
+
+## 📋 Tổng quan
+
+Đây là một ứng dụng enterprise được xây dựng với .NET 9, tuân thủ **Clean Architecture** và các design patterns hiện đại. Ứng dụng được thiết kế để hỗ trợ đa database, caching với Redis, logging toàn diện và xử lý lỗi chuyên nghiệp.
+
+## 🏗️ Kiến trúc tổng thể
+
+### Clean Architecture Layers
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Base.API (Presentation)                  │
+│  • Controllers                                              │
+│  • API Endpoints                                           │
+│  • Swagger Documentation                                   │
+└─────────────────────────────────────────────────────────────┘
+                                │
+┌─────────────────────────────────────────────────────────────┐
+│                 Base.Application (Application)              │
+│  • CQRS Commands & Queries                                  │
+│  • MediatR Handlers                                         │
+│  • AutoMapper Profiles                                      │
+│  • FluentValidation                                         │
+│  • Pipeline Behaviors                                       │
+└─────────────────────────────────────────────────────────────┘
+                                │
+┌─────────────────────────────────────────────────────────────┐
+│                   Base.Domain (Domain)                      │
+│  • Entities                                                 │
+│  • Domain Events                                            │
+│  • Business Logic                                           │
+│  • Repository Interfaces                                    │
+└─────────────────────────────────────────────────────────────┘
+                                │
+┌─────────────────────────────────────────────────────────────┐
+│               Base.Infrastructure (Infrastructure)          │
+│  • Repository Implementations                               │
+│  • Database Context                                         │
+│  • External Service Integrations                           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Shared Libraries
+
+- **Contracts**: Common interfaces, events, exceptions
+- **Infrastructure**: Cross-cutting concerns, database providers
+- **Logging**: Centralized logging with Serilog
+- **Shared**: Common utilities, configurations, DTOs
+
+## 🎯 Design Patterns được sử dụng
+
+### 1. **Clean Architecture**
+- **Separation of Concerns**: Mỗi layer có trách nhiệm riêng biệt
+- **Dependency Inversion**: Domain không phụ thuộc vào Infrastructure
+- **Independence**: Có thể thay đổi database, UI mà không ảnh hưởng business logic
+
+### 2. **CQRS (Command Query Responsibility Segregation)**
+```csharp
+// Commands - Thay đổi dữ liệu
+public class CreateProductCommand : IRequest<long>
+{
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public decimal Price { get; set; }
+    public int Stock { get; set; }
+    public string SKU { get; set; }
+}
+
+// Queries - Đọc dữ liệu
+public class GetProductsQuery : IRequest<List<ProductDto>>
+{
+    // Query parameters
+}
+```
+
+### 3. **MediatR Pattern**
+- **Decoupling**: Controllers không gọi trực tiếp services
+- **Pipeline Behaviors**: Validation, Logging, Performance monitoring
+- **Request/Response**: Type-safe communication
+
+### 4. **Repository Pattern**
+```csharp
+public interface IProductRepository : IRepositoryBaseAsync<Product>
+{
+    Task<Product?> GetBySkuAsync(string sku);
+    Task<List<Product>> GetLowStockProductsAsync(int threshold);
+}
+```
+
+### 5. **Unit of Work Pattern**
+- **Transaction Management**: Đảm bảo consistency
+- **Change Tracking**: Quản lý entity states
+- **Domain Events**: Publish events sau khi save changes
+
+### 6. **Domain Events Pattern**
+```csharp
+public class Product : AuditableEventEntity<long>
+{
+    public static Product Create(string name, string description, decimal price, int stock, string sku)
+    {
+        var product = new Product(name, description, price, stock, sku);
+        product.AddDomainEvent(new ProductCreatedEvent(product.Id, product.Name, product.SKU, product.Price, product.Stock));
+        return product;
+    }
+}
+```
+
+### 7. **Factory Pattern**
+```csharp
+public static class DatabaseProviderFactory
+{
+    public static IDatabaseProvider CreateProvider(IConfiguration configuration)
+    {
+        var providerName = configuration["DatabaseSettings:DBProvider"] ?? "MySQL";
+        return providerName.ToUpperInvariant() switch
+        {
+            "MYSQL" => new MySqlDatabaseProvider(),
+            "ORACLE" => new OracleDatabaseProvider(),
+            "POSTGRESQL" => new PostgreSqlDatabaseProvider(),
+            _ => throw new NotSupportedException($"Database provider '{providerName}' is not supported.")
+        };
+    }
+}
+```
+
+### 8. **Strategy Pattern**
+- **Multi-Database Support**: MySQL, Oracle, PostgreSQL
+- **Caching Strategies**: Redis, MongoDB
+- **Logging Strategies**: Serilog với multiple sinks
+
+## 🗄️ Database Support
+
+### Multi-Database Architecture
+Ứng dụng hỗ trợ nhiều database providers:
+
+- **MySQL** (Pomelo.EntityFrameworkCore.MySql)
+- **Oracle** (Oracle.EntityFrameworkCore)
+- **PostgreSQL** (Npgsql.EntityFrameworkCore.PostgreSQL)
+
+### Configuration
+```json
+{
+  "DatabaseSettings": {
+    "DBProvider": "MySQL", // MySQL, Oracle, PostgreSQL
+    "ConnectionStrings": "Server=localhost;Database=CodeBase;Uid=root;Pwd=password;"
+  }
+}
+```
+
+### Entity Framework Core
+- **Code First**: Migrations tự động
+- **Change Tracking**: Optimistic concurrency
+- **Domain Events**: Tích hợp với MediatR
+
+## 🚀 Caching Strategy
+
+### Redis Integration
+```csharp
+public interface IRedisRepository
+{
+    // String Operations
+    Task<bool> SetStringAsync(string key, string value, TimeSpan? expiry = null);
+    Task<string?> GetStringAsync(string key);
+    
+    // Object Operations
+    Task<bool> SetAsync<T>(string key, T value, TimeSpan? expiry = null);
+    Task<T?> GetAsync<T>(string key);
+    
+    // Hash, List, Set Operations
+    // Batch Operations
+}
+```
+
+### MongoDB Support
+- **Document Storage**: Flexible schema
+- **Collection Management**: Auto-discovery
+- **Read Preferences**: Primary/Secondary
+
+## 📊 Logging & Monitoring
+
+### Serilog Integration
+```csharp
+builder.Host.UseSerilog(SeriLogger.Configure);
+```
+
+### Pipeline Behaviors
+1. **ValidationBehaviour**: FluentValidation integration
+2. **PerformanceBehaviour**: Request timing
+3. **UnhandledExceptionBehaviour**: Error logging
+
+### Error Handling
+```csharp
+public class ErrorWrappingMiddleware
+{
+    // Centralized exception handling
+    // Custom error responses
+    // HTTP status code mapping
+}
+```
+
+## 🔧 Technology Stack
+
+### Core Technologies
+- **.NET 9**: Latest framework
+- **Entity Framework Core 9**: ORM
+- **MediatR**: CQRS implementation
+- **AutoMapper**: Object mapping
+- **FluentValidation**: Input validation
+
+### Databases & Caching
+- **MySQL/PostgreSQL/Oracle**: Primary databases
+- **Redis**: Caching layer
+- **MongoDB**: Document storage
+
+### Additional Libraries
+- **Serilog**: Structured logging
+- **Swagger/OpenAPI**: API documentation
+- **MailKit**: Email services
+- **Hangfire**: Background jobs
+- **RabbitMQ**: Message queuing
+
+## 📁 Project Structure
+
+```
+CodeBase/
+├── Base.API/                    # Presentation Layer
+│   ├── Controllers/
+│   ├── Extensions/
+│   └── Program.cs
+├── Base.Application/            # Application Layer
+│   ├── Feature/
+│   │   └── Product/
+│   │       ├── Commands/
+│   │       ├── Queries/
+│   │       └── EventHandlers/
+│   ├── Common/
+│   └── ConfigureServices.cs
+├── Base.Domain/                 # Domain Layer
+│   ├── Entities/
+│   └── Interfaces/
+├── Base.Infrastructure/         # Infrastructure Layer
+│   ├── Persistence/
+│   └── Repositories/
+├── Contracts/                   # Shared Contracts
+│   ├── Common/
+│   ├── Domain/
+│   └── Exceptions/
+├── Infrastructure/              # Cross-cutting Infrastructure
+│   ├── DatabaseProviders/
+│   ├── Common/
+│   └── Middlewares/
+├── Logging/                     # Logging Infrastructure
+└── Shared/                      # Shared Utilities
+```
+
+## 🚀 Getting Started
+
+### Prerequisites
+- .NET 9 SDK
+- MySQL/PostgreSQL/Oracle (chọn một)
+- Redis (optional)
+- MongoDB (optional)
+
+### Installation
+```bash
+# Clone repository
+git clone <repository-url>
+cd CodeBase
+
+# Restore packages
+dotnet restore
+
+# Update database
+dotnet ef database update -p Base.Infrastructure -s Base.API
+
+# Run application
+dotnet run --project Base.API
+```
+
+### Configuration
+1. Cập nhật `appsettings.json` với connection strings
+2. Chọn database provider trong `DatabaseSettings:DBProvider`
+3. Cấu hình Redis connection (nếu sử dụng)
+
+## 📈 Features
+
+### ✅ Implemented
+- [x] Clean Architecture
+- [x] CQRS with MediatR
+- [x] Multi-database support
+- [x] Redis caching
+- [x] MongoDB support
+- [x] Structured logging
+- [x] Error handling
+- [x] API documentation
+- [x] Domain events
+- [x] Validation pipeline
+
+### 🔄 In Progress
+- [ ] Background jobs (Hangfire)
+- [ ] Message queuing (RabbitMQ)
+- [ ] Authentication/Authorization
+- [ ] API versioning
+
+### 📋 Planned
+- [ ] Microservices support
+- [ ] Docker containerization
+- [ ] Kubernetes deployment
+- [ ] Performance monitoring
+- [ ] Health checks
+
+
+## 🙏 Acknowledgments
+
+- Clean Architecture principles by Uncle Bob
+- .NET Community for excellent libraries
+- All contributors and maintainers
