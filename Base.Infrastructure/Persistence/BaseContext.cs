@@ -3,6 +3,7 @@ using Contracts.Common.Interface;
 using Contracts.Domain.Interface;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Infrastructure.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +17,10 @@ namespace Base.Infrastructure.Persistence
     {
         private IMediator _mediator;
 
-        private List<BaseEvent> _events;
+        // private readonly IPublishEndpoint _publishEndpoint;    
+        // private readonly ISendEndpointProvider _sendEndpointProvider; 
+
+        private List<BaseEvent>? _events;
 
         public BaseContext(DbContextOptions<BaseContext> options, IMediator mediator) : base(options)
         {
@@ -78,9 +82,9 @@ namespace Base.Infrastructure.Persistence
                 }
             }
             var result = await base.SaveChangesAsync(cancellationToken);
-            if (_events.Any())
+            if (_events?.Any() == true)
             {
-                //await _mediator.DispatchDomainEventAsync(_events);
+                await _mediator.DispatchDomainEventAsync(_events);
             }
             return result;
         }

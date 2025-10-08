@@ -12,24 +12,24 @@ namespace Common.Logging
               var applicationName = context.HostingEnvironment.ApplicationName?.ToLower().Replace(".", "-");
               var environmentName = context.HostingEnvironment.EnvironmentName ?? "Development";
 
-              //var elasticUri = context.Configuration.GetValue<string>("ElasticConfiguration:Uri");
-              //var elasicUsername = context.Configuration.GetValue<string>("ElasticConfiguration:Username");
-              //var elasicPassword = context.Configuration.GetValue<string>("ElasticConfiguration:Password");
+              var elasticUri = context.Configuration.GetValue<string>("ElasticConfiguration:Uri");
+              var elasicUsername = context.Configuration.GetValue<string>("ElasticConfiguration:Username");
+              var elasicPassword = context.Configuration.GetValue<string>("ElasticConfiguration:Password");
 
               configuration
                   .WriteTo.Debug()
                   .WriteTo.Console(outputTemplate:
                       "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:l}{NewLine}{Exception}{NewLine}")
-                  //.WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(elasticUri))
-                  //{
-                  //    IndexFormat = $"ch-logs-{applicationName}-{environmentName}-{DateTime.UtcNow:yyyy-MM}",
-                  //    AutoRegisterTemplate = true,
-                  //    AutoRegisterTemplateVersion = AutoRegisterTemplateVersion.ESv7,
-                  //    DetectElasticsearchVersion = true,
-                  //NumberOfShards = 2,
-                  //NumberOfReplicas = 1,
-                  //ModifyConnectionSettings = x => x.BasicAuthentication(elasicUsername, elasicPassword),
-                  //})
+                  .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(elasticUri))
+                  {
+                      IndexFormat = $"ch-logs-{applicationName}-{environmentName}-{DateTime.UtcNow:yyyy-MM}",
+                      AutoRegisterTemplate = true,
+                      AutoRegisterTemplateVersion = AutoRegisterTemplateVersion.ESv7,
+                      DetectElasticsearchVersion = true,
+                      NumberOfShards = 2,
+                      NumberOfReplicas = 1,
+                      ModifyConnectionSettings = x => x.BasicAuthentication(elasicUsername, elasicPassword),
+                  })
                   .Enrich.FromLogContext()
                   .Enrich.WithMachineName()
                   .Enrich.WithProperty("Environment", environmentName)

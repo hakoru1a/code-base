@@ -63,6 +63,23 @@ namespace Base.Infrastructure
             services.AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
             services.AddScoped(typeof(ISMTPEmailServices), typeof(SMTTEmailServices));
 
+            // Đăng ký cả Mediator và MassTransit để có thể sử dụng cả 2
+            // Mediator: Xử lý domain events trong cùng application
+            // MassTransit: Gửi messages đến các services khác
+            // Cấu hình MassTransit
+            //services.AddMassTransit(x =>
+            //{
+            //    x.UsingRabbitMq((context, cfg) =>
+            //    {
+            //        cfg.Host("localhost", "/", h =>
+            //        {
+            //            h.Username("guest");
+            //            h.Password("guest");
+            //        });
+            //        cfg.ConfigureEndpoints(context);
+            //    });
+            //});
+
             services.ConfigureSwagger();
             return services;
         }

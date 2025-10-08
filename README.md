@@ -106,7 +106,53 @@ public class Product : AuditableEventEntity<long>
 }
 ```
 
-### 7. **Factory Pattern**
+### 7. **Event-Driven Architecture với Mediator & MassTransit**
+Ứng dụng hỗ trợ cả **Mediator** (in-memory) và **MassTransit** (distributed messaging) để xử lý events:
+
+#### **Mediator Pattern** - Xử lý Domain Events trong cùng Application
+```csharp
+// Trong Service/Controller
+public class OrderService
+{
+    private readonly IMediator _mediator;
+    
+    public async Task ProcessOrder(Order order)
+    {
+        // Xử lý domain events trong cùng application
+        var domainEvent = new OrderCreatedEvent { OrderId = order.Id };
+        await _mediator.Publish(domainEvent);
+    }
+}
+```
+
+#### **MassTransit Pattern** - Gửi Messages đến External Services
+```csharp
+// Trong Service/Controller
+public class NotificationService
+{
+    private readonly IPublishEndpoint _publishEndpoint;
+    private readonly ISendEndpointProvider _sendEndpointProvider;
+    
+    public async Task SendNotification(NotificationRequest request)
+    {
+        // Publish event đến tất cả consumers
+        await _publishEndpoint.Publish(new NotificationEvent { ... });
+        
+        // Send command đến queue cụ thể
+        await _sendEndpointProvider.SendCommandAsync(command, "notification-queue");
+    }
+}
+```
+
+#### **Khi nào sử dụng gì:**
+| **Mediator** | **MassTransit** |
+|--------------|-----------------|
+| ✅ Domain events trong cùng app | ✅ Integration events giữa services |
+| ✅ Business logic validation | ✅ Commands đến specific queues |
+| ✅ In-memory processing | ✅ Reliable message delivery |
+| ✅ Fast, synchronous | ✅ Asynchronous, scalable |
+
+### 8. **Factory Pattern**
 ```csharp
 public static class DatabaseProviderFactory
 {
@@ -124,7 +170,7 @@ public static class DatabaseProviderFactory
 }
 ```
 
-### 8. **Strategy Pattern**
+### 9. **Strategy Pattern**
 - **Multi-Database Support**: MySQL, Oracle, PostgreSQL
 - **Caching Strategies**: Redis, MongoDB
 - **Logging Strategies**: Serilog với multiple sinks
@@ -214,11 +260,12 @@ public class ErrorWrappingMiddleware
 - **MongoDB**: Document storage
 
 ### Additional Libraries
-- **Serilog**: Structured logging
+- **Serilog**: Structured logging với Elasticsearch
 - **Swagger/OpenAPI**: API documentation
 - **MailKit**: Email services
 - **Hangfire**: Background jobs
-- **RabbitMQ**: Message queuing
+- **MassTransit**: Message queuing với RabbitMQ
+- **MediatR**: In-memory messaging
 
 ## 📁 Project Structure
 
@@ -261,6 +308,8 @@ CodeBase/
 - MySQL/PostgreSQL/Oracle (chọn một)
 - Redis (optional)
 - MongoDB (optional)
+- RabbitMQ (cho MassTransit)
+- Elasticsearch (cho logging)
 
 ### Installation
 ```bash
@@ -282,6 +331,34 @@ dotnet run --project Base.API
 1. Cập nhật `appsettings.json` với connection strings
 2. Chọn database provider trong `DatabaseSettings:DBProvider`
 3. Cấu hình Redis connection (nếu sử dụng)
+4. Cấu hình RabbitMQ cho MassTransit
+5. Cấu hình Elasticsearch cho logging
+
+#### **appsettings.json Example:**
+```json
+{
+  "DatabaseSettings": {
+    "DBProvider": "MySQL",
+    "ConnectionStrings": "Server=localhost;Database=CodeBase;Uid=root;Pwd=password;"
+  },
+  "CacheSettings": {
+    "ConnectionStrings": "localhost:6379"
+  },
+  "ElasticConfiguration": {
+    "Uri": "http://localhost:9200",
+    "Username": "elastic",
+    "Password": "changeme"
+  },
+  "MassTransit": {
+    "RabbitMQ": {
+      "Host": "localhost",
+      "Username": "guest",
+      "Password": "guest",
+      "VirtualHost": "/"
+    }
+  }
+}
+```
 
 ## 📈 Features
 
@@ -291,15 +368,16 @@ dotnet run --project Base.API
 - [x] Multi-database support
 - [x] Redis caching
 - [x] MongoDB support
-- [x] Structured logging
+- [x] Structured logging với Elasticsearch
 - [x] Error handling
 - [x] API documentation
-- [x] Domain events
+- [x] Domain events với MediatR
 - [x] Validation pipeline
+- [x] MassTransit integration
+- [x] Event-driven architecture
 
 ### 🔄 In Progress
 - [ ] Background jobs (Hangfire)
-- [ ] Message queuing (RabbitMQ)
 - [ ] Authentication/Authorization
 - [ ] API versioning
 
