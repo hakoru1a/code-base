@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Contracts.Domain;
+using Shared.SeedWork;
 
 namespace Infrastucture.Common.Repository
 {
@@ -115,6 +116,16 @@ namespace Infrastucture.Common.Repository
 
         public Task<int> SaveChangesAsync() => _dbContext.SaveChangesAsync();
 
+        public async Task<PagedList<T>> GetPageAsync(IQueryable<T> query, int pageNumber, int pageSize)
+        {
+            var totalItems = await query.CountAsync();
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedList<T>(items, totalItems, pageNumber, pageSize);
+        }
 
     }
 }

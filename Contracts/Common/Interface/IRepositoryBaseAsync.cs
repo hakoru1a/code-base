@@ -1,6 +1,7 @@
 ﻿using Contracts.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Shared.SeedWork;
 using System.Linq.Expressions;
 
 namespace Constracts.Common.Interface
@@ -42,5 +43,6 @@ namespace Constracts.Common.Interface
             params Expression<Func<T, object>>[] includeProperties);
         Task<T?> GetByIdAsync(K id);
         Task<T?> GetByIdAsync(K id, params Expression<Func<T, object>>[] includeProperties);
+        Task<PagedList<T>> GetPageAsync(IQueryable<T> query, int pageNumber, int pageSize);
     }
 }
