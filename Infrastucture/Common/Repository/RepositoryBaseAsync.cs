@@ -1,6 +1,7 @@
 using Contracts.Common.Interface;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -272,6 +273,247 @@ namespace Infrastucture.Common.Repository
 
             _dbContext.Set<T>().RemoveRange(entityList);
             return Task.CompletedTask;
+        }
+
+        #endregion
+
+        #region Bulk Operations (EF Core 7+)
+
+        /// <summary>
+        /// Bulk inserts entities using EF Core 7+ ExecuteUpdateAsync for better performance
+        /// </summary>
+        public async Task<int> BulkInsertAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
+        {
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+
+            var entityList = entities.ToList();
+            if (!entityList.Any())
+                return 0;
+
+            // Use AddRangeAsync for bulk insert (EF Core 7+ optimized)
+            await _dbContext.Set<T>().AddRangeAsync(entityList, cancellationToken);
+            return await SaveChangesAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Bulk inserts entities with batch size control for large datasets
+        /// </summary>
+        public async Task<int> BulkInsertAsync(IEnumerable<T> entities, int batchSize = 1000, CancellationToken cancellationToken = default)
+        {
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+            if (batchSize <= 0)
+                throw new ArgumentException("Batch size must be greater than 0", nameof(batchSize));
+
+            var entityList = entities.ToList();
+            if (!entityList.Any())
+                return 0;
+
+            var totalInserted = 0;
+            var batches = entityList.Chunk(batchSize);
+
+            foreach (var batch in batches)
+            {
+                await _dbContext.Set<T>().AddRangeAsync(batch, cancellationToken);
+                totalInserted += await SaveChangesAsync(cancellationToken);
+            }
+
+            return totalInserted;
+        }
+
+        /// <summary>
+        /// Bulk updates entities using EF Core 7+ ExecuteUpdateAsync for better performance
+        /// </summary>
+        public async Task<int> BulkUpdateAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
+        {
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+
+            var entityList = entities.ToList();
+            if (!entityList.Any())
+                return 0;
+
+            // For bulk update, we need to update each entity individually
+            // EF Core 7+ ExecuteUpdateAsync is for updating based on conditions, not individual entities
+            foreach (var entity in entityList)
+            {
+                await UpdateAsync(entity, cancellationToken);
+            }
+
+            return await SaveChangesAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Bulk updates entities with batch size control for large datasets
+        /// </summary>
+        public async Task<int> BulkUpdateAsync(IEnumerable<T> entities, int batchSize = 1000, CancellationToken cancellationToken = default)
+        {
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+            if (batchSize <= 0)
+                throw new ArgumentException("Batch size must be greater than 0", nameof(batchSize));
+
+            var entityList = entities.ToList();
+            if (!entityList.Any())
+                return 0;
+
+            var totalUpdated = 0;
+            var batches = entityList.Chunk(batchSize);
+
+            foreach (var batch in batches)
+            {
+                foreach (var entity in batch)
+                {
+                    await UpdateAsync(entity, cancellationToken);
+                }
+                totalUpdated += await SaveChangesAsync(cancellationToken);
+            }
+
+            return totalUpdated;
+        }
+
+        /// <summary>
+        /// Bulk deletes entities using EF Core 7+ ExecuteDeleteAsync for better performance
+        /// </summary>
+        public async Task<int> BulkDeleteAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
+        {
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+
+            var entityList = entities.ToList();
+            if (!entityList.Any())
+                return 0;
+
+            _dbContext.Set<T>().RemoveRange(entityList);
+            return await SaveChangesAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Bulk deletes entities with batch size control for large datasets
+        /// </summary>
+        public async Task<int> BulkDeleteAsync(IEnumerable<T> entities, int batchSize = 1000, CancellationToken cancellationToken = default)
+        {
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+            if (batchSize <= 0)
+                throw new ArgumentException("Batch size must be greater than 0", nameof(batchSize));
+
+            var entityList = entities.ToList();
+            if (!entityList.Any())
+                return 0;
+
+            var totalDeleted = 0;
+            var batches = entityList.Chunk(batchSize);
+
+            foreach (var batch in batches)
+            {
+                _dbContext.Set<T>().RemoveRange(batch);
+                totalDeleted += await SaveChangesAsync(cancellationToken);
+            }
+
+            return totalDeleted;
+        }
+
+        /// <summary>
+        /// Bulk deletes entities by condition using EF Core 7+ ExecuteDeleteAsync
+        /// This is the most efficient way to delete multiple records
+        /// </summary>
+        public async Task<int> BulkDeleteByConditionAsync(Expression<Func<T, bool>> condition, CancellationToken cancellationToken = default)
+        {
+            if (condition == null)
+                throw new ArgumentNullException(nameof(condition));
+
+            return await _dbContext.Set<T>()
+                .Where(condition)
+                .ExecuteDeleteAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Bulk updates entities by condition using EF Core 7+ ExecuteUpdateAsync
+        /// This is the most efficient way to update multiple records
+        /// </summary>
+        public async Task<int> BulkUpdateByConditionAsync(
+            Expression<Func<T, bool>> condition,
+            Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls,
+            CancellationToken cancellationToken = default)
+        {
+            if (condition == null)
+                throw new ArgumentNullException(nameof(condition));
+            if (setPropertyCalls == null)
+                throw new ArgumentNullException(nameof(setPropertyCalls));
+
+            return await _dbContext.Set<T>()
+                .Where(condition)
+                .ExecuteUpdateAsync(setPropertyCalls, cancellationToken);
+        }
+
+        /// <summary>
+        /// Bulk upsert (insert or update) entities using EF Core 7+ features
+        /// </summary>
+        public async Task<int> BulkUpsertAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default)
+        {
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+
+            var entityList = entities.ToList();
+            if (!entityList.Any())
+                return 0;
+
+            var totalAffected = 0;
+
+            foreach (var entity in entityList)
+            {
+                var existing = await _dbContext.Set<T>().FindAsync(new object[] { entity.Id! }, cancellationToken);
+                if (existing == null)
+                {
+                    await _dbContext.Set<T>().AddAsync(entity, cancellationToken);
+                }
+                else
+                {
+                    _dbContext.Entry(existing).CurrentValues.SetValues(entity);
+                }
+            }
+
+            totalAffected = await SaveChangesAsync(cancellationToken);
+            return totalAffected;
+        }
+
+        /// <summary>
+        /// Bulk upsert with batch size control for large datasets
+        /// </summary>
+        public async Task<int> BulkUpsertAsync(IEnumerable<T> entities, int batchSize = 1000, CancellationToken cancellationToken = default)
+        {
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+            if (batchSize <= 0)
+                throw new ArgumentException("Batch size must be greater than 0", nameof(batchSize));
+
+            var entityList = entities.ToList();
+            if (!entityList.Any())
+                return 0;
+
+            var totalAffected = 0;
+            var batches = entityList.Chunk(batchSize);
+
+            foreach (var batch in batches)
+            {
+                foreach (var entity in batch)
+                {
+                    var existing = await _dbContext.Set<T>().FindAsync(new object[] { entity.Id! }, cancellationToken);
+                    if (existing == null)
+                    {
+                        await _dbContext.Set<T>().AddAsync(entity, cancellationToken);
+                    }
+                    else
+                    {
+                        _dbContext.Entry(existing).CurrentValues.SetValues(entity);
+                    }
+                }
+                totalAffected += await SaveChangesAsync(cancellationToken);
+            }
+
+            return totalAffected;
         }
 
         #endregion

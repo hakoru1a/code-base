@@ -1,5 +1,6 @@
 using Contracts.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Storage;
 using Shared.SeedWork;
 using System.Linq.Expressions;
@@ -51,6 +52,18 @@ namespace Contracts.Common.Interface
 
         // Save changes
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
+
+        // Bulk operations (EF Core 7+)
+        Task<int> BulkInsertAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
+        Task<int> BulkInsertAsync(IEnumerable<T> entities, int batchSize = 1000, CancellationToken cancellationToken = default);
+        Task<int> BulkUpdateAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
+        Task<int> BulkUpdateAsync(IEnumerable<T> entities, int batchSize = 1000, CancellationToken cancellationToken = default);
+        Task<int> BulkDeleteAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
+        Task<int> BulkDeleteAsync(IEnumerable<T> entities, int batchSize = 1000, CancellationToken cancellationToken = default);
+        Task<int> BulkDeleteByConditionAsync(Expression<Func<T, bool>> condition, CancellationToken cancellationToken = default);
+        Task<int> BulkUpdateByConditionAsync(Expression<Func<T, bool>> condition, Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls, CancellationToken cancellationToken = default);
+        Task<int> BulkUpsertAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
+        Task<int> BulkUpsertAsync(IEnumerable<T> entities, int batchSize = 1000, CancellationToken cancellationToken = default);
     }
 
     /// <summary>
