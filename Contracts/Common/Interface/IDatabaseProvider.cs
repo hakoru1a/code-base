@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Constracts.Common.Interface
+namespace Contracts.Common.Interface
 {
     public interface IDatabaseProvider
     {

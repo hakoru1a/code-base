@@ -1,9 +1,9 @@
-﻿using System.Reflection;
+using System.Reflection;
 using AutoMapper;
 using Base.Domain.Interfaces;
 using Base.Infrastructure.Repositories;
 using Base.Application.Common;
-using Constracts.Common.Interface;
+using Contracts.Common.Interface;
 using Contracts.Common.Interface;
 using FluentValidation;
 using Infrastructure.Common;

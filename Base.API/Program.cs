@@ -1,4 +1,4 @@
-﻿using Base.API.Extensions;
+using Base.API.Extensions;
 using Base.Application;
 using Base.Infrastructure;
 using Common.Logging;
@@ -38,7 +38,7 @@ try
 }
 catch (HostAbortedException ex)
 {
-    // Xử lý riêng cho HostAbortedException
+    // X? ly rieng cho HostAbortedException
     Log.Warning("Host was aborted during startup: {Message}", ex.Message);
 }
 catch (Exception ex)

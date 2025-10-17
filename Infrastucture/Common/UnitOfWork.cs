@@ -1,4 +1,4 @@
-﻿using Constracts.Common.Interface;
+using Contracts.Common.Interface;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastucture.Common

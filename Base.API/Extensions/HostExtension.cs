@@ -1,4 +1,4 @@
-﻿namespace Base.API.Extensions
+namespace Base.API.Extensions
 {
     public static class HostExtension
     {

@@ -1,4 +1,4 @@
-﻿using Contracts.Common.Interface;
+using Contracts.Common.Interface;
 using Contracts.Domain;
 using MongoDB.Driver;
 using Shared.Attributes;

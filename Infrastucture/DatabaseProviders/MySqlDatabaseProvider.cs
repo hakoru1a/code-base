@@ -1,4 +1,4 @@
-using Constracts.Common.Interface;
+using Contracts.Common.Interface;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

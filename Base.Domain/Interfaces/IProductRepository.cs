@@ -1,5 +1,5 @@
-﻿using Base.Domain.Entities;
-using Constracts.Common.Interface;
+using Base.Domain.Entities;
+using Contracts.Common.Interface;
 using System;
 using System.Collections.Generic;
 using System.Linq;

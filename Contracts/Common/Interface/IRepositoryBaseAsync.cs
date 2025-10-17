@@ -1,39 +1,61 @@
-﻿using Contracts.Domain;
+using Contracts.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Shared.SeedWork;
 using System.Linq.Expressions;
 
-namespace Constracts.Common.Interface
+namespace Contracts.Common.Interface
 {
+    /// <summary>
+    /// Base query interface for repositories with DbContext
+    /// </summary>
     public interface IRepositoryQueryBase<T, K, TContext> : IRepositoryQueryBase<T, K>
       where T : EntityBase<K>
       where TContext : DbContext
     {
     }
 
+    /// <summary>
+    /// Base async repository interface with DbContext
+    /// </summary>
     public interface IRepositoryBaseAsync<T, K, TContext> : IRepositoryQueryBase<T, K, TContext>, IRepositoryBaseAsync<T, K>
         where T : EntityBase<K>
         where TContext : DbContext
     {
     }
+
+    /// <summary>
+    /// Base async repository interface for CRUD operations
+    /// </summary>
     public interface IRepositoryBaseAsync<T, K> : IRepositoryQueryBase<T, K> where T : EntityBase<K>
     {
-        Task<K> CreateAsync(T entity);
-        void Create(T entity);
-        Task<IList<K>> CreateListAsync(IEnumerable<T> entities);
-        void Update(T entity);
-        Task UpdateAsync(T entity);
-        Task UpdateListAsync(IEnumerable<T> entities);
+        // Create operations
+        Task<K> CreateAsync(T entity, CancellationToken cancellationToken = default);
+        Task CreateWithoutSaveAsync(T entity, CancellationToken cancellationToken = default);
+        Task<IList<K>> CreateListAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
+
+        // Update operations
+        Task UpdateAsync(T entity, CancellationToken cancellationToken = default);
+        Task UpdateAndSaveAsync(T entity, CancellationToken cancellationToken = default);
+        Task UpdateListAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
+
+        // Delete operations
         void Delete(T entity);
-        Task DeleteAsync(T entity);
+        Task DeleteAsync(T entity, CancellationToken cancellationToken = default);
         Task DeleteListAsync(IEnumerable<T> entities);
-        Task<IDbContextTransaction> BeginTransactionAsync();
-        Task EndTransactionAsync();
-        Task RollbackTransactionAsync();
-        Task<int> SaveChangesAsync();
+
+        // Transaction operations
+        Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
+        Task EndTransactionAsync(CancellationToken cancellationToken = default);
+        Task RollbackTransactionAsync(CancellationToken cancellationToken = default);
+
+        // Save changes
+        Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }
 
+    /// <summary>
+    /// Base query interface for reading operations
+    /// </summary>
     public interface IRepositoryQueryBase<T, K> where T : EntityBase<K>
     {
         IQueryable<T> FindAll(bool trackChanges = false);
@@ -41,8 +63,8 @@ namespace Constracts.Common.Interface
         IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression, bool trackChanges = false);
         IQueryable<T> FindByCondition(Expression<Func<T, bool>> expression, bool trackChanges = false,
             params Expression<Func<T, object>>[] includeProperties);
-        Task<T?> GetByIdAsync(K id);
-        Task<T?> GetByIdAsync(K id, params Expression<Func<T, object>>[] includeProperties);
-        Task<PagedList<T>> GetPageAsync(IQueryable<T> query, int pageNumber, int pageSize);
+        Task<T?> GetByIdAsync(K id, CancellationToken cancellationToken = default);
+        Task<T?> GetByIdAsync(K id, CancellationToken cancellationToken = default, params Expression<Func<T, object>>[] includeProperties);
+        Task<PagedList<T>> GetPageAsync(IQueryable<T> query, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
     }
 }

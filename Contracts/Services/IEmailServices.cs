@@ -1,11 +1,11 @@
-﻿using Shared.Services.Email;
+using Shared.Services.Email;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Constracts.Services
+namespace Contracts.Services
 {
     public interface IEmailServices<in T> where T : class
     {

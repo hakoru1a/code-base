@@ -1,4 +1,4 @@
-﻿using Contracts.Common.Interface;
+using Contracts.Common.Interface;
 using Contracts.Domain;
 
 namespace Contracts.Common.Events

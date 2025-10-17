@@ -1,4 +1,4 @@
-﻿using Base.Domain.Interfaces;
+using Base.Domain.Interfaces;
 using MediatR;
 using System;
 using System.Collections.Generic;

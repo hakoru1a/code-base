@@ -1,7 +1,7 @@
-﻿using Base.Domain.Entities;
+using Base.Domain.Entities;
 using Base.Domain.Interfaces;
 using Base.Infrastructure.Persistence;
-using Constracts.Common.Interface;
+using Contracts.Common.Interface;
 using Infrastucture.Common.Repository;
 using System;
 using System.Collections.Generic;

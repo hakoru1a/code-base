@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Constracts.Common.Interface
+namespace Contracts.Common.Interface
 {
     public interface IRedisRepository
     {

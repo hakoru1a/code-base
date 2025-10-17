@@ -1,4 +1,4 @@
-﻿using Constracts.Services;
+using Contracts.Services;
 using Infrastructure.Configurations;
 using MailKit.Net.Smtp;
 using MimeKit;

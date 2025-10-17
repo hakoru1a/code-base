@@ -1,4 +1,4 @@
-﻿namespace Shared.Attributes
+namespace Shared.Attributes
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     public class BsonCollectionAttribute : Attribute

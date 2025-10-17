@@ -1,12 +1,12 @@
-﻿using Base.Infrastructure.Persistence;
+using Base.Infrastructure.Persistence;
 using Base.Infrastructure.Repositories;
 using Base.Domain.Interfaces;
 using Infrastructure.DatabaseProviders;
 using Infrastructure.Extensions;
 using Common.Logging;
-using Constracts.Common.Interface;
+using Contracts.Common.Interface;
 using Shared.Configurations.Database;
-using Constracts.Services;
+using Contracts.Services;
 using Infrastructure.Services;
 using Infrastucture.Common;
 using Infrastucture.Common.Repository;
@@ -63,10 +63,10 @@ namespace Base.Infrastructure
             services.AddScoped(typeof(IUnitOfWork<>), typeof(UnitOfWork<>));
             services.AddScoped(typeof(ISMTPEmailServices), typeof(SMTTEmailServices));
 
-            // Đăng ký cả Mediator và MassTransit để có thể sử dụng cả 2
-            // Mediator: Xử lý domain events trong cùng application
-            // MassTransit: Gửi messages đến các services khác
-            // Cấu hình MassTransit
+            // ??ng ky c? Mediator va MassTransit ?? co th? s? d?ng c? 2
+            // Mediator: X? ly domain events trong cung application
+            // MassTransit: G?i messages ??n cac services khac
+            // C?u hinh MassTransit
             //services.AddMassTransit(x =>
             //{
             //    x.UsingRabbitMq((context, cfg) =>

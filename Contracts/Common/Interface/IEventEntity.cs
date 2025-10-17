@@ -1,4 +1,4 @@
-﻿using Contracts.Common.Events;
+using Contracts.Common.Events;
 using Contracts.Domain.Interface;
 using System;
 using System.Collections.Generic;

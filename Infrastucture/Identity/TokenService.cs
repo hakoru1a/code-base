@@ -1,4 +1,4 @@
-﻿using Contracts.Identity;
+using Contracts.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Shared.Configurations;
 using Shared.DTOs.Identity;

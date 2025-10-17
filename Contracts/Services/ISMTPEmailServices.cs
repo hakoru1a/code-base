@@ -1,6 +1,6 @@
-﻿using Shared.Services.Email;
+using Shared.Services.Email;
 
-namespace Constracts.Services
+namespace Contracts.Services
 {
     public interface ISMTPEmailServices : IEmailServices<MailRequest>
     {

@@ -1,4 +1,4 @@
-﻿public class ApiErrorResult<T> : ApiResult<T>
+public class ApiErrorResult<T> : ApiResult<T>
 {
     public ApiErrorResult() : this(message: "Something wrong happened. Please try again later")
     {

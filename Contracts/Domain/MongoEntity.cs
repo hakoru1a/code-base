@@ -1,4 +1,4 @@
-﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson.Serialization.Attributes;
 namespace Contracts.Domain
 {
     public class MongoEntity

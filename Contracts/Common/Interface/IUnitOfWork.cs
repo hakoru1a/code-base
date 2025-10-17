@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
-namespace Constracts.Common.Interface
+namespace Contracts.Common.Interface
 {
     public interface IUnitOfWork<TContext> : IDisposable where TContext : DbContext
     {

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Base.Application.Common.Models;
 using Base.Domain.Interfaces;
 using MediatR;
