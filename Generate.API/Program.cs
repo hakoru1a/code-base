@@ -1,5 +1,6 @@
 using Generate.API.Extensions;
 using Generate.Application;
+using Generate.Infrastructure;
 using Common.Logging;
 using Serilog;
 
@@ -20,8 +21,7 @@ try
     builder.Services.AddApplicationServices();
 
     // Add Infrastructure Services (Database, Repositories, etc.)
-    // Note: You may need to add Generate.Infrastructure ConfigureServices if not already present
-    // builder.Services.AddInfrastructureLayerServices(builder.Configuration);
+    builder.Services.AddInfrastructure(builder.Configuration);
 
     var app = builder.Build();
 
