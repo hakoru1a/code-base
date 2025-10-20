@@ -6,6 +6,7 @@ using Generate.Application.Features.Category.Queries.GetCategories;
 using Generate.Application.Features.Category.Queries.GetCategoryById;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Shared.SeedWork;
 
 namespace Generate.API.Controllers
 {
@@ -33,14 +34,14 @@ namespace Generate.API.Controllers
         /// <response code="200">Returns the list of categories</response>
         /// <response code="500">Internal server error</response>
         [HttpGet]
-        [ProducesResponseType(typeof(List<CategoryResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiSuccessResult<List<CategoryResponseDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetList()
         {
             _logger.LogInformation("Getting all categories");
             var query = new GetCategoriesQuery();
             var result = await _mediator.Send(query);
-            return Ok(result);
+            return Ok(new ApiSuccessResult<List<CategoryResponseDto>>(result));
         }
 
         /// <summary>
@@ -52,8 +53,8 @@ namespace Generate.API.Controllers
         /// <response code="404">Category not found</response>
         /// <response code="500">Internal server error</response>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(CategoryResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiSuccessResult<CategoryResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResult<CategoryResponseDto>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetById(long id)
         {
@@ -63,10 +64,10 @@ namespace Generate.API.Controllers
 
             if (result == null)
             {
-                return NotFound(new { Message = $"Category with ID {id} not found" });
+                return NotFound(new ApiErrorResult<CategoryResponseDto>($"Category with ID {id} not found"));
             }
 
-            return Ok(result);
+            return Ok(new ApiSuccessResult<CategoryResponseDto>(result));
         }
 
         /// <summary>
@@ -78,7 +79,7 @@ namespace Generate.API.Controllers
         /// <response code="400">Invalid input data</response>
         /// <response code="500">Internal server error</response>
         [HttpPost]
-        [ProducesResponseType(typeof(long), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiSuccessResult<long>), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Create([FromBody] CategoryCreateDto dto)
@@ -95,7 +96,7 @@ namespace Generate.API.Controllers
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = categoryId },
-                new { Id = categoryId, Message = "Category created successfully" }
+                new ApiSuccessResult<long>(categoryId, "Category created successfully")
             );
         }
 
@@ -110,9 +111,9 @@ namespace Generate.API.Controllers
         /// <response code="404">Category not found</response>
         /// <response code="500">Internal server error</response>
         [HttpPut("{id}")]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiSuccessResult<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResult<bool>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResult<bool>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Update(long id, [FromBody] CategoryUpdateDto dto)
         {
@@ -120,7 +121,7 @@ namespace Generate.API.Controllers
 
             if (id != dto.Id)
             {
-                return BadRequest(new { Message = "ID in URL does not match ID in body" });
+                return BadRequest(new ApiErrorResult<bool>("ID in URL does not match ID in body"));
             }
 
             var command = new UpdateCategoryCommand
@@ -133,10 +134,10 @@ namespace Generate.API.Controllers
 
             if (!result)
             {
-                return NotFound(new { Message = $"Category with ID {id} not found" });
+                return NotFound(new ApiErrorResult<bool>($"Category with ID {id} not found"));
             }
 
-            return Ok(new { Success = true, Message = "Category updated successfully" });
+            return Ok(new ApiSuccessResult<bool>(result, "Category updated successfully"));
         }
 
         /// <summary>
@@ -148,8 +149,8 @@ namespace Generate.API.Controllers
         /// <response code="404">Category not found</response>
         /// <response code="500">Internal server error</response>
         [HttpDelete("{id}")]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiSuccessResult<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResult<bool>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Delete(long id)
         {
@@ -160,10 +161,10 @@ namespace Generate.API.Controllers
 
             if (!result)
             {
-                return NotFound(new { Message = $"Category with ID {id} not found" });
+                return NotFound(new ApiErrorResult<bool>($"Category with ID {id} not found"));
             }
 
-            return Ok(new { Success = true, Message = "Category deleted successfully" });
+            return Ok(new ApiSuccessResult<bool>(result, "Category deleted successfully"));
         }
     }
 }

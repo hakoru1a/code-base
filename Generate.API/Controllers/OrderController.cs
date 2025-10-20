@@ -6,6 +6,7 @@ using Generate.Application.Features.Order.Queries.GetOrderById;
 using Generate.Application.Features.Order.Queries.GetOrders;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Shared.SeedWork;
 
 namespace Generate.API.Controllers
 {
@@ -33,14 +34,14 @@ namespace Generate.API.Controllers
         /// <response code="200">Returns the list of orders</response>
         /// <response code="500">Internal server error</response>
         [HttpGet]
-        [ProducesResponseType(typeof(List<OrderResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiSuccessResult<List<OrderResponseDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetList()
         {
             _logger.LogInformation("Getting all orders");
             var query = new GetOrdersQuery();
             var result = await _mediator.Send(query);
-            return Ok(result);
+            return Ok(new ApiSuccessResult<List<OrderResponseDto>>(result));
         }
 
         /// <summary>
@@ -52,8 +53,8 @@ namespace Generate.API.Controllers
         /// <response code="404">Order not found</response>
         /// <response code="500">Internal server error</response>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(OrderResponseDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiSuccessResult<OrderResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResult<OrderResponseDto>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetById(long id)
         {
@@ -63,10 +64,10 @@ namespace Generate.API.Controllers
 
             if (result == null)
             {
-                return NotFound(new { Message = $"Order with ID {id} not found" });
+                return NotFound(new ApiErrorResult<OrderResponseDto>($"Order with ID {id} not found"));
             }
 
-            return Ok(result);
+            return Ok(new ApiSuccessResult<OrderResponseDto>(result));
         }
 
         /// <summary>
@@ -78,7 +79,7 @@ namespace Generate.API.Controllers
         /// <response code="400">Invalid input data</response>
         /// <response code="500">Internal server error</response>
         [HttpPost]
-        [ProducesResponseType(typeof(long), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiSuccessResult<long>), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Create([FromBody] OrderCreateDto dto)
@@ -96,7 +97,7 @@ namespace Generate.API.Controllers
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = orderId },
-                new { Id = orderId, Message = "Order created successfully" }
+                new ApiSuccessResult<long>(orderId, "Order created successfully")
             );
         }
 
@@ -111,9 +112,9 @@ namespace Generate.API.Controllers
         /// <response code="404">Order not found</response>
         /// <response code="500">Internal server error</response>
         [HttpPut("{id}")]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiSuccessResult<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResult<bool>), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResult<bool>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Update(long id, [FromBody] OrderUpdateDto dto)
         {
@@ -121,7 +122,7 @@ namespace Generate.API.Controllers
 
             if (id != dto.Id)
             {
-                return BadRequest(new { Message = "ID in URL does not match ID in body" });
+                return BadRequest(new ApiErrorResult<bool>("ID in URL does not match ID in body"));
             }
 
             var command = new UpdateOrderCommand
@@ -135,10 +136,10 @@ namespace Generate.API.Controllers
 
             if (!result)
             {
-                return NotFound(new { Message = $"Order with ID {id} not found" });
+                return NotFound(new ApiErrorResult<bool>($"Order with ID {id} not found"));
             }
 
-            return Ok(new { Success = true, Message = "Order updated successfully" });
+            return Ok(new ApiSuccessResult<bool>(result, "Order updated successfully"));
         }
 
         /// <summary>
@@ -150,8 +151,8 @@ namespace Generate.API.Controllers
         /// <response code="404">Order not found</response>
         /// <response code="500">Internal server error</response>
         [HttpDelete("{id}")]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiSuccessResult<bool>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResult<bool>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Delete(long id)
         {
@@ -162,10 +163,10 @@ namespace Generate.API.Controllers
 
             if (!result)
             {
-                return NotFound(new { Message = $"Order with ID {id} not found" });
+                return NotFound(new ApiErrorResult<bool>($"Order with ID {id} not found"));
             }
 
-            return Ok(new { Success = true, Message = "Order deleted successfully" });
+            return Ok(new ApiSuccessResult<bool>(result, "Order deleted successfully"));
         }
     }
 }

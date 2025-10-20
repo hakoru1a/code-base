@@ -1,3 +1,4 @@
+using Base.Application.Common.Models;
 using Base.Application.Feature.Product.Commands.CreateProduct;
 using Base.Application.Feature.Product.Queries.GetProductById;
 using Base.Application.Feature.Product.Queries.GetProducts;
@@ -27,7 +28,7 @@ namespace Base.API.Controllers
                 parameters.PageNumber, parameters.PageSize);
             var query = new GetProductsQuery { Parameters = parameters };
             var result = await _mediator.Send(query);
-            return Ok(result);
+            return Ok(new ApiSuccessResult<PagedResult<ProductDto>>(result));
         }
 
         [HttpGet("{id}")]
@@ -40,10 +41,10 @@ namespace Base.API.Controllers
             if (result == null)
             {
                 _logger.LogWarning("Product with ID: {ProductId} not found", id);
-                return NotFound();
+                return NotFound(new ApiErrorResult<ProductDto>($"Product with ID {id} not found"));
             }
 
-            return Ok(result);
+            return Ok(new ApiSuccessResult<ProductDto>(result));
         }
 
         [HttpPost]
@@ -52,7 +53,7 @@ namespace Base.API.Controllers
             _logger.LogInformation("Creating new product: {ProductName}", command.Name);
             var result = await _mediator.Send(command);
             _logger.LogInformation("Product created successfully with ID: {ProductId}", result);
-            return CreatedAtAction(nameof(GetProductById), new { id = result }, result);
+            return CreatedAtAction(nameof(GetProductById), new { id = result }, new ApiSuccessResult<long>(result, "Product created successfully"));
         }
     }
 }
