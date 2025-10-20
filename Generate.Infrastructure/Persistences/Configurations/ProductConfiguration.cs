@@ -9,7 +9,7 @@ namespace Generate.Infrastructure.Persistences.Configurations
         public void Configure(EntityTypeBuilder<Product> builder)
         {
             // Table name
-            builder.ToTable("Products");
+            builder.ToTable("PRODUCT");
 
             // Primary key
             builder.HasKey(p => p.Id);
@@ -44,6 +44,8 @@ namespace Generate.Infrastructure.Persistences.Configurations
             // Indexes
             builder.HasIndex(p => p.Name);
             builder.HasIndex(p => p.CategoryId);
+
+            builder.MapAuditColumns();
         }
     }
 }

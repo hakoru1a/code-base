@@ -9,7 +9,7 @@ namespace Generate.Infrastructure.Persistences.Configurations
         public void Configure(EntityTypeBuilder<Category> builder)
         {
             // Table name
-            builder.ToTable("Categories");
+            builder.ToTable("CATEGORY");
 
             // Primary key
             builder.HasKey(c => c.Id);
@@ -28,6 +28,8 @@ namespace Generate.Infrastructure.Persistences.Configurations
             // Indexes
             builder.HasIndex(c => c.Name)
                 .IsUnique();
+
+            builder.MapAuditColumns();
         }
     }
 }

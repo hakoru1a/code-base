@@ -9,7 +9,7 @@ namespace Generate.Infrastructure.Persistences.Configurations
         public void Configure(EntityTypeBuilder<ProductDetail> builder)
         {
             // Table name
-            builder.ToTable("ProductDetails");
+            builder.ToTable("PRODUCT_DETAIL");
 
             // Primary key
             builder.HasKey(pd => pd.Id);
@@ -31,6 +31,8 @@ namespace Generate.Infrastructure.Persistences.Configurations
             // Indexes
             builder.HasIndex(pd => pd.ProductId)
                 .IsUnique(); // Ensure one-to-one relationship
+
+            builder.MapAuditColumns();
         }
     }
 }

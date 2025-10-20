@@ -1,4 +1,4 @@
-namespace Generate.API.Extensions
+    namespace Generate.API.Extensions
 {
     public static class HostExtension
     {

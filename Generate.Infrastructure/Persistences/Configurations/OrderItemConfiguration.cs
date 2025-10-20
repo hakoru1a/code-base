@@ -9,7 +9,7 @@ namespace Generate.Infrastructure.Persistences.Configurations
         public void Configure(EntityTypeBuilder<OrderItem> builder)
         {
             // Table name
-            builder.ToTable("OrderItems");
+            builder.ToTable("ORDER_ITEM");
 
             // Composite primary key
             builder.HasKey(oi => new { oi.OrderId, oi.ProductId });
@@ -41,6 +41,8 @@ namespace Generate.Infrastructure.Persistences.Configurations
             // Indexes
             builder.HasIndex(oi => oi.OrderId);
             builder.HasIndex(oi => oi.ProductId);
+
+            builder.MapAuditColumns();
         }
     }
 }

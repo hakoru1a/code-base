@@ -9,7 +9,7 @@ namespace Generate.Infrastructure.Persistences.Configurations
         public void Configure(EntityTypeBuilder<Order> builder)
         {
             // Table name
-            builder.ToTable("Orders");
+            builder.ToTable("ORDERS");
 
             // Primary key
             builder.HasKey(o => o.Id);
@@ -28,6 +28,8 @@ namespace Generate.Infrastructure.Persistences.Configurations
 
             // Indexes
             builder.HasIndex(o => o.CustomerName);
+
+            builder.MapAuditColumns();
         }
     }
 }
