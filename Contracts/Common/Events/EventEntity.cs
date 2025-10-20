@@ -1,5 +1,6 @@
 using Contracts.Common.Interface;
 using Contracts.Domain;
+using Shared.Interfaces.Event;
 
 namespace Contracts.Common.Events
 {

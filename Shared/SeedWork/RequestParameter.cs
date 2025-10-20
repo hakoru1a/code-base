@@ -10,6 +10,8 @@ namespace Shared.SeedWork
     {
         public string OrderBy { get; set; }
 
-        public string SearchTerms { get; set; }
+        public string OrderByDirection { get; set; }
+
+        public string SearchTerms { get; set; } = string.Empty;
     }
 }

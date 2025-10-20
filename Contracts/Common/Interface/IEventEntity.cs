@@ -1,5 +1,6 @@
 using Contracts.Common.Events;
 using Contracts.Domain.Interface;
+using Shared.Interfaces.Event;
 using System;
 using System.Collections.Generic;
 using System.Linq;

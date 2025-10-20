@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Contracts.Common.Events;
-using Contracts.Domain.Event.Product;
+
 
 namespace Base.Domain.Entities
 {
@@ -44,7 +44,7 @@ namespace Base.Domain.Entities
         {
             var product = new Product(name, description, price, stock, sku);
 
-            product.AddDomainEvent(new ProductCreatedEvent(product.Id, product.Name, product.SKU, product.Price, product.Stock));
+            //product.AddDomainEvent(new ProductCreatedEvent(product.Id, product.Name, product.SKU, product.Price, product.Stock));
 
             return product;
         }
@@ -65,7 +65,7 @@ namespace Base.Domain.Entities
             SKU = sku;
             LastModifiedDate = DateTimeOffset.UtcNow;
 
-            AddDomainEvent(new ProductUpdatedEvent(Id, Name, Description, Price, Stock, SKU, LastModifiedDate.Value));
+            //AddDomainEvent(new ProductUpdatedEvent(Id, Name, Description, Price, Stock, SKU, LastModifiedDate.Value));
         }
 
         public void UpdateStock(int newStock)
@@ -76,7 +76,7 @@ namespace Base.Domain.Entities
             Stock = newStock;
             LastModifiedDate = DateTimeOffset.UtcNow;
 
-            AddDomainEvent(new StockChangedEvent(Id, Name, SKU, oldStock, Stock, Stock - oldStock, LastModifiedDate.Value));
+            //AddDomainEvent(new StockChangedEvent(Id, Name, SKU, oldStock, Stock, Stock - oldStock, LastModifiedDate.Value));
         }
 
         public void IncreaseStock(int quantity)
@@ -100,7 +100,7 @@ namespace Base.Domain.Entities
 
         public void DeleteProduct()
         {
-            AddDomainEvent(new ProductDeletedEvent(Id, Name, SKU, DateTimeOffset.UtcNow));
+            //AddDomainEvent(new ProductDeletedEvent(Id, Name, SKU, DateTimeOffset.UtcNow));
         }
 
         public bool IsInStock()

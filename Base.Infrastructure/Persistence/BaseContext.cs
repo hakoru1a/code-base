@@ -10,6 +10,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Shared.Interfaces.Event;
 
 namespace Base.Infrastructure.Persistence
 {
@@ -82,6 +83,8 @@ namespace Base.Infrastructure.Persistence
                 }
             }
             var result = await base.SaveChangesAsync(cancellationToken);
+
+            // Có thể dispatch bằng mass transit hoặc cũng thể sử dụng outbox pattern + woker riêng
             if (_events?.Any() == true)
             {
                 await _mediator.DispatchDomainEventAsync(_events);
