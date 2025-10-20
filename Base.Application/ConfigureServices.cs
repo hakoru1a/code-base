@@ -8,7 +8,7 @@ using Contracts.Common.Interface;
 using FluentValidation;
 using Infrastructure.Common;
 using Infrastructure.Common.Behavior;
-using Infrastucture.Common.Repository;
+using Infrastructure.Common.Repository;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 

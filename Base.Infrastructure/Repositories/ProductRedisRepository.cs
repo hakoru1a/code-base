@@ -1,5 +1,5 @@
 using Base.Domain.Interfaces;
-using Infrastucture.Common.Repository;
+using Infrastructure.Common.Repository;
 using StackExchange.Redis;
 
 namespace Base.Infrastructure.Repositories

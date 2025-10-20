@@ -22,7 +22,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Base.Domain\Base.Domain.csproj" />
 		<ProjectReference Include="..\Base.Infrastructure\Base.Infrastructure.csproj" />
-		<ProjectReference Include="..\Infrastucture\Infrastucture.csproj" />
+		<ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
 	</ItemGroup>
   <ItemGroup>
     <Folder Include="Feature\Product\Commands\DeleteProduct\" />

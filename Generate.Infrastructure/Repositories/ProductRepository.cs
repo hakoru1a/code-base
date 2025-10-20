@@ -2,7 +2,7 @@
 using Generate.Domain.Entities;
 using Generate.Domain.Interfaces;
 using Generate.Infrastructure.Persistences;
-using Infrastucture.Common.Repository;
+using Infrastructure.Common.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;

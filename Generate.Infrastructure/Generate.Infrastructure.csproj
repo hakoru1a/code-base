@@ -17,7 +17,7 @@
 	  <ProjectReference Include="..\Base.Infrastructure\Base.Infrastructure.csproj" />
 	  <ProjectReference Include="..\Contracts\Contracts.csproj" />
 	  <ProjectReference Include="..\Generate.Domain\Generate.Domain.csproj" />
-	  <ProjectReference Include="..\Infrastucture\Infrastucture.csproj" />
+	  <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
 	</ItemGroup>
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>

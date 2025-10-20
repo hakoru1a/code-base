@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace Infrastucture.Common.Repository
+namespace Infrastructure.Common.Repository
 {
     public class RedisRepository : IRedisRepository
     {

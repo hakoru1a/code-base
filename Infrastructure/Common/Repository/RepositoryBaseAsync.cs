@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 using Contracts.Domain;
 using Shared.SeedWork;
 
-namespace Infrastucture.Common.Repository
+namespace Infrastructure.Common.Repository
 {
     /// <summary>
     /// Base repository implementation providing common data access operations

@@ -5,7 +5,7 @@ using Shared.Attributes;
 using Shared.Configurations.Database;
 
 
-namespace Infrastucture.Common.Repository
+namespace Infrastructure.Common.Repository
 {
     public class MongoDBRepository<T> : IMongoDBRepository<T> where T : MongoEntity
     {

@@ -2,7 +2,7 @@ using Base.Domain.Entities;
 using Base.Domain.Interfaces;
 using Base.Infrastructure.Persistence;
 using Contracts.Common.Interface;
-using Infrastucture.Common.Repository;
+using Infrastructure.Common.Repository;
 using System;
 using System.Collections.Generic;
 using System.Linq;
