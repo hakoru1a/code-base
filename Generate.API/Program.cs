@@ -4,9 +4,13 @@ using Generate.Infrastructure;
 using Common.Logging;
 using Serilog;
 
+
+
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+    Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
+    Log.Information("Starting API running");
 
     // Add Serilog Configuration
     builder.Host.UseSerilog(SeriLogger.Configure);

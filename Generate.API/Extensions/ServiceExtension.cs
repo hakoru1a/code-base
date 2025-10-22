@@ -2,9 +2,11 @@ using Infrastructure.Extensions;
 using Infrastructure.Filters;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Shared.Configurations;
 using Shared.Configurations.Database;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Generate.API.Extensions
 {
@@ -92,25 +94,10 @@ namespace Generate.API.Extensions
 
         private static IServiceCollection AddSwaggerConfiguration(this IServiceCollection services)
         {
+            // Register the Swagger configuration options
+            services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
             services.AddSwaggerGen(options =>
             {
-                using var sp = services.BuildServiceProvider();
-                var provider = sp.GetRequiredService<IApiVersionDescriptionProvider>();
-                foreach (var description in provider.ApiVersionDescriptions)
-                {
-                    options.SwaggerDoc(description.GroupName, new OpenApiInfo
-                    {
-                        Version = description.ApiVersion.ToString(),
-                        Title = "Generate API",
-                        Description = "An ASP.NET Core Web API for managing business entities",
-                        Contact = new OpenApiContact
-                        {
-                            Name = "Generate API Team",
-                            Email = "support@generate.com"
-                        }
-                    });
-                }
-
                 // Add JWT Authentication to Swagger
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
@@ -146,6 +133,35 @@ namespace Generate.API.Extensions
             });
 
             return services;
+        }
+    }
+
+    // Configure Swagger options using IConfigureOptions pattern
+    public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
+    {
+        private readonly IApiVersionDescriptionProvider _provider;
+
+        public ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider)
+        {
+            _provider = provider;
+        }
+
+        public void Configure(SwaggerGenOptions options)
+        {
+            foreach (var description in _provider.ApiVersionDescriptions)
+            {
+                options.SwaggerDoc(description.GroupName, new OpenApiInfo
+                {
+                    Version = description.ApiVersion.ToString(),
+                    Title = "Generate API",
+                    Description = "An ASP.NET Core Web API for managing business entities",
+                    Contact = new OpenApiContact
+                    {
+                        Name = "Generate API Team",
+                        Email = "support@generate.com"
+                    }
+                });
+            }
         }
     }
 }
