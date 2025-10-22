@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Generate.Application.Common.DTOs.Order;
 using Generate.Application.Features.Order.Commands.CreateOrder;
 using Generate.Application.Features.Order.Commands.DeleteOrder;
@@ -14,7 +15,8 @@ namespace Generate.API.Controllers
     /// Controller for managing orders
     /// </summary>
     [ApiController]
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [Produces("application/json")]
     public class OrderController : ControllerBase
     {
@@ -41,7 +43,7 @@ namespace Generate.API.Controllers
             _logger.LogInformation("Getting all orders");
             var query = new GetOrdersQuery();
             var result = await _mediator.Send(query);
-            return Ok(new ApiSuccessResult<List<OrderResponseDto>>(result));
+            return Ok(new ApiSuccessResult<List<OrderResponseDto>>(result, ResponseMessages.RetrieveItemsSuccess));
         }
 
         /// <summary>
@@ -64,10 +66,12 @@ namespace Generate.API.Controllers
 
             if (result == null)
             {
-                return NotFound(new ApiErrorResult<OrderResponseDto>($"Order with ID {id} not found"));
+                _logger.LogWarning("Order with ID: {OrderId} not found", id);
+                return NotFound(new ApiErrorResult<OrderResponseDto>(
+                    ResponseMessages.ItemNotFound("Order", id)));
             }
 
-            return Ok(new ApiSuccessResult<OrderResponseDto>(result));
+            return Ok(new ApiSuccessResult<OrderResponseDto>(result, ResponseMessages.RetrieveItemSuccess));
         }
 
         /// <summary>
@@ -84,7 +88,7 @@ namespace Generate.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Create([FromBody] OrderCreateDto dto)
         {
-            _logger.LogInformation("Creating new order");
+            _logger.LogInformation("Creating new order for customer: {CustomerName}", dto.CustomerName);
 
             var command = new CreateOrderCommand
             {
@@ -93,11 +97,12 @@ namespace Generate.API.Controllers
             };
 
             var orderId = await _mediator.Send(command);
+            _logger.LogInformation("Order created successfully with ID: {OrderId}", orderId);
 
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = orderId },
-                new ApiSuccessResult<long>(orderId, "Order created successfully")
+                new ApiSuccessResult<long>(orderId, ResponseMessages.ItemCreated("Order"))
             );
         }
 
@@ -122,6 +127,7 @@ namespace Generate.API.Controllers
 
             if (id != dto.Id)
             {
+                _logger.LogWarning("ID mismatch - URL ID: {UrlId}, Body ID: {BodyId}", id, dto.Id);
                 return BadRequest(new ApiErrorResult<bool>("ID in URL does not match ID in body"));
             }
 
@@ -136,10 +142,13 @@ namespace Generate.API.Controllers
 
             if (!result)
             {
-                return NotFound(new ApiErrorResult<bool>($"Order with ID {id} not found"));
+                _logger.LogWarning("Order with ID: {OrderId} not found for update", id);
+                return NotFound(new ApiErrorResult<bool>(
+                    ResponseMessages.ItemNotFound("Order", id)));
             }
 
-            return Ok(new ApiSuccessResult<bool>(result, "Order updated successfully"));
+            _logger.LogInformation("Order with ID: {OrderId} updated successfully", id);
+            return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.ItemUpdated("Order")));
         }
 
         /// <summary>
@@ -163,10 +172,13 @@ namespace Generate.API.Controllers
 
             if (!result)
             {
-                return NotFound(new ApiErrorResult<bool>($"Order with ID {id} not found"));
+                _logger.LogWarning("Order with ID: {OrderId} not found for deletion", id);
+                return NotFound(new ApiErrorResult<bool>(
+                    ResponseMessages.ItemNotFound("Order", id)));
             }
 
-            return Ok(new ApiSuccessResult<bool>(result, "Order deleted successfully"));
+            _logger.LogInformation("Order with ID: {OrderId} deleted successfully", id);
+            return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.ItemDeleted("Order")));
         }
     }
 }

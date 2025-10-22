@@ -10,7 +10,11 @@ namespace Generate.API.Extensions
             app.UseSwagger();
             app.UseSwaggerUI(options =>
             {
-                options.SwaggerEndpoint("/swagger/v1/swagger.json", "Generate API v1");
+                var provider = app.ApplicationServices.GetRequiredService<Asp.Versioning.ApiExplorer.IApiVersionDescriptionProvider>();
+                foreach (var description in provider.ApiVersionDescriptions)
+                {
+                    options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", $"Generate API {description.GroupName.ToUpperInvariant()}");
+                }
                 options.RoutePrefix = "swagger";
             });
 

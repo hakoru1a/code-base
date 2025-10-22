@@ -1,4 +1,7 @@
 using Infrastructure.Extensions;
+using Infrastructure.Filters;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.OpenApi.Models;
 using Shared.Configurations;
 using Shared.Configurations.Database;
@@ -10,12 +13,37 @@ namespace Generate.API.Extensions
         public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
         {
             // Add Controllers with JSON options
-            services.AddControllers()
+            services.AddControllers(options =>
+                {
+                    // Add custom validation filter
+                    options.Filters.Add<ValidateModelStateFilter>();
+                })
+                .ConfigureApiBehaviorOptions(options =>
+                {
+                    // Suppress default ModelState validation error response
+                    options.SuppressModelStateInvalidFilter = true;
+                })
                 .AddJsonOptions(options =>
                 {
-                    options.JsonSerializerOptions.PropertyNamingPolicy = null;
+                    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
                     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                    options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+                    options.JsonSerializerOptions.WriteIndented = false;
                 });
+
+            // API Versioning
+            services.AddApiVersioning(options =>
+            {
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.ReportApiVersions = true;
+                options.ApiVersionReader = new UrlSegmentApiVersionReader();
+            })
+            .AddApiExplorer(options =>
+            {
+                options.GroupNameFormat = "'v'VVV";
+                options.SubstituteApiVersionInUrl = true;
+            });
 
             // Add Configuration Settings
             services.AddConfigurationSettings(configuration);
@@ -66,17 +94,22 @@ namespace Generate.API.Extensions
         {
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v1", new OpenApiInfo
+                using var sp = services.BuildServiceProvider();
+                var provider = sp.GetRequiredService<IApiVersionDescriptionProvider>();
+                foreach (var description in provider.ApiVersionDescriptions)
                 {
-                    Version = "v1",
-                    Title = "Generate API",
-                    Description = "An ASP.NET Core Web API for managing business entities",
-                    Contact = new OpenApiContact
+                    options.SwaggerDoc(description.GroupName, new OpenApiInfo
                     {
-                        Name = "Generate API Team",
-                        Email = "support@generate.com"
-                    }
-                });
+                        Version = description.ApiVersion.ToString(),
+                        Title = "Generate API",
+                        Description = "An ASP.NET Core Web API for managing business entities",
+                        Contact = new OpenApiContact
+                        {
+                            Name = "Generate API Team",
+                            Email = "support@generate.com"
+                        }
+                    });
+                }
 
                 // Add JWT Authentication to Swagger
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

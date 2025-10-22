@@ -2,6 +2,7 @@ using Contracts.Exceptions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Shared.SeedWork;
 using System.Net;
 using System.Text.Json;
 
@@ -36,69 +37,80 @@ namespace Infrastructure.Middlewares
             var response = context.Response;
             response.ContentType = "application/json";
 
-            var errorResponse = new ErrorResponse
-            {
-                Success = false,
-                Message = exception.Message
-            };
+            object errorResponse;
+            string message = exception.Message;
 
             switch (exception)
             {
                 case DuplicateException duplicateEx:
                     response.StatusCode = (int)HttpStatusCode.Conflict;
-                    errorResponse.ErrorCode = "DUPLICATE_ERROR";
+                    errorResponse = new ApiErrorResult<object>(message);
                     break;
+
                 case NotFoundException notFoundEx:
                     response.StatusCode = (int)HttpStatusCode.NotFound;
-                    errorResponse.ErrorCode = "NOT_FOUND";
+                    errorResponse = new ApiErrorResult<object>(message);
                     break;
+
                 case ValidationException validationEx:
                     response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    errorResponse.ErrorCode = "VALIDATION_ERROR";
-                    errorResponse.ValidationErrors = validationEx.Errors;
+                    var validationErrors = validationEx.Errors?.SelectMany(kvp =>
+                        kvp.Value.Select(error => $"{kvp.Key}: {error}"))
+                        .ToList() ?? new List<string> { message };
+                    errorResponse = new ApiErrorResult<object>(
+                        ResponseMessages.ValidationFailed,
+                        validationErrors);
                     break;
+
                 case UnauthorizedException unauthorizedEx:
                     response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    errorResponse.ErrorCode = unauthorizedEx.ErrorCode ?? "UNAUTHORIZED";
+                    errorResponse = new ApiErrorResult<object>(message);
                     break;
+
                 case BadRequestException badRequestEx:
                     response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    errorResponse.ErrorCode = badRequestEx.ErrorCode ?? "BAD_REQUEST";
-                    errorResponse.ValidationErrors = badRequestEx.ValidationErrors;
+                    if (badRequestEx.ValidationErrors != null && badRequestEx.ValidationErrors.Any())
+                    {
+                        var errors = badRequestEx.ValidationErrors
+                            .SelectMany(kvp => kvp.Value.Select(error => $"{kvp.Key}: {error}"))
+                            .ToList();
+                        errorResponse = new ApiErrorResult<object>(message, errors);
+                    }
+                    else
+                    {
+                        errorResponse = new ApiErrorResult<object>(message);
+                    }
                     break;
+
                 case BusinessException businessEx:
                     response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    errorResponse.ErrorCode = businessEx.ErrorCode ?? "BUSINESS_ERROR";
-                    errorResponse.Details = businessEx.Details;
+                    errorResponse = new ApiErrorResult<object>(message);
                     break;
+
                 case KeyNotFoundException:
                     response.StatusCode = (int)HttpStatusCode.NotFound;
-                    errorResponse.ErrorCode = "NOT_FOUND";
+                    errorResponse = new ApiErrorResult<object>("Resource not found");
                     break;
+
                 case UnauthorizedAccessException:
                     response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    errorResponse.ErrorCode = "UNAUTHORIZED";
+                    errorResponse = new ApiErrorResult<object>("Unauthorized access");
                     break;
+
                 default:
                     response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    errorResponse.Message = "An unexpected error occurred.";
-                    errorResponse.ErrorCode = "INTERNAL_SERVER_ERROR";
+                    errorResponse = new ApiErrorResult<object>(ResponseMessages.InternalError);
                     break;
             }
 
-            var result = JsonSerializer.Serialize(errorResponse);
+            var options = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+            };
+
+            var result = JsonSerializer.Serialize(errorResponse, options);
             await response.WriteAsync(result);
         }
     }
-
-    public class ErrorResponse
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; } = string.Empty;
-        public string? ErrorCode { get; set; }
-        public object? Details { get; set; }
-        public IDictionary<string, string[]>? ValidationErrors { get; set; }
-    }
-
-
 }

@@ -16,7 +16,7 @@ namespace Generate.Application.Features.Product.EventHandlers
         public Task Handle(ProductDeletedEvent notification, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Product Deleted: {ProductId} at {DeletedDate}",
-                notification.ProductId, notification.DeletedDate);
+                notification.ProductId, notification.EventId);
 
             // Add additional business logic here (e.g., update search index, invalidate cache, etc.)
 

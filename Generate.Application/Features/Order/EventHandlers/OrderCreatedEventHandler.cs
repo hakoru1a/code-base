@@ -16,7 +16,7 @@ namespace Generate.Application.Features.Order.EventHandlers
         public Task Handle(OrderCreatedEvent notification, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Order Created: {OrderId} - Customer: {CustomerName} with {TotalItems} items at {CreatedDate}",
-                notification.OrderId, notification.CustomerName, notification.TotalItems, notification.CreatedDate);
+                notification.OrderId, notification.CustomerName, notification.TotalItems, notification.EventId);
 
             // Add additional business logic here (e.g., send order confirmation email, update inventory, etc.)
 

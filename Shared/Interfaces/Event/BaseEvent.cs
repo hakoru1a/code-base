@@ -11,6 +11,8 @@ namespace Shared.Interfaces.Event
     {
         public Guid EventId { get; } = Guid.NewGuid();
         public DateTime OccurredOnUtc { get; } = DateTime.UtcNow;
+
+        public DateTime SuccessDate { get; set; }
     }
 
 }

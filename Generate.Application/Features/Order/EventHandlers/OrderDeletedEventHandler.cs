@@ -16,7 +16,7 @@ namespace Generate.Application.Features.Order.EventHandlers
         public Task Handle(OrderDeletedEvent notification, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Order Deleted: {OrderId} at {DeletedDate}",
-                notification.OrderId, notification.DeletedDate);
+                notification.OrderId, notification.EventId);
 
             // Add additional business logic here (e.g., restore inventory, send cancellation email, etc.)
 

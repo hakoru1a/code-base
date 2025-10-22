@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Generate.Application.Common.DTOs.Product;
 using Generate.Application.Features.Product.Commands.CreateProduct;
 using Generate.Application.Features.Product.Commands.DeleteProduct;
@@ -14,7 +15,8 @@ namespace Generate.API.Controllers
     /// Controller for managing products
     /// </summary>
     [ApiController]
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [Produces("application/json")]
     public class ProductController : ControllerBase
     {
@@ -41,7 +43,7 @@ namespace Generate.API.Controllers
             _logger.LogInformation("Getting all products");
             var query = new GetProductsQuery();
             var result = await _mediator.Send(query);
-            return Ok(new ApiSuccessResult<List<ProductResponseDto>>(result));
+            return Ok(new ApiSuccessResult<List<ProductResponseDto>>(result, ResponseMessages.RetrieveItemsSuccess));
         }
 
         /// <summary>
@@ -64,10 +66,12 @@ namespace Generate.API.Controllers
 
             if (result == null)
             {
-                return NotFound(new ApiErrorResult<ProductResponseDto>($"Product with ID {id} not found"));
+                _logger.LogWarning("Product with ID: {ProductId} not found", id);
+                return NotFound(new ApiErrorResult<ProductResponseDto>(
+                    ResponseMessages.ItemNotFound("Product", id)));
             }
 
-            return Ok(new ApiSuccessResult<ProductResponseDto>(result));
+            return Ok(new ApiSuccessResult<ProductResponseDto>(result, ResponseMessages.RetrieveItemSuccess));
         }
 
         /// <summary>
@@ -93,11 +97,12 @@ namespace Generate.API.Controllers
             };
 
             var productId = await _mediator.Send(command);
+            _logger.LogInformation("Product created successfully with ID: {ProductId}", productId);
 
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = productId },
-                new ApiSuccessResult<long>(productId, "Product created successfully")
+                new ApiSuccessResult<long>(productId, ResponseMessages.ItemCreated("Product"))
             );
         }
 
@@ -122,6 +127,7 @@ namespace Generate.API.Controllers
 
             if (id != dto.Id)
             {
+                _logger.LogWarning("ID mismatch - URL ID: {UrlId}, Body ID: {BodyId}", id, dto.Id);
                 return BadRequest(new ApiErrorResult<bool>("ID in URL does not match ID in body"));
             }
 
@@ -136,10 +142,13 @@ namespace Generate.API.Controllers
 
             if (!result)
             {
-                return NotFound(new ApiErrorResult<bool>($"Product with ID {id} not found"));
+                _logger.LogWarning("Product with ID: {ProductId} not found for update", id);
+                return NotFound(new ApiErrorResult<bool>(
+                    ResponseMessages.ItemNotFound("Product", id)));
             }
 
-            return Ok(new ApiSuccessResult<bool>(result, "Product updated successfully"));
+            _logger.LogInformation("Product with ID: {ProductId} updated successfully", id);
+            return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.ItemUpdated("Product")));
         }
 
         /// <summary>
@@ -163,11 +172,13 @@ namespace Generate.API.Controllers
 
             if (!result)
             {
-                return NotFound(new ApiErrorResult<bool>($"Product with ID {id} not found"));
+                _logger.LogWarning("Product with ID: {ProductId} not found for deletion", id);
+                return NotFound(new ApiErrorResult<bool>(
+                    ResponseMessages.ItemNotFound("Product", id)));
             }
 
-            return Ok(new ApiSuccessResult<bool>(result, "Product deleted successfully"));
+            _logger.LogInformation("Product with ID: {ProductId} deleted successfully", id);
+            return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.ItemDeleted("Product")));
         }
     }
 }
-

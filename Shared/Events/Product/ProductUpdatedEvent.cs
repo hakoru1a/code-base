@@ -1,8 +1,9 @@
 using MediatR;
+using Shared.Interfaces.Event;
 
 namespace Shared.Events.Product
 {
-    public class ProductUpdatedEvent : INotification
+    public record class ProductUpdatedEvent : BaseEvent
     {
         public long ProductId { get; set; }
         public string Name { get; set; } = string.Empty;

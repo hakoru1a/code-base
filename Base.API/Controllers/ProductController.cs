@@ -28,7 +28,9 @@ namespace Base.API.Controllers
                 parameters.PageNumber, parameters.PageSize);
             var query = new GetProductsQuery { Parameters = parameters };
             var result = await _mediator.Send(query);
-            return Ok(new ApiSuccessResult<PagedResult<ProductDto>>(result));
+
+            // Using the extension method to convert PagedResult to ApiResult with metadata
+            return Ok(result.ToApiResult());
         }
 
         [HttpGet("{id}")]
@@ -41,10 +43,11 @@ namespace Base.API.Controllers
             if (result == null)
             {
                 _logger.LogWarning("Product with ID: {ProductId} not found", id);
-                return NotFound(new ApiErrorResult<ProductDto>($"Product with ID {id} not found"));
+                return NotFound(new ApiErrorResult<ProductDto>(
+                    ResponseMessages.ItemNotFound("Product", id)));
             }
 
-            return Ok(new ApiSuccessResult<ProductDto>(result));
+            return Ok(new ApiSuccessResult<ProductDto>(result, ResponseMessages.RetrieveItemSuccess));
         }
 
         [HttpPost]
@@ -53,7 +56,10 @@ namespace Base.API.Controllers
             _logger.LogInformation("Creating new product: {ProductName}", command.Name);
             var result = await _mediator.Send(command);
             _logger.LogInformation("Product created successfully with ID: {ProductId}", result);
-            return CreatedAtAction(nameof(GetProductById), new { id = result }, new ApiSuccessResult<long>(result, "Product created successfully"));
+            return CreatedAtAction(
+                nameof(GetProductById),
+                new { id = result },
+                new ApiSuccessResult<long>(result, ResponseMessages.ItemCreated("Product")));
         }
     }
 }

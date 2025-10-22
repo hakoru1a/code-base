@@ -1,11 +1,11 @@
 using MediatR;
+using Shared.Interfaces.Event;
 
 namespace Shared.Events.Product
 {
-    public class ProductDeletedEvent : INotification
+    public record class ProductDeletedEvent : BaseEvent
     {
         public long ProductId { get; set; }
-        public DateTime DeletedDate { get; set; }
     }
 }
 

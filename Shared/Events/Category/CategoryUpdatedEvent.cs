@@ -1,12 +1,12 @@
 using MediatR;
+using Shared.Interfaces.Event;
 
 namespace Shared.Events.Category
 {
-    public class CategoryUpdatedEvent : INotification
+    public record class CategoryUpdatedEvent : BaseEvent
     {
         public long CategoryId { get; set; }
         public string Name { get; set; } = string.Empty;
-        public DateTime UpdatedDate { get; set; }
     }
 }
 

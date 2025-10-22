@@ -1,8 +1,10 @@
+using Asp.Versioning;
 using Generate.Application.Common.DTOs.Category;
 using Generate.Application.Features.Category.Commands.CreateCategory;
 using Generate.Application.Features.Category.Commands.DeleteCategory;
 using Generate.Application.Features.Category.Commands.UpdateCategory;
 using Generate.Application.Features.Category.Queries.GetCategories;
+using Generate.Application.Features.Category.Queries.GetCategoriesPaged;
 using Generate.Application.Features.Category.Queries.GetCategoryById;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +16,8 @@ namespace Generate.API.Controllers
     /// Controller for managing categories
     /// </summary>
     [ApiController]
-    [Route("api/[controller]")]
+    [ApiVersion("2.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [Produces("application/json")]
     public class CategoryController : ControllerBase
     {
@@ -41,7 +44,35 @@ namespace Generate.API.Controllers
             _logger.LogInformation("Getting all categories");
             var query = new GetCategoriesQuery();
             var result = await _mediator.Send(query);
-            return Ok(new ApiSuccessResult<List<CategoryResponseDto>>(result));
+            return Ok(new ApiSuccessResult<List<CategoryResponseDto>>(result, ResponseMessages.RetrieveItemsSuccess));
+        }
+
+        /// <summary>
+        /// Get paginated list of categories with filtering and sorting
+        /// </summary>
+        /// <param name="filter">Filter parameters including pagination, search, and ordering</param>
+        /// <returns>Paginated list of categories</returns>
+        /// <response code="200">Returns the paginated list of categories</response>
+        /// <response code="500">Internal server error</response>
+        [HttpGet("paged")]
+        [ProducesResponseType(typeof(ApiSuccessResult<List<CategoryResponseDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetPagedList([FromQuery] CategoryFilterDto filter)
+        {
+            _logger.LogInformation("Getting paginated categories - Page: {PageNumber}, Size: {PageSize}",
+                filter.PageNumber, filter.PageSize);
+
+            var query = new GetCategoriesPagedQuery { Filter = filter };
+            var pagedResult = await _mediator.Send(query);
+            var metadata = pagedResult.GetMetaData();
+
+            _logger.LogInformation("Retrieved {Count} categories out of {TotalCount}",
+                pagedResult.Count, metadata.TotalItems);
+
+            return Ok(new ApiSuccessResult<List<CategoryResponseDto>>(
+                pagedResult.ToList(),
+                ResponseMessages.RetrieveItemsSuccess,
+                metadata));
         }
 
         /// <summary>
@@ -64,10 +95,12 @@ namespace Generate.API.Controllers
 
             if (result == null)
             {
-                return NotFound(new ApiErrorResult<CategoryResponseDto>($"Category with ID {id} not found"));
+                _logger.LogWarning("Category with ID: {CategoryId} not found", id);
+                return NotFound(new ApiErrorResult<CategoryResponseDto>(
+                    ResponseMessages.ItemNotFound("Category", id)));
             }
 
-            return Ok(new ApiSuccessResult<CategoryResponseDto>(result));
+            return Ok(new ApiSuccessResult<CategoryResponseDto>(result, ResponseMessages.RetrieveItemSuccess));
         }
 
         /// <summary>
@@ -92,11 +125,12 @@ namespace Generate.API.Controllers
             };
 
             var categoryId = await _mediator.Send(command);
+            _logger.LogInformation("Category created successfully with ID: {CategoryId}", categoryId);
 
             return CreatedAtAction(
                 nameof(GetById),
                 new { id = categoryId },
-                new ApiSuccessResult<long>(categoryId, "Category created successfully")
+                new ApiSuccessResult<long>(categoryId, ResponseMessages.ItemCreated("Category"))
             );
         }
 
@@ -121,6 +155,7 @@ namespace Generate.API.Controllers
 
             if (id != dto.Id)
             {
+                _logger.LogWarning("ID mismatch - URL ID: {UrlId}, Body ID: {BodyId}", id, dto.Id);
                 return BadRequest(new ApiErrorResult<bool>("ID in URL does not match ID in body"));
             }
 
@@ -134,10 +169,13 @@ namespace Generate.API.Controllers
 
             if (!result)
             {
-                return NotFound(new ApiErrorResult<bool>($"Category with ID {id} not found"));
+                _logger.LogWarning("Category with ID: {CategoryId} not found for update", id);
+                return NotFound(new ApiErrorResult<bool>(
+                    ResponseMessages.ItemNotFound("Category", id)));
             }
 
-            return Ok(new ApiSuccessResult<bool>(result, "Category updated successfully"));
+            _logger.LogInformation("Category with ID: {CategoryId} updated successfully", id);
+            return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.ItemUpdated("Category")));
         }
 
         /// <summary>
@@ -161,10 +199,13 @@ namespace Generate.API.Controllers
 
             if (!result)
             {
-                return NotFound(new ApiErrorResult<bool>($"Category with ID {id} not found"));
+                _logger.LogWarning("Category with ID: {CategoryId} not found for deletion", id);
+                return NotFound(new ApiErrorResult<bool>(
+                    ResponseMessages.ItemNotFound("Category", id)));
             }
 
-            return Ok(new ApiSuccessResult<bool>(result, "Category deleted successfully"));
+            _logger.LogInformation("Category with ID: {CategoryId} deleted successfully", id);
+            return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.ItemDeleted("Category")));
         }
     }
 }

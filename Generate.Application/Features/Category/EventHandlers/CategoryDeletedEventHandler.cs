@@ -16,7 +16,7 @@ namespace Generate.Application.Features.Category.EventHandlers
         public Task Handle(CategoryDeletedEvent notification, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Category Deleted: {CategoryId} at {DeletedDate}",
-                notification.CategoryId, notification.DeletedDate);
+                notification.CategoryId, notification.EventId);
 
             // Add additional business logic here (e.g., send notifications, update cache, etc.)
 
