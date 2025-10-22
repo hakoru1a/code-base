@@ -20,6 +20,10 @@ namespace Common.Logging
                   .WriteTo.Debug()
                   .WriteTo.Console(outputTemplate:
                       "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:l}{NewLine}{Exception}{NewLine}")
+                  .WriteTo.File("logs/log-.txt",
+                      rollingInterval: RollingInterval.Day,
+                      outputTemplate:
+                      "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:l}{NewLine}{Exception}{NewLine}")
                   .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(elasticUri))
                   {
                       IndexFormat = $"ch-logs-{applicationName}-{environmentName}-{DateTime.UtcNow:yyyy-MM}",
