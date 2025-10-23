@@ -1,49 +1,212 @@
 ﻿using Contracts.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using FirebaseAdmin;
+using FirebaseAdmin.Messaging;
+using Google.Apis.Auth.OAuth2;
+using Infrastructure.Configurations;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services
 {
     public class FcmNotificationService : IFcmNotification
     {
-        public string ProviderName => throw new NotImplementedException();
+        private readonly FcmSettings _settings;
+        private readonly FirebaseMessaging _messaging;
 
-        public Task<bool> CanDeliverAsync(string token, string channel, CancellationToken ct = default)
+        public string ProviderName => "Firebase Cloud Messaging";
+
+        public FcmNotificationService(IOptions<FcmSettings> options)
         {
-            throw new NotImplementedException();
+            _settings = options.Value;
+
+            // Initialize Firebase App if not already initialized
+            if (FirebaseApp.DefaultInstance == null)
+            {
+                var credential = GoogleCredential.FromFile(_settings.CredentialPath);
+                FirebaseApp.Create(new AppOptions()
+                {
+                    Credential = credential,
+                    ProjectId = _settings.ProjectId
+                });
+            }
+
+            _messaging = FirebaseMessaging.DefaultInstance;
         }
 
-        public Task<IDictionary<string, bool>> CanDeliverManyAsync(IEnumerable<string> tokens, string channel, CancellationToken ct = default)
+        public async Task<string> SendAsync(string token, string title, string body, IDictionary<string, string>? data = null, string? channel = null, string priority = "normal", CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            var message = new Message
+            {
+                Token = token,
+                Notification = new Notification
+                {
+                    Title = title,
+                    Body = body
+                },
+                Data = data != null ? new Dictionary<string, string>(data) : null,
+                Android = new AndroidConfig
+                {
+                    Priority = priority.ToLower() == "high" ? Priority.High : Priority.Normal,
+                    Notification = new AndroidNotification
+                    {
+                        ChannelId = channel
+                    }
+                },
+                Apns = new ApnsConfig
+                {
+                    Headers = new Dictionary<string, string>
+                    {
+                        ["apns-priority"] = priority.ToLower() == "high" ? "10" : "5"
+                    }
+                }
+            };
+
+            var response = await _messaging.SendAsync(message, ct);
+            return response;
         }
 
-        public Task<string> PublishToTopicAsync(string topic, string title, string body, IDictionary<string, string>? data = null, CancellationToken ct = default)
+        public async Task<IReadOnlyList<string>> SendManyAsync(IEnumerable<string> tokens, string title, string body, IDictionary<string, string>? data = null, string? channel = null, string priority = "normal", CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            var tokenList = tokens.ToList();
+            var messages = tokenList.Select(token => new Message
+            {
+                Token = token,
+                Notification = new Notification
+                {
+                    Title = title,
+                    Body = body
+                },
+                Data = data != null ? new Dictionary<string, string>(data) : null,
+                Android = new AndroidConfig
+                {
+                    Priority = priority.ToLower() == "high" ? Priority.High : Priority.Normal,
+                    Notification = new AndroidNotification
+                    {
+                        ChannelId = channel
+                    }
+                },
+                Apns = new ApnsConfig
+                {
+                    Headers = new Dictionary<string, string>
+                    {
+                        ["apns-priority"] = priority.ToLower() == "high" ? "10" : "5"
+                    }
+                }
+            }).ToList();
+
+            var response = await _messaging.SendEachAsync(messages, ct);
+            var successfulTokens = new List<string>();
+
+            for (int i = 0; i < response.Responses.Count; i++)
+            {
+                if (response.Responses[i].IsSuccess)
+                {
+                    successfulTokens.Add(tokenList[i]);
+                }
+            }
+
+            return successfulTokens;
         }
 
-        public Task<string> SendAsync(string token, string title, string body, IDictionary<string, string>? data = null, string? channel = null, string priority = "normal", CancellationToken ct = default)
+        public async Task<string> PublishToTopicAsync(string topic, string title, string body, IDictionary<string, string>? data = null, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            var message = new Message
+            {
+                Topic = topic,
+                Notification = new Notification
+                {
+                    Title = title,
+                    Body = body
+                },
+                Data = data != null ? new Dictionary<string, string>(data) : null
+            };
+
+            var response = await _messaging.SendAsync(message, ct);
+            return response;
         }
 
-        public Task<IReadOnlyList<string>> SendManyAsync(IEnumerable<string> tokens, string title, string body, IDictionary<string, string>? data = null, string? channel = null, string priority = "normal", CancellationToken ct = default)
+        public async Task<bool> SubscribeTopicAsync(string token, string topic, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var response = await _messaging.SubscribeToTopicAsync(new List<string> { token }, topic);
+                return response.SuccessCount > 0;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-        public Task<bool> SubscribeTopicAsync(string token, string topic, CancellationToken ct = default)
+        public async Task<bool> UnsubscribeTopicAsync(string token, string topic, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var response = await _messaging.UnsubscribeFromTopicAsync(new List<string> { token }, topic);
+                return response.SuccessCount > 0;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
-        public Task<bool> UnsubscribeTopicAsync(string token, string topic, CancellationToken ct = default)
+        public async Task<bool> CanDeliverAsync(string token, string channel, CancellationToken ct = default)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // Send a dry-run message to check if the token is valid
+                var message = new Message
+                {
+                    Token = token,
+                    Notification = new Notification
+                    {
+                        Title = "Test",
+                        Body = "Test"
+                    }
+                };
+
+                await _messaging.SendAsync(message, dryRun: true, ct);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public async Task<IDictionary<string, bool>> CanDeliverManyAsync(IEnumerable<string> tokens, string channel, CancellationToken ct = default)
+        {
+            var results = new Dictionary<string, bool>();
+            var tokenList = tokens.ToList();
+
+            var messages = tokenList.Select(token => new Message
+            {
+                Token = token,
+                Notification = new Notification
+                {
+                    Title = "Test",
+                    Body = "Test"
+                }
+            }).ToList();
+
+            try
+            {
+                var response = await _messaging.SendEachAsync(messages, dryRun: true, ct);
+
+                for (int i = 0; i < tokenList.Count; i++)
+                {
+                    results[tokenList[i]] = response.Responses[i].IsSuccess;
+                }
+            }
+            catch
+            {
+                foreach (var token in tokenList)
+                {
+                    results[token] = false;
+                }
+            }
+
+            return results;
         }
     }
 }

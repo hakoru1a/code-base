@@ -1,6 +1,8 @@
 using AutoMapper;
+using Common.Logging;
 using FluentValidation;
 using Infrastructure.Common.Behavior;
+using Infrastructure.Policies;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -27,10 +29,6 @@ namespace Generate.Application
 
             return services;
         }
-
-
     }
-
-    
 }
 
