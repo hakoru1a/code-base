@@ -37,6 +37,8 @@ try
 
     app.UseInfrastructure();
 
+    app.UseCors("AllowAllOrigins");
+
     app.Run();
 }
 catch (HostAbortedException ex)

@@ -10,6 +10,7 @@ namespace Base.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Produces("application/json")]
     public class ProductController : ControllerBase
     {
         private readonly IMediator _mediator;
