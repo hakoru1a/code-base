@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {
-    public class AWSFileStorageService : IAWSFileStorage
+    public class AWSFileStorageService : IAWSFileStorageService
     {
         public Task<bool> DeleteAsync(string fileUrl, CancellationToken cancellationToken = default)
         {

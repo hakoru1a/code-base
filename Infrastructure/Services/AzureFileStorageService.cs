@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {
-    public class AzureFileStorageService : IAzureFileStorage
+    public class AzureFileStorageService : IAzureFileStorageService
     {
         public Task<bool> DeleteAsync(string fileUrl, CancellationToken cancellationToken = default)
         {

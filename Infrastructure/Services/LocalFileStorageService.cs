@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Services
 {
-    public class LocalFileStorageService : ILocalFileStorage
+    public class LocalFileStorageService : ILocalFileStorageService
     {
         public Task<bool> DeleteAsync(string fileUrl, CancellationToken cancellationToken = default)
         {
