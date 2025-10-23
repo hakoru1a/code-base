@@ -7,14 +7,14 @@ using System.Text.Json;
 
 namespace Infrastructure.Services
 {
-    public class OpenAiProvider : IOpenAiProviderService
+    public class OpenAiProviderService : IOpenAiProviderService
     {
         private readonly HttpClient _httpClient;
         private readonly OpenAISettings _settings;
 
         public string ProviderName => "OpenAI";
 
-        public OpenAiProvider(IOptions<OpenAISettings> options, IHttpClientFactory httpClientFactory)
+        public OpenAiProviderService(IOptions<OpenAISettings> options, IHttpClientFactory httpClientFactory)
         {
             _settings = options.Value;
             _httpClient = httpClientFactory.CreateClient();
