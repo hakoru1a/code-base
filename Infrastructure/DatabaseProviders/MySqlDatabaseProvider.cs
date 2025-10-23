@@ -27,6 +27,7 @@ namespace Infrastructure.DatabaseProviders
             where TContext : DbContext
         {
             services.AddDbContext<TContext>(options =>
+            {
                 options.UseMySql(
                     connectionString,
                     ServerVersion.AutoDetect(connectionString),
@@ -34,8 +35,26 @@ namespace Infrastructure.DatabaseProviders
                     {
                         if (!string.IsNullOrEmpty(migrationsAssembly))
                             builder.MigrationsAssembly(migrationsAssembly);
-                    })
-            );
+
+                        // Enable connection resiliency
+                        builder.EnableRetryOnFailure(
+                            maxRetryCount: 5,
+                            maxRetryDelay: TimeSpan.FromSeconds(30),
+                            errorNumbersToAdd: null
+                        );
+
+                        // Set command timeout
+                        builder.CommandTimeout(30);
+                    });
+
+                // Enable lazy loading proxies
+                options.UseLazyLoadingProxies();
+
+                // Performance optimizations
+                options.EnableSensitiveDataLogging(false);
+                options.EnableDetailedErrors(false);
+                options.UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll);
+            });
         }
     }
 }
