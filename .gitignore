@@ -502,7 +502,6 @@ temp/
 *.suo
 *.ntvs*
 *.njsproj
-*.sln
 *.sw?
 
 # Local configuration files
