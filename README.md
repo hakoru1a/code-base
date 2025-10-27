@@ -152,7 +152,87 @@ public class NotificationService
 | ✅ In-memory processing | ✅ Reliable message delivery |
 | ✅ Fast, synchronous | ✅ Asynchronous, scalable |
 
-### 8. **Factory Pattern**
+### 8. **OAuth 2.0 / OpenID Connect Authentication Flow (Keycloak)**
+
+Ứng dụng hỗ trợ xác thực OAuth 2.0 / OpenID Connect với Keycloak, cho phép đăng nhập an toàn và phân quyền truy cập API.
+
+#### **Authentication Flow:**
+
+```
+[1] User mở Client (SPA/React)
+      ↓
+[2] Client redirect user đến Provider (Keycloak / IdentityServer / Google)
+      URL: /authorize?client_id=webapp&redirect_uri=https://client.com/callback&scope=openid profile api1&response_type=code&code_challenge=xxxx
+
+[3] Provider hiển thị trang đăng nhập
+      → User nhập username/password (hoặc login Google, Facebook…)
+
+[4] Provider xác thực user thành công
+      → Redirect về client kèm theo "authorization code"
+      https://client.com/callback?code=abc123&state=xyz
+
+[5] Client gọi POST /token (server side)
+      Gửi code để đổi token:
+      {
+        code: "abc123",
+        redirect_uri: "https://client.com/callback",
+        client_id: "webapp",
+        code_verifier: "xxxx"
+      }
+
+[6] Provider xác thực code hợp lệ → trả về:
+      {
+        access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        id_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+        refresh_token: "def456"
+      }
+
+[7] Client lưu token (thường là access_token & id_token trong memory/session)
+
+[8] Mỗi lần gọi API:
+      Authorization: Bearer <access_token>
+
+[9] Gateway hoặc API verify JWT → cho phép truy cập
+```
+
+#### **Cấu hình Keycloak:**
+
+```json
+{
+  "KeycloakSettings": {
+    "Authority": "https://keycloak.example.com/realms/your-realm",
+    "ClientId": "webapp",
+    "ClientSecret": "your-client-secret",
+    "MetadataAddress": "https://keycloak.example.com/realms/your-realm/.well-known/openid-configuration"
+  }
+}
+```
+
+#### **Security Middleware Integration:**
+
+```csharp
+// Trong Program.cs hoặc Startup.cs
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.Authority = configuration["KeycloakSettings:Authority"];
+        options.Audience = configuration["KeycloakSettings:ClientId"];
+        options.RequireHttpsMetadata = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateAudience = true,
+            ValidateIssuer = true,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+// Protect controllers
+app.UseAuthentication();
+app.UseAuthorization();
+```
+
+### 9. **Factory Pattern**
 ```csharp
 public static class DatabaseProviderFactory
 {
@@ -170,7 +250,7 @@ public static class DatabaseProviderFactory
 }
 ```
 
-### 9. **Strategy Pattern**
+### 10. **Strategy Pattern**
 - **Multi-Database Support**: MySQL, Oracle, PostgreSQL
 - **Caching Strategies**: Redis, MongoDB
 - **Logging Strategies**: Serilog với multiple sinks
@@ -266,6 +346,7 @@ public class ErrorWrappingMiddleware
 - **Hangfire**: Background jobs
 - **MassTransit**: Message queuing với RabbitMQ
 - **MediatR**: In-memory messaging
+- **Keycloak**: OAuth 2.0 / OpenID Connect authentication
 
 ## 📁 Project Structure
 
@@ -310,6 +391,7 @@ CodeBase/
 - MongoDB (optional)
 - RabbitMQ (cho MassTransit)
 - Elasticsearch (cho logging)
+- Keycloak (cho authentication)
 
 ### Installation
 ```bash
@@ -333,6 +415,7 @@ dotnet run --project Base.API
 3. Cấu hình Redis connection (nếu sử dụng)
 4. Cấu hình RabbitMQ cho MassTransit
 5. Cấu hình Elasticsearch cho logging
+6. Cấu hình Keycloak cho authentication
 
 #### **appsettings.json Example:**
 ```json
@@ -356,6 +439,12 @@ dotnet run --project Base.API
       "Password": "guest",
       "VirtualHost": "/"
     }
+  },
+  "KeycloakSettings": {
+    "Authority": "https://keycloak.example.com/realms/your-realm",
+    "ClientId": "webapp",
+    "ClientSecret": "your-client-secret",
+    "MetadataAddress": "https://keycloak.example.com/realms/your-realm/.well-known/openid-configuration"
   }
 }
 ```
@@ -375,11 +464,13 @@ dotnet run --project Base.API
 - [x] Validation pipeline
 - [x] MassTransit integration
 - [x] Event-driven architecture
+- [x] OAuth 2.0 / OpenID Connect (Keycloak)
 
 ### 🔄 In Progress
 - [ ] Background jobs (Hangfire)
-- [ ] Authentication/Authorization
+- [ ] JWT token refresh flow
 - [ ] API versioning
+- [ ] Role-based authorization 
 
 ### 📋 Planned
 - [ ] Microservices support
@@ -394,3 +485,6 @@ dotnet run --project Base.API
 - Clean Architecture principles by Uncle Bob
 - .NET Community for excellent libraries
 - All contributors and maintainers
+
+
+
