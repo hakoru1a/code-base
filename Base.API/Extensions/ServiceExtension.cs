@@ -17,7 +17,12 @@ namespace Base.API.Extensions
         {
             var emailSettings = services.GetOptions<SMTPEmailSettings>(sectionName: nameof(SMTPEmailSettings));
             services.AddSingleton(emailSettings);
+        }
 
+        internal static IServiceCollection AddHealthCheckServices(this IServiceCollection services)
+        {
+            services.AddHealthChecks();
+            return services;
         }
     }
 }

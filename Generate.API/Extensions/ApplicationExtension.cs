@@ -6,6 +6,12 @@ namespace Generate.API.Extensions
     {
         public static void UseInfrastructure(this IApplicationBuilder app)
         {
+            // Error handling middleware - should be first in the pipeline
+            app.UseMiddleware<ErrorWrappingMiddleware>();
+
+            // CORS - must be before Swagger to allow cross-origin requests
+            app.UseCors("AllowAllOrigins");
+
             // Swagger - should be early for development tools
             app.UseSwagger();
             app.UseSwaggerUI(options =>
@@ -17,12 +23,6 @@ namespace Generate.API.Extensions
                 }
                 options.RoutePrefix = "swagger";
             });
-
-            // Error handling middleware - should be first in the pipeline
-            app.UseMiddleware<ErrorWrappingMiddleware>();
-
-            // CORS - before authentication and authorization
-            app.UseCors("AllowAllOrigins");
 
             // Routing
             app.UseRouting();

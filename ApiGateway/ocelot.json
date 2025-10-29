@@ -1,0 +1,106 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5239
+        }
+      ],
+      "UpstreamPathTemplate": "/base-api/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "PATCH" ],
+      "SwaggerKey": "base"
+    },
+    {
+      "DownstreamPathTemplate": "/swagger/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5239
+        }
+      ],
+      "UpstreamPathTemplate": "/base-api/swagger/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "base"
+    },
+    {
+      "DownstreamPathTemplate": "/api/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5027
+        }
+      ],
+      "UpstreamPathTemplate": "/generate-api/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "PATCH" ],
+      "SwaggerKey": "generate"
+    },
+    {
+      "DownstreamPathTemplate": "/swagger/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5027
+        }
+      ],
+      "UpstreamPathTemplate": "/generate-api/swagger/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "generate"
+    },
+    {
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5239
+        }
+      ],
+      "UpstreamPathTemplate": "/base-api/health",
+      "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5027
+        }
+      ],
+      "UpstreamPathTemplate": "/generate-api/health",
+      "UpstreamHttpMethod": [ "GET" ]
+    }
+  ],
+  "SwaggerEndPoints": [
+    {
+      "Key": "base",
+      "Config": [
+        {
+          "Name": "Base API",
+          "Version": "v1",
+          "Url": "http://localhost:5239/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "generate",
+      "Config": [
+        {
+          "Name": "Generate API",
+          "Version": "v1",
+          "Url": "http://localhost:5027/swagger/v1/swagger.json"
+        }
+      ]
+    }
+  ],
+  "GlobalConfiguration": {
+    "BaseUrl": "http://localhost:5238"
+  }
+}
+
