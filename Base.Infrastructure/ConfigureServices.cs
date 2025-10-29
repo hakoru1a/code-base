@@ -1,6 +1,5 @@
 using Base.Infrastructure.Persistence;
 using Base.Infrastructure.Repositories;
-using Base.Domain.Interfaces;
 using Infrastructure.DatabaseProviders;
 using Infrastructure.Extensions;
 using Common.Logging;
@@ -20,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Base.Infrastructure.Interfaces;
 
 namespace Base.Infrastructure
 {

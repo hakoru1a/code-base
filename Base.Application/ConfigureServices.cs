@@ -1,6 +1,6 @@
 using System.Reflection;
 using AutoMapper;
-using Base.Domain.Interfaces;
+using Base.Infrastructure.Interfaces;
 using Base.Infrastructure.Repositories;
 using Base.Application.Common;
 using Contracts.Common.Interface;

@@ -1,6 +1,6 @@
 ﻿using Generate.Infrastructure.Persistences;
 using Generate.Infrastructure.Repositories;
-using Generate.Domain.Interfaces;
+using Generate.Infrastructure.Interfaces;
 using Infrastructure.DatabaseProviders;
 using Infrastructure.Extensions;
 using Contracts.Common.Interface;

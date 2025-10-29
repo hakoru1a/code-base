@@ -1,6 +1,6 @@
 using AutoMapper;
 using Base.Application.Common.Models;
-using Base.Domain.Interfaces;
+using Base.Infrastructure.Interfaces;
 using MediatR;
 using System;
 using System.Collections.Generic;

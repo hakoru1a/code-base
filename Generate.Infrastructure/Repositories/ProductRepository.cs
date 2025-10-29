@@ -1,6 +1,6 @@
 ﻿using Contracts.Common.Interface;
 using Generate.Domain.Entities;
-using Generate.Domain.Interfaces;
+using Generate.Infrastructure.Interfaces;
 using Generate.Infrastructure.Persistences;
 using Infrastructure.Common.Repository;
 using System;

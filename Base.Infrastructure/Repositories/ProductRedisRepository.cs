@@ -1,4 +1,4 @@
-using Base.Domain.Interfaces;
+using Base.Infrastructure.Interfaces;
 using Infrastructure.Common.Repository;
 using StackExchange.Redis;
 

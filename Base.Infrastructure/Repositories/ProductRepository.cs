@@ -1,5 +1,5 @@
 using Base.Domain.Entities;
-using Base.Domain.Interfaces;
+using Base.Infrastructure.Interfaces;
 using Base.Infrastructure.Persistence;
 using Contracts.Common.Interface;
 using Infrastructure.Common.Repository;
