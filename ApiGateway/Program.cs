@@ -1,11 +1,16 @@
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using Microsoft.OpenApi.Models;
+using Infrastructure.Extentions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add Ocelot configuration
 builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
+
+// Add Keycloak Authentication (RBAC at Gateway level)
+builder.Services.AddKeycloakAuthentication(builder.Configuration);
+builder.Services.AddKeycloakAuthorization();
 
 // Add Ocelot services
 builder.Services.AddOcelot(builder.Configuration);
@@ -39,6 +44,10 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 app.UseCors("AllowAll");
+
+// Add Authentication and Authorization middleware
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())

@@ -3,6 +3,7 @@ using AutoMapper;
 using Base.Infrastructure.Interfaces;
 using Base.Infrastructure.Repositories;
 using Base.Application.Common;
+using Base.Application.Feature.Product.Services;
 using Contracts.Common.Interface;
 using FluentValidation;
 using Infrastructure.Common;
@@ -20,6 +21,7 @@ public static class ConfigureServices
             .AddValidatorsFromAssembly(Assembly.GetExecutingAssembly())
             .AddScoped<ISerializeService, SerializeService>()
             .AddScoped<IProductRepository, ProductRepository>()
+            .AddScoped<IProductPolicyService, ProductPolicyService>()
             .AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()))
             .AddTransient(serviceType: typeof(IPipelineBehavior<,>), implementationType: typeof(UnhandledExceptionBehaviour<,>))
             .AddTransient(serviceType: typeof(IPipelineBehavior<,>), implementationType: typeof(PerformanceBehaviour<,>))

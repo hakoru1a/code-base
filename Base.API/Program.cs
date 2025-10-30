@@ -1,7 +1,9 @@
 using Base.API.Extensions;
 using Base.Application;
+using Base.Application.Feature.Product.Policies;
 using Base.Infrastructure;
 using Common.Logging;
+using Infrastructure.Extentions;
 using Serilog;
 
 
@@ -11,6 +13,18 @@ try
     builder.Host.UseSerilog(SeriLogger.Configure);
     builder.Host.AddAppConfigurations();
 
+    // Add Keycloak Authentication (RBAC at Gateway, but also validated at Service level)
+    builder.Services.AddKeycloakAuthentication(builder.Configuration);
+    builder.Services.AddKeycloakAuthorization();
+
+    // Add Policy-Based Authorization (PBAC at Service level)
+    builder.Services.AddPolicyBasedAuthorization(policies =>
+    {
+        policies.AddPolicy<ProductViewPricePolicyHandler>("PRODUCT_VIEW_PRICE");
+        policies.AddPolicy<ProductCreatePolicyHandler>("PRODUCT_CREATE");
+        policies.AddPolicy<ProductUpdatePolicyHandler>("PRODUCT_UPDATE");
+        policies.AddPolicy<ProductListFilterPolicyHandler>("PRODUCT_LIST_FILTER");
+    });
 
     builder.Services.AddInfrastructure(builder.Configuration)
                     .AddConfigurationSettings(builder.Configuration)
@@ -34,6 +48,13 @@ try
 
     // Enable CORS early in pipeline
     app.UseCors("AllowAll");
+
+    // Add Authentication and Authorization
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    // Add Policy-Based Authorization Middleware (PBAC)
+    app.UsePolicyAuthorization();
 
     app.UseSwagger();
 

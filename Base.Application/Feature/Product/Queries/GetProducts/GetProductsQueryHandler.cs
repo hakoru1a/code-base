@@ -27,6 +27,12 @@ namespace Base.Application.Feature.Product.Queries.GetProducts
         {
             var query = _productRepository.FindAll();
 
+            // Apply PBAC price filter (for basic users)
+            if (request.MaxPrice.HasValue)
+            {
+                query = query.Where(p => p.Price <= request.MaxPrice.Value);
+            }
+
             // Apply search filter
             if (!string.IsNullOrWhiteSpace(request.Parameters.SearchTerms))
             {
