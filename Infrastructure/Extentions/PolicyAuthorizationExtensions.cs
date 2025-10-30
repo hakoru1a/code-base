@@ -25,6 +25,9 @@ namespace Infrastructure.Extentions
             // Register UserContextAccessor
             services.AddScoped<IUserContextAccessor, UserContextAccessor>();
 
+            // Register PolicyConfigurationService for dynamic config
+            services.AddSingleton<IPolicyConfigurationService, PolicyConfigurationService>();
+
             // Configure policy registry
             if (configurePolicies != null)
             {

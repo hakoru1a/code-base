@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Base.Application.Common.Models
+namespace Base.Application.Common.Models.Product
 {
     public class ProductDto
     {

@@ -20,10 +20,10 @@ try
     // Add Policy-Based Authorization (PBAC at Service level)
     builder.Services.AddPolicyBasedAuthorization(policies =>
     {
-        policies.AddPolicy<ProductViewPricePolicyHandler>("PRODUCT_VIEW_PRICE");
-        policies.AddPolicy<ProductCreatePolicyHandler>("PRODUCT_CREATE");
-        policies.AddPolicy<ProductUpdatePolicyHandler>("PRODUCT_UPDATE");
-        policies.AddPolicy<ProductListFilterPolicyHandler>("PRODUCT_LIST_FILTER");
+        policies.AddPolicy<ProductViewPolicy>("PRODUCT:VIEW");
+        policies.AddPolicy<ProductCreatePolicy>("PRODUCT:CREATE");
+        policies.AddPolicy<ProductUpdatePolicy>("PRODUCT:UPDATE");
+        policies.AddPolicy<ProductListFilterPolicy>("PRODUCT:LIST_FILTER");
     });
 
     builder.Services.AddInfrastructure(builder.Configuration)

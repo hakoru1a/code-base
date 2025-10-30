@@ -1,5 +1,5 @@
 using AutoMapper;
-using Base.Application.Common.Models;
+using Base.Application.Common.Models.Product;
 using Base.Domain.Entities;
 using Infrastructure.Mapping;
 

@@ -1,5 +1,8 @@
 using Infrastructure.Authorization.Interfaces;
 using Microsoft.Extensions.Logging;
+using Shared.DTOs.Authorization;
+using Shared.DTOs.Authorization.PolicyContexts;
+using Shared.Identity;
 
 namespace Base.Application.Feature.Product.Services
 {
@@ -23,7 +26,7 @@ namespace Base.Application.Feature.Product.Services
             _logger = logger;
         }
 
-        public async Task<ProductListFilter> GetProductListFilterAsync()
+        public async Task<ProductListFilterContext> GetProductListFilterAsync()
         {
             var userContext = _userContextAccessor.GetCurrentUserContext();
 
@@ -33,23 +36,23 @@ namespace Base.Application.Feature.Product.Services
                 string.Join(", ", userContext.Roles));
 
             var policyResult = await _policyEvaluator.EvaluateAsync(
-                Policies.ProductListFilterPolicyHandler.POLICY_NAME,
+                Policies.ProductListFilterPolicy.POLICY_NAME,
                 userContext,
                 new Dictionary<string, object>());
 
-            var filter = new ProductListFilter();
+            var filter = new ProductListFilterContext();
 
             // Extract filter criteria from policy metadata
             if (policyResult.Metadata != null)
             {
-                if (policyResult.Metadata.TryGetValue("MaxPrice", out var maxPriceObj) &&
+                if (policyResult.Metadata.TryGetValue(PolicyConstants.ContextKeys.MaxPrice, out var maxPriceObj) &&
                     maxPriceObj is decimal maxPrice &&
                     maxPrice < decimal.MaxValue)
                 {
                     filter.MaxPrice = maxPrice;
                 }
 
-                if (policyResult.Metadata.TryGetValue("AllowedCategories", out var categoriesObj) &&
+                if (policyResult.Metadata.TryGetValue(PolicyConstants.ContextKeys.AllowedCategories, out var categoriesObj) &&
                     categoriesObj is List<string> categories &&
                     categories.Any())
                 {
@@ -66,7 +69,7 @@ namespace Base.Application.Feature.Product.Services
             return filter;
         }
 
-        public async Task<PolicyCheckResult> CanViewProductAsync(long productId, decimal productPrice)
+        public async Task<PolicyEvaluationResult> CanViewProductAsync(long productId, decimal productPrice)
         {
             var userContext = _userContextAccessor.GetCurrentUserContext();
 
@@ -78,12 +81,12 @@ namespace Base.Application.Feature.Product.Services
 
             var policyContext = new Dictionary<string, object>
             {
-                { "ProductPrice", productPrice },
-                { "ProductId", productId }
+                { PolicyConstants.ContextKeys.ProductPrice, productPrice },
+                { PolicyConstants.ContextKeys.ProductId, productId }
             };
 
             var policyResult = await _policyEvaluator.EvaluateAsync(
-                Policies.ProductViewPricePolicyHandler.POLICY_NAME,
+                Policies.ProductViewPolicy.POLICY_NAME,
                 userContext,
                 policyContext);
 
@@ -96,14 +99,10 @@ namespace Base.Application.Feature.Product.Services
                     policyResult.Reason);
             }
 
-            return new PolicyCheckResult
-            {
-                IsAllowed = policyResult.IsAllowed,
-                Reason = policyResult.Reason
-            };
+            return policyResult;
         }
 
-        public async Task<PolicyCheckResult> CanCreateProductAsync()
+        public async Task<PolicyEvaluationResult> CanCreateProductAsync()
         {
             var userContext = _userContextAccessor.GetCurrentUserContext();
 
@@ -112,7 +111,7 @@ namespace Base.Application.Feature.Product.Services
                 userContext.UserId);
 
             var policyResult = await _policyEvaluator.EvaluateAsync(
-                Policies.ProductCreatePolicyHandler.POLICY_NAME,
+                Policies.ProductCreatePolicy.POLICY_NAME,
                 userContext,
                 new Dictionary<string, object>());
 
@@ -124,14 +123,10 @@ namespace Base.Application.Feature.Product.Services
                     policyResult.Reason);
             }
 
-            return new PolicyCheckResult
-            {
-                IsAllowed = policyResult.IsAllowed,
-                Reason = policyResult.Reason
-            };
+            return policyResult;
         }
 
-        public async Task<PolicyCheckResult> CanUpdateProductAsync(
+        public async Task<PolicyEvaluationResult> CanUpdateProductAsync(
             long productId,
             string? createdBy,
             string? category)
@@ -145,13 +140,13 @@ namespace Base.Application.Feature.Product.Services
 
             var policyContext = new Dictionary<string, object>
             {
-                { "ProductId", productId },
-                { "CreatedBy", createdBy ?? "" },
-                { "ProductCategory", category ?? "" }
+                { PolicyConstants.ContextKeys.ProductId, productId },
+                { PolicyConstants.ContextKeys.CreatedBy, createdBy ?? "" },
+                { PolicyConstants.ContextKeys.ProductCategory, category ?? "" }
             };
 
             var policyResult = await _policyEvaluator.EvaluateAsync(
-                Policies.ProductUpdatePolicyHandler.POLICY_NAME,
+                Policies.ProductUpdatePolicy.POLICY_NAME,
                 userContext,
                 policyContext);
 
@@ -164,14 +159,10 @@ namespace Base.Application.Feature.Product.Services
                     policyResult.Reason);
             }
 
-            return new PolicyCheckResult
-            {
-                IsAllowed = policyResult.IsAllowed,
-                Reason = policyResult.Reason
-            };
+            return policyResult;
         }
 
-        public async Task<PolicyCheckResult> CanDeleteProductAsync(long productId)
+        public async Task<PolicyEvaluationResult> CanDeleteProductAsync(long productId)
         {
             var userContext = _userContextAccessor.GetCurrentUserContext();
 
@@ -182,8 +173,7 @@ namespace Base.Application.Feature.Product.Services
 
             // For now, delete is RBAC only (handled at gateway)
             // But we can add PBAC here if needed
-            return await Task.FromResult(PolicyCheckResult.Allow("Delete is controlled by RBAC"));
+            return await Task.FromResult(PolicyEvaluationResult.Allow("Delete is controlled by RBAC"));
         }
     }
 }
-

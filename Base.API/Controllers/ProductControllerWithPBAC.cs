@@ -1,4 +1,5 @@
 using Base.Application.Common.Models;
+using Base.Application.Common.Models.Product;
 using Base.Application.Feature.Product.Commands.CreateProduct;
 using Base.Application.Feature.Product.Queries.GetProductById;
 using Base.Application.Feature.Product.Queries.GetProducts;
@@ -6,6 +7,7 @@ using Base.Application.Feature.Product.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.DTOs.Authorization.PolicyContexts;
 using Shared.SeedWork;
 
 namespace Base.API.Controllers
@@ -48,7 +50,6 @@ namespace Base.API.Controllers
             _logger.LogInformation("Getting products with page {PageIndex}, page size {PageSize}",
                 parameters.PageNumber, parameters.PageSize);
 
-            // Get filter from policy service (clean - all logic encapsulated)
             var filter = await _productPolicyService.GetProductListFilterAsync();
 
             // Pass filter to query handler
@@ -65,7 +66,7 @@ namespace Base.API.Controllers
 
         /// <summary>
         /// Get product by ID with PBAC (Policy-Based Access Control)
-        /// Policy: PRODUCT_VIEW_PRICE - Basic users can only view products under 5M VND
+        /// Policy: PRODUCT:VIEW - Basic users can only view products under 5M VND
         /// </summary>
         [HttpGet("{id}")]
         [Authorize(Policy = "BasicUser")] // RBAC at Gateway
@@ -99,7 +100,7 @@ namespace Base.API.Controllers
         /// <summary>
         /// Create product with RBAC and PBAC
         /// RBAC: Requires "ManagerOrAdmin" policy at Gateway
-        /// PBAC: Requires "PRODUCT_CREATE" policy at Service level
+        /// PBAC: Requires "PRODUCT:CREATE" policy at Service level
         /// </summary>
         [HttpPost]
         [Authorize(Policy = "ManagerOrAdmin")] // RBAC at Gateway
