@@ -86,56 +86,71 @@ namespace Infrastructure.Extentions
         }
 
         /// <summary>
-        /// Add authorization policies for RBAC
+        /// Add authorization policies for RBAC at Gateway level
+        /// These policies provide coarse-grained access control based on roles
+        /// For fine-grained control, use PBAC at service level
         /// </summary>
         public static IServiceCollection AddKeycloakAuthorization(
             this IServiceCollection services)
         {
             services.AddAuthorization(options =>
             {
-                // Role-based policies (RBAC at Gateway level)
-                options.AddPolicy("AdminOnly", policy => 
-                    policy.RequireRole("admin"));
+                // ===== ROLE-BASED POLICIES (RBAC) =====
+                // These provide coarse-grained access control at the gateway/controller level
                 
-                options.AddPolicy("ManagerOrAdmin", policy => 
-                    policy.RequireRole("admin", "manager", "product_manager"));
+                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.AdminOnly, policy => 
+                    policy.RequireRole(Shared.Identity.Roles.Admin));
                 
-                options.AddPolicy("AuthenticatedUser", policy => 
+                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.ManagerOrAdmin, policy => 
+                    policy.RequireRole(
+                        Shared.Identity.Roles.Admin, 
+                        Shared.Identity.Roles.Manager, 
+                        Shared.Identity.Roles.ProductManager));
+                
+                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.AuthenticatedUser, policy => 
                     policy.RequireAuthenticatedUser());
                 
-                options.AddPolicy("PremiumUser", policy => 
-                    policy.RequireRole("premium_user", "admin"));
+                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.PremiumUser, policy => 
+                    policy.RequireRole(
+                        Shared.Identity.Roles.PremiumUser, 
+                        Shared.Identity.Roles.Admin));
                 
-                options.AddPolicy("BasicUser", policy => 
-                    policy.RequireRole("basic_user", "premium_user", "admin"));
+                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.BasicUser, policy => 
+                    policy.RequireRole(
+                        Shared.Identity.Roles.BasicUser, 
+                        Shared.Identity.Roles.PremiumUser, 
+                        Shared.Identity.Roles.Admin));
 
-                // Permission-based policies
+                // ===== HYBRID POLICIES (Role + Permission) =====
+                // These combine roles and permissions for backward compatibility
+                // Consider migrating to pure PBAC for better flexibility
+                
                 options.AddPolicy("CanViewProducts", policy =>
                     policy.RequireAssertion(context =>
                         context.User.HasClaim(c => 
-                            c.Type == "permissions" && c.Value.Contains("product:view")) ||
-                        context.User.IsInRole("admin") ||
-                        context.User.IsInRole("manager")));
+                            c.Type == "permissions" && c.Value.Contains(Shared.Identity.Permissions.Product.View)) ||
+                        context.User.IsInRole(Shared.Identity.Roles.Admin) ||
+                        context.User.IsInRole(Shared.Identity.Roles.Manager)));
 
                 options.AddPolicy("CanCreateProducts", policy =>
                     policy.RequireAssertion(context =>
                         context.User.HasClaim(c => 
-                            c.Type == "permissions" && c.Value.Contains("product:create")) ||
-                        context.User.IsInRole("admin") ||
-                        context.User.IsInRole("product_manager")));
+                            c.Type == "permissions" && c.Value.Contains(Shared.Identity.Permissions.Product.Create)) ||
+                        context.User.IsInRole(Shared.Identity.Roles.Admin) ||
+                        context.User.IsInRole(Shared.Identity.Roles.ProductManager)));
 
                 options.AddPolicy("CanUpdateProducts", policy =>
                     policy.RequireAssertion(context =>
                         context.User.HasClaim(c => 
-                            c.Type == "permissions" && c.Value.Contains("product:update")) ||
-                        context.User.IsInRole("admin") ||
-                        context.User.IsInRole("product_manager")));
+                            c.Type == "permissions" && c.Value.Contains(Shared.Identity.Permissions.Product.Update)) ||
+                        context.User.IsInRole(Shared.Identity.Roles.Admin) ||
+                        context.User.IsInRole(Shared.Identity.Roles.ProductManager)));
 
                 options.AddPolicy("CanDeleteProducts", policy =>
                     policy.RequireAssertion(context =>
                         context.User.HasClaim(c => 
-                            c.Type == "permissions" && c.Value.Contains("product:delete")) ||
-                        context.User.IsInRole("admin")));
+                            c.Type == "permissions" && c.Value.Contains(Shared.Identity.Permissions.Product.Delete)) ||
+                        context.User.IsInRole(Shared.Identity.Roles.Admin)));
             });
 
             return services;

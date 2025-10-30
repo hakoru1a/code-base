@@ -2,6 +2,7 @@ using Infrastructure.Authorization;
 using Infrastructure.Authorization.Interfaces;
 using Infrastructure.Middlewares;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Extentions
@@ -18,21 +19,29 @@ namespace Infrastructure.Extentions
             this IServiceCollection services,
             Action<PolicyRegistry>? configurePolicies = null)
         {
-            // Register the policy evaluator as a singleton
+            // Register IHttpContextAccessor if not already registered
+            services.AddHttpContextAccessor();
+
+            // Register the policy evaluator as singleton
             services.AddSingleton<PolicyEvaluator>();
+
+            // Register IPolicyEvaluator interface pointing to the same instance
             services.AddSingleton<IPolicyEvaluator>(sp => sp.GetRequiredService<PolicyEvaluator>());
 
-            // Register UserContextAccessor
+            // Register UserContextAccessor as scoped (per request)
             services.AddScoped<IUserContextAccessor, UserContextAccessor>();
 
             // Register PolicyConfigurationService for dynamic config
             services.AddSingleton<IPolicyConfigurationService, PolicyConfigurationService>();
 
-            // Configure policy registry
+            // Configure policy registry if provided
             if (configurePolicies != null)
             {
                 var registry = new PolicyRegistry(services);
                 configurePolicies(registry);
+                
+                // Build the evaluator with registered policies
+                registry.BuildEvaluator();
             }
 
             return services;
@@ -40,6 +49,7 @@ namespace Infrastructure.Extentions
 
         /// <summary>
         /// Use policy authorization middleware
+        /// Must be called after UseAuthentication() and UseAuthorization()
         /// </summary>
         public static IApplicationBuilder UsePolicyAuthorization(this IApplicationBuilder app)
         {
@@ -50,6 +60,7 @@ namespace Infrastructure.Extentions
 
     /// <summary>
     /// Registry for registering policies
+    /// Provides a fluent API for policy registration
     /// </summary>
     public class PolicyRegistry
     {
@@ -62,35 +73,69 @@ namespace Infrastructure.Extentions
         }
 
         /// <summary>
-        /// Register a policy
+        /// Register a policy with explicit policy name
         /// </summary>
+        /// <typeparam name="TPolicy">The policy implementation type</typeparam>
+        /// <param name="policyName">The policy name (e.g., "PRODUCT:VIEW")</param>
+        /// <returns>This registry for method chaining</returns>
         public PolicyRegistry AddPolicy<TPolicy>(string policyName) where TPolicy : class, IPolicy
         {
-            _services.AddScoped<TPolicy>();
-            _policies.Add((policyName, typeof(TPolicy)));
-
-            // Configure the evaluator after all services are built
-            _services.AddSingleton<IPolicyEvaluator>(sp =>
+            if (string.IsNullOrWhiteSpace(policyName))
             {
-                var evaluator = sp.GetRequiredService<PolicyEvaluator>();
-                foreach (var (name, type) in _policies)
-                {
-                    evaluator.RegisterPolicy<IPolicy>(name);
-                }
-                return evaluator;
-            });
+                throw new ArgumentException("Policy name cannot be empty", nameof(policyName));
+            }
+
+            // Register policy as scoped service (per request)
+            _services.AddScoped<TPolicy>();
+            
+            // Track policy for registration with evaluator
+            _policies.Add((policyName, typeof(TPolicy)));
 
             return this;
         }
 
         /// <summary>
-        /// Register a policy with automatic name resolution
+        /// Register a policy with automatic name resolution from PolicyName property
+        /// Requires the policy to have a parameterless constructor
         /// </summary>
-        public PolicyRegistry AddPolicy<TPolicy>() where TPolicy : class, IPolicy
+        /// <typeparam name="TPolicy">The policy implementation type</typeparam>
+        /// <returns>This registry for method chaining</returns>
+        public PolicyRegistry AddPolicy<TPolicy>() where TPolicy : class, IPolicy, new()
         {
-            // Try to instantiate to get the policy name
-            var tempPolicy = Activator.CreateInstance<TPolicy>();
+            // Create temporary instance to get policy name
+            var tempPolicy = new TPolicy();
             return AddPolicy<TPolicy>(tempPolicy.PolicyName);
+        }
+
+        /// <summary>
+        /// Internal method to build and configure the policy evaluator
+        /// Called automatically after all policies are registered
+        /// </summary>
+        internal void BuildEvaluator()
+        {
+            if (!_policies.Any())
+            {
+                return;
+            }
+
+            // Replace the policy evaluator registration with one that has all policies registered
+            _services.AddSingleton<PolicyEvaluator>(sp =>
+            {
+                var evaluator = new PolicyEvaluator(sp);
+                
+                // Register all policies with the evaluator
+                foreach (var (policyName, policyType) in _policies)
+                {
+                    // Use reflection to call generic RegisterPolicy method
+                    var method = evaluator.GetType()
+                        .GetMethod(nameof(PolicyEvaluator.RegisterPolicy))
+                        ?.MakeGenericMethod(policyType);
+                    
+                    method?.Invoke(evaluator, new object[] { policyName });
+                }
+
+                return evaluator;
+            });
         }
     }
 }

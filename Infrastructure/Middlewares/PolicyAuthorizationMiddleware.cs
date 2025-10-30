@@ -1,14 +1,14 @@
 using Infrastructure.Authorization.Interfaces;
+using Infrastructure.Extensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Shared.DTOs.Authorization;
-using System.Security.Claims;
 using System.Text.Json;
 
 namespace Infrastructure.Middlewares
 {
     /// <summary>
     /// Middleware to handle policy-based authorization at service level
+    /// Evaluates policies marked with [RequirePolicy] attribute
     /// </summary>
     public class PolicyAuthorizationMiddleware
     {
@@ -26,134 +26,97 @@ namespace Infrastructure.Middlewares
         public async Task InvokeAsync(HttpContext context, IPolicyEvaluator policyEvaluator)
         {
             // Check if policy is required for this endpoint
+            // This is set by RequirePolicyAttribute or can be set manually
             if (context.Items.TryGetValue("RequiredPolicy", out var policyNameObj) && 
                 policyNameObj is string policyName)
             {
-                _logger.LogInformation("Evaluating policy: {PolicyName} for user", policyName);
+                _logger.LogInformation(
+                    "Evaluating policy {PolicyName} for user {UserId} on endpoint {Path}",
+                    policyName,
+                    context.User?.Identity?.Name ?? "anonymous",
+                    context.Request.Path);
 
-                var userContext = ExtractUserContext(context.User);
-                var evaluationContext = new Dictionary<string, object>();
-
-                // You can add more context extraction logic here based on route, query, etc.
+                var userContext = context.User.ToUserClaimsContext();
+                var evaluationContext = ExtractEvaluationContext(context);
                 
                 var result = await policyEvaluator.EvaluateAsync(policyName, userContext, evaluationContext);
 
                 if (!result.IsAllowed)
                 {
-                    _logger.LogWarning(
-                        "Policy {PolicyName} denied access for user {UserId}. Reason: {Reason}",
-                        policyName, userContext.UserId, result.Reason);
-
-                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                    context.Response.ContentType = "application/json";
-
-                    var errorResponse = new
-                    {
-                        error = "Forbidden",
-                        message = result.Reason,
-                        policy = policyName
-                    };
-
-                    await context.Response.WriteAsync(JsonSerializer.Serialize(errorResponse));
+                    await HandlePolicyDenied(context, policyName, userContext.UserId, result.Reason);
                     return;
                 }
 
-                _logger.LogInformation(
-                    "Policy {PolicyName} granted access for user {UserId}",
-                    policyName, userContext.UserId);
+                _logger.LogDebug(
+                    "Policy {PolicyName} granted access for user {UserId}. Reason: {Reason}",
+                    policyName, userContext.UserId, result.Reason);
             }
 
             await _next(context);
         }
 
-        private UserClaimsContext ExtractUserContext(ClaimsPrincipal user)
+        /// <summary>
+        /// Extract evaluation context from HTTP request
+        /// Can be extended to include route values, query parameters, etc.
+        /// </summary>
+        private Dictionary<string, object> ExtractEvaluationContext(HttpContext context)
         {
-            var context = new UserClaimsContext
+            var evaluationContext = new Dictionary<string, object>();
+
+            // Add route values if available
+            if (context.Request.RouteValues.Any())
             {
-                UserId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value 
-                    ?? user.FindFirst("sub")?.Value 
-                    ?? user.FindFirst("preferred_username")?.Value 
-                    ?? "anonymous",
-                Roles = new List<string>(),
-                Claims = new Dictionary<string, string>(),
-                Permissions = new List<string>(),
-                CustomAttributes = new Dictionary<string, object>()
+                foreach (var routeValue in context.Request.RouteValues)
+                {
+                    if (routeValue.Value != null)
+                    {
+                        evaluationContext[$"route:{routeValue.Key}"] = routeValue.Value;
+                    }
+                }
+            }
+
+            // Add request method
+            evaluationContext["http_method"] = context.Request.Method;
+
+            // Add request path
+            evaluationContext["request_path"] = context.Request.Path.Value ?? "";
+
+            return evaluationContext;
+        }
+
+        /// <summary>
+        /// Handle policy evaluation failure
+        /// Returns consistent error response
+        /// </summary>
+        private async Task HandlePolicyDenied(
+            HttpContext context, 
+            string policyName, 
+            string userId, 
+            string? reason)
+        {
+            _logger.LogWarning(
+                "Policy {PolicyName} denied access for user {UserId} on {Path}. Reason: {Reason}",
+                policyName, userId, context.Request.Path, reason);
+
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            context.Response.ContentType = "application/json";
+
+            var errorResponse = new
+            {
+                error = "Forbidden",
+                message = reason ?? "Access denied by policy",
+                policy = policyName,
+                timestamp = DateTime.UtcNow
             };
 
-            // Extract roles from standard claims
-            context.Roles.AddRange(user.FindAll(ClaimTypes.Role).Select(c => c.Value));
-            
-            // Extract roles from Keycloak realm_access
-            var realmAccessClaim = user.FindFirst("realm_access")?.Value;
-            if (!string.IsNullOrEmpty(realmAccessClaim))
+            var options = new JsonSerializerOptions
             {
-                try
-                {
-                    var realmAccess = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(realmAccessClaim);
-                    if (realmAccess != null && realmAccess.TryGetValue("roles", out var rolesElement))
-                    {
-                        var roles = JsonSerializer.Deserialize<List<string>>(rolesElement.GetRawText());
-                        if (roles != null)
-                        {
-                            context.Roles.AddRange(roles);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // Log but don't fail
-                    Console.WriteLine($"Failed to parse realm_access: {ex.Message}");
-                }
-            }
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = false
+            };
 
-            // Extract resource_access roles (client-specific roles)
-            var resourceAccessClaim = user.FindFirst("resource_access")?.Value;
-            if (!string.IsNullOrEmpty(resourceAccessClaim))
-            {
-                try
-                {
-                    var resourceAccess = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(resourceAccessClaim);
-                    if (resourceAccess != null)
-                    {
-                        foreach (var resource in resourceAccess)
-                        {
-                            if (resource.Value.TryGetProperty("roles", out var rolesElement))
-                            {
-                                var roles = JsonSerializer.Deserialize<List<string>>(rolesElement.GetRawText());
-                                if (roles != null)
-                                {
-                                    context.Roles.AddRange(roles.Select(r => $"{resource.Key}:{r}"));
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to parse resource_access: {ex.Message}");
-                }
-            }
-
-            // Extract all claims
-            foreach (var claim in user.Claims)
-            {
-                context.Claims[claim.Type] = claim.Value;
-                
-                // Extract permissions from custom claim
-                if (claim.Type == "permissions" || claim.Type == "scope")
-                {
-                    context.Permissions.AddRange(claim.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-                }
-            }
-
-            // Extract custom attributes (e.g., department, location, etc.)
-            var department = user.FindFirst("department")?.Value;
-            if (!string.IsNullOrEmpty(department))
-            {
-                context.CustomAttributes["department"] = department;
-            }
-
-            return context;
+            await context.Response.WriteAsync(
+                JsonSerializer.Serialize(errorResponse, options));
         }
     }
 }

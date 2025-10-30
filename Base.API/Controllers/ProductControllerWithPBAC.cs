@@ -39,12 +39,13 @@ namespace Base.API.Controllers
         /// <summary>
         /// Get all products with RBAC at Gateway level and PBAC filtering
         /// Products are filtered based on user role:
-        /// - Basic users: Only products under 5M VND
+        /// - Basic users: Only products under configured limit (default 5M VND)
         /// - Premium users: All products
         /// - Admins: All products
+        /// Filtering is controlled by JWT claims or default configuration
         /// </summary>
         [HttpGet]
-        [Authorize(Policy = "BasicUser")] // RBAC at Gateway
+        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.BasicUser)] // RBAC at Gateway
         public async Task<IActionResult> GetProducts([FromQuery] PagedRequestParameter parameters)
         {
             _logger.LogInformation("Getting products with page {PageIndex}, page size {PageSize}",
@@ -66,10 +67,11 @@ namespace Base.API.Controllers
 
         /// <summary>
         /// Get product by ID with PBAC (Policy-Based Access Control)
-        /// Policy: PRODUCT:VIEW - Basic users can only view products under 5M VND
+        /// Policy: PRODUCT:VIEW - Basic users can only view products under configured limit
+        /// The actual limit is determined by JWT claims or default configuration
         /// </summary>
         [HttpGet("{id}")]
-        [Authorize(Policy = "BasicUser")] // RBAC at Gateway
+        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.BasicUser)] // RBAC at Gateway
         public async Task<IActionResult> GetProductById(long id)
         {
             _logger.LogInformation("Getting product with ID: {ProductId}", id);
@@ -99,11 +101,12 @@ namespace Base.API.Controllers
 
         /// <summary>
         /// Create product with RBAC and PBAC
-        /// RBAC: Requires "ManagerOrAdmin" policy at Gateway
-        /// PBAC: Requires "PRODUCT:CREATE" policy at Service level
+        /// RBAC: Requires "ManagerOrAdmin" policy at Gateway (coarse-grained)
+        /// PBAC: Requires "PRODUCT:CREATE" policy at Service level (fine-grained)
+        /// Both checks must pass for the request to succeed
         /// </summary>
         [HttpPost]
-        [Authorize(Policy = "ManagerOrAdmin")] // RBAC at Gateway
+        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.ManagerOrAdmin)] // RBAC at Gateway
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductCommand command)
         {
             _logger.LogInformation("Creating new product: {ProductName}", command.Name);
@@ -127,13 +130,15 @@ namespace Base.API.Controllers
         }
 
         /// <summary>
-        /// Update product with complex PBAC rules
+        /// Update product with layered authorization
+        /// RBAC (Gateway): Requires manager or admin role
+        /// PBAC (Service): Fine-grained checks:
         /// - Admins can update any product
         /// - Users can update their own products if they have permission
         /// - Product managers can update products in their category
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Policy = "ManagerOrAdmin")] // RBAC at Gateway
+        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.ManagerOrAdmin)] // RBAC at Gateway
         public async Task<IActionResult> UpdateProduct(long id, [FromBody] UpdateProductRequest request)
         {
             _logger.LogInformation("Updating product with ID: {ProductId}", id);
@@ -169,10 +174,12 @@ namespace Base.API.Controllers
         }
 
         /// <summary>
-        /// Delete product - Admin only
+        /// Delete product - Admin only (RBAC)
+        /// This endpoint uses only RBAC for authorization
+        /// Could be enhanced with PBAC for soft delete, audit requirements, etc.
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Policy = "AdminOnly")] // RBAC at Gateway - strict admin only
+        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.AdminOnly)] // RBAC at Gateway - strict admin only
         public Task<IActionResult> DeleteProduct(long id)
         {
             _logger.LogInformation("Deleting product with ID: {ProductId}", id);

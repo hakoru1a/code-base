@@ -5,6 +5,7 @@ using Base.Infrastructure;
 using Common.Logging;
 using Infrastructure.Extentions;
 using Serilog;
+using Shared.Identity;
 
 
 try
@@ -20,10 +21,10 @@ try
     // Add Policy-Based Authorization (PBAC at Service level)
     builder.Services.AddPolicyBasedAuthorization(policies =>
     {
-        policies.AddPolicy<ProductViewPolicy>("PRODUCT:VIEW");
-        policies.AddPolicy<ProductCreatePolicy>("PRODUCT:CREATE");
-        policies.AddPolicy<ProductUpdatePolicy>("PRODUCT:UPDATE");
-        policies.AddPolicy<ProductListFilterPolicy>("PRODUCT:LIST_FILTER");
+        policies.AddPolicy<ProductViewPolicy>(PolicyNames.Pbac.Product.View);
+        policies.AddPolicy<ProductCreatePolicy>(PolicyNames.Pbac.Product.Create);
+        policies.AddPolicy<ProductUpdatePolicy>(PolicyNames.Pbac.Product.Update);
+        policies.AddPolicy<ProductListFilterPolicy>(PolicyNames.Pbac.Product.ListFilter);
     });
 
     builder.Services.AddInfrastructure(builder.Configuration)
@@ -65,8 +66,6 @@ try
     });
 
     app.UseHttpsRedirection();
-
-    app.UseAuthorization();
 
     app.MapControllers();
 
