@@ -4,13 +4,14 @@ using Shared.DTOs.Authorization;
 namespace Infrastructure.Authorization.Interfaces
 {
     /// <summary>
-    /// Service for retrieving dynamic policy configuration from multiple sources
-    /// Priority: JWT Claims > Configuration File > Hardcoded Defaults
+    /// Service for retrieving dynamic policy configuration from JWT claims only
+    /// Priority: JWT Claims > Hardcoded Defaults
     /// </summary>
     public interface IPolicyConfigurationService
     {
         /// <summary>
-        /// Get policy configuration for a specific role from configuration file
+        /// Get policy configuration for a specific role (always returns empty - kept for interface compatibility)
+        /// All policy configuration is read from JWT claims only
         /// </summary>
         PolicyConfiguration GetRoleConfiguration(string role);
 

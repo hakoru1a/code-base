@@ -1,86 +1,38 @@
 using Infrastructure.Authorization.Interfaces;
 using Infrastructure.Authorization.Models;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Shared.DTOs.Authorization;
 
 namespace Infrastructure.Authorization
 {
     /// <summary>
-    /// Service for retrieving dynamic policy configuration
-    /// Supports loading from: JWT Claims, Configuration File, Hardcoded Defaults
+    /// Service for retrieving dynamic policy configuration from JWT claims only
+    /// Priority: JWT Claims > Hardcoded Defaults
     /// </summary>
     public class PolicyConfigurationService : IPolicyConfigurationService
     {
-        private readonly IConfiguration _configuration;
         private readonly ILogger<PolicyConfigurationService> _logger;
 
         // Hardcoded defaults (lowest priority - only used if no other config exists)
         private readonly PolicyConfiguration _defaultConfig = new()
         {
-            MaxPrice = 5_000_000m,  // Default max price for basic users
+            MaxPrice = 0m,  // Default max price for basic users
             MinPrice = null,
             AllowedCategories = null,
-            ApprovalLimit = 10_000_000m  // Default approval limit
+            ApprovalLimit = 0m  // Default approval limit
         };
 
-        public PolicyConfigurationService(
-            IConfiguration configuration,
-            ILogger<PolicyConfigurationService> logger)
+        public PolicyConfigurationService(ILogger<PolicyConfigurationService> logger)
         {
-            _configuration = configuration;
             _logger = logger;
         }
 
         public PolicyConfiguration GetRoleConfiguration(string role)
         {
-            // Try to get role-specific config from appsettings.json
-            // Example: "PolicyConfig:Roles:basic_user:MaxPrice": 5000000
-            var section = _configuration.GetSection($"PolicyConfig:Roles:{role}");
-
-            if (!section.Exists())
-            {
-                _logger.LogDebug("No configuration found for role: {Role}", role);
-                return PolicyConfiguration.Empty();
-            }
-
-            var config = new PolicyConfiguration();
-
-            // Parse MaxPrice
-            if (decimal.TryParse(section["MaxPrice"], out var maxPrice))
-            {
-                config.MaxPrice = maxPrice;
-            }
-
-            // Parse MinPrice
-            if (decimal.TryParse(section["MinPrice"], out var minPrice))
-            {
-                config.MinPrice = minPrice;
-            }
-
-            // Parse AllowedCategories (comma-separated)
-            var categories = section["AllowedCategories"];
-            if (!string.IsNullOrEmpty(categories))
-            {
-                config.AllowedCategories = categories
-                    .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(c => c.Trim())
-                    .ToList();
-            }
-
-            // Parse ApprovalLimit
-            if (decimal.TryParse(section["ApprovalLimit"], out var approvalLimit))
-            {
-                config.ApprovalLimit = approvalLimit;
-            }
-
-            _logger.LogDebug(
-                "Loaded configuration for role {Role}: MaxPrice={MaxPrice}, AllowedCategories={Categories}",
-                role,
-                config.MaxPrice?.ToString("N0") ?? "None",
-                config.AllowedCategories != null ? string.Join(", ", config.AllowedCategories) : "None");
-
-            return config;
+            // Policy configuration is always read from JWT claims, not from appsettings
+            // This method returns empty configuration to maintain interface compatibility
+            _logger.LogDebug("Policy configuration for role {Role} will be read from JWT claims only", role);
+            return PolicyConfiguration.Empty();
         }
 
         public PolicyConfiguration GetClaimsConfiguration(UserClaimsContext user)
@@ -147,28 +99,17 @@ namespace Infrastructure.Authorization
 
         public PolicyConfiguration GetEffectivePolicyConfig(UserClaimsContext user)
         {
-            // Start with hardcoded defaults (lowest priority)
-            var effectiveConfig = _defaultConfig;
-
-            // Merge with role-based configuration from appsettings.json (medium priority)
-            foreach (var role in user.Roles)
-            {
-                var roleConfig = GetRoleConfiguration(role);
-                effectiveConfig = effectiveConfig.MergeWith(roleConfig);
-            }
-
-            // Merge with JWT claims configuration (highest priority)
-            var claimsConfig = GetClaimsConfiguration(user);
-            effectiveConfig = effectiveConfig.MergeWith(claimsConfig);
+            // Get policy configuration directly from JWT claims only
+            var config = GetClaimsConfiguration(user);
 
             _logger.LogDebug(
-                "Effective policy config for user {UserId}: MaxPrice={MaxPrice}, MinPrice={MinPrice}, Categories={Categories}",
+                "Policy config for user {UserId}: MaxPrice={MaxPrice}, MinPrice={MinPrice}, Categories={Categories}",
                 user.UserId,
-                effectiveConfig.MaxPrice?.ToString("N0") ?? "None",
-                effectiveConfig.MinPrice?.ToString("N0") ?? "None",
-                effectiveConfig.AllowedCategories != null ? string.Join(", ", effectiveConfig.AllowedCategories) : "All");
+                config.MaxPrice?.ToString("N0") ?? "None",
+                config.MinPrice?.ToString("N0") ?? "None",
+                config.AllowedCategories != null ? string.Join(", ", config.AllowedCategories) : "All");
 
-            return effectiveConfig;
+            return config;
         }
 
         public PolicyConfiguration GetDefaultConfiguration()

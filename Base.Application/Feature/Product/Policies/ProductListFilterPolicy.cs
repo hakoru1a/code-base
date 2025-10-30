@@ -55,7 +55,7 @@ namespace Base.Application.Feature.Product.Policies
             var effectiveConfig = _policyConfigService.GetEffectivePolicyConfig(user);
 
             // Admin and Premium users: no restrictions (unless overridden by claims)
-            if (HasAnyRole(user, Shared.Identity.Roles.Admin, Shared.Identity.Roles.PremiumUser) &&
+            if (HasAnyRole(user, Roles.Admin, Roles.PremiumUser) &&
                 effectiveConfig.MaxPrice == null &&
                 effectiveConfig.AllowedCategories == null)
             {
@@ -70,7 +70,7 @@ namespace Base.Application.Feature.Product.Policies
             };
 
             // Special handling: Product managers inherit department from custom attributes if no explicit config
-            if (HasRole(user, Shared.Identity.Roles.ProductManager) &&
+            if (HasRole(user, Roles.ProductManager) &&
                 filterContext.AllowedCategories == null)
             {
                 var department = user.CustomAttributes.GetValueOrDefault(PolicyConstants.UserAttributes.Department) as string;

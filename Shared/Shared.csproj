@@ -16,6 +16,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Enums\" />
+	  <Folder Include="Identity\Policies\Product\" />
 	</ItemGroup>
 	
 </Project>
