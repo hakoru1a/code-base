@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Shared.Configurations;
 using System.Security.Claims;
 using System.Text.Json;
+using Serilog;
 
 namespace Infrastructure.Extensions
 {
@@ -70,12 +71,12 @@ namespace Infrastructure.Extensions
                     },
                     OnAuthenticationFailed = context =>
                     {
-                        Console.WriteLine($"Authentication failed: {context.Exception}");
+                        Log.Error(context.Exception, "Authentication failed");
                         return Task.CompletedTask;
                     },
                     OnChallenge = context =>
                     {
-                        Console.WriteLine($"OnChallenge: {context.Error}, {context.ErrorDescription}");
+                        Log.Warning("OnChallenge: {Error}, {ErrorDescription}", context.Error, context.ErrorDescription);
                         return Task.CompletedTask;
                     }
                 };
@@ -183,7 +184,7 @@ namespace Infrastructure.Extensions
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to parse realm_access: {ex.Message}");
+                    Log.Error(ex, "Failed to parse realm_access");
                 }
             }
 
@@ -221,7 +222,7 @@ namespace Infrastructure.Extensions
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Failed to parse resource_access: {ex.Message}");
+                        Log.Error(ex, "Failed to parse resource_access");
                     }
                 }
             }

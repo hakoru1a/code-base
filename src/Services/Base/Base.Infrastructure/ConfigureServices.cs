@@ -4,6 +4,7 @@ using Infrastructure.DatabaseProviders;
 using Infrastructure.Extensions;
 using Common.Logging;
 using Contracts.Common.Interface;
+using Serilog;
 using Shared.Configurations.Database;
 using Contracts.Services;
 using Infrastructure.Services;
@@ -42,7 +43,7 @@ namespace Base.Infrastructure
             ConfigureDatabase(services, databaseProvider, databaseSettings.ConnectionStrings);
 
             // Log the selected database provider
-            Console.WriteLine($"Using Database Provider: {databaseProvider.ProviderName}");
+            Log.Information("Using Database Provider: {ProviderName}", databaseProvider.ProviderName);
 
             // Redis Configuration using GetOptions
             var cacheSettings = services.GetOptions<CacheSettings>("CacheSettings");
