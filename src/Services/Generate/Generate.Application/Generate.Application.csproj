@@ -17,8 +17,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Generate.Domain\Generate.Domain.csproj" />
     <ProjectReference Include="..\Generate.Infrastructure\Generate.Infrastructure.csproj" />
-    <ProjectReference Include="..\Contracts\Contracts.csproj" />
-    <ProjectReference Include="..\Shared\Shared.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Contracts\Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Shared\Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

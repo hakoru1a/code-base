@@ -24,10 +24,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Generate.Application\Generate.Application.csproj" />
     <ProjectReference Include="..\Generate.Infrastructure\Generate.Infrastructure.csproj" />
-    <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
-    <ProjectReference Include="..\Shared\Shared.csproj" />
-    <ProjectReference Include="..\Contracts\Contracts.csproj" />
-    <ProjectReference Include="..\Logging\Logging.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Infrastructure\Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Shared\Shared.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Contracts\Contracts.csproj" />
+    <ProjectReference Include="..\..\..\BuildingBlocks\Logging\Logging.csproj" />
   </ItemGroup>
 
 </Project>
