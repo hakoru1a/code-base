@@ -11,7 +11,7 @@ using Shared.Interfaces.Event;
 
 namespace Infrastructure.Extensions
 {
-    public static class MediatorExtenstion
+    public static class MediatorExtention
     {
         public static async Task DispatchDomainEventAsync(this IMediator mediator, List<BaseEvent> domainEvents)
         {
