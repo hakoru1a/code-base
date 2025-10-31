@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  generate-api:
+    build:
+      context: ../../src/Services/Generate/Generate.API
+      dockerfile: Dockerfile
+    container_name: codebase_generate_api
+    restart: unless-stopped
+    ports:
+      - "${GENERATE_API_PORT}:8080"
+      - "${GENERATE_API_HTTPS_PORT}:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_URLS=http://+:8080;https://+:8081
+      - DatabaseSettings__DBProvider=${DATABASE_PROVIDER}
+      - DatabaseSettings__ConnectionStrings=${DATABASE_CONNECTION_STRING}
+      - CacheSettings__ConnectionStrings=${REDIS_CONNECTION_STRING}
+      - ElasticConfiguration__Uri=${ELASTICSEARCH_URI}
+      - ElasticConfiguration__Username=elastic
+      - ElasticConfiguration__Password=${ELASTIC_PASSWORD}
+      - MassTransit__RabbitMQ__Host=${RABBITMQ_HOST}
+      - MassTransit__RabbitMQ__Username=${RABBITMQ_USER}
+      - MassTransit__RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - MassTransit__RabbitMQ__VirtualHost=${RABBITMQ_VHOST}
+    depends_on:
+      - redis
+      - rabbitmq
+      - elasticsearch
+    networks:
+      - codebase_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  codebase_network:
+    external: true
+
