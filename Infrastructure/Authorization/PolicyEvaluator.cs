@@ -18,9 +18,26 @@ namespace Infrastructure.Authorization
             _policyRegistry = new Dictionary<string, Type>();
         }
 
+        /// <summary>
+        /// Register a policy type with a given name (generic version)
+        /// </summary>
         public void RegisterPolicy<TPolicy>(string policyName) where TPolicy : IPolicy
         {
             _policyRegistry[policyName] = typeof(TPolicy);
+        }
+
+        /// <summary>
+        /// Register a policy type with a given name (non-generic version)
+        /// Used internally to avoid reflection in registration
+        /// </summary>
+        public void RegisterPolicy(Type policyType, string policyName)
+        {
+            if (!typeof(IPolicy).IsAssignableFrom(policyType))
+            {
+                throw new ArgumentException($"Type {policyType.Name} does not implement IPolicy", nameof(policyType));
+            }
+
+            _policyRegistry[policyName] = policyType;
         }
 
         public async Task<PolicyEvaluationResult> EvaluateAsync(

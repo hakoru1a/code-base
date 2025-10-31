@@ -34,7 +34,7 @@ namespace Base.Application.Feature.Product.Policies
                 if (adminConfig.MaxPrice.HasValue && context.ProductPrice > adminConfig.MaxPrice.Value)
                 {
                     return Task.FromResult(PolicyEvaluationResult.Deny(
-                        string.Format(PolicyConstants.Messages.PriceExceedsLimitTemplate, 
+                        string.Format(PolicyConstants.Messages.PriceExceedsLimitTemplate,
                             context.ProductPrice, "admin", adminConfig.MaxPrice.Value)));
                 }
                 return Task.FromResult(PolicyEvaluationResult.Allow(PolicyConstants.Messages.AdminFullAccess));
@@ -74,7 +74,7 @@ namespace Base.Application.Feature.Product.Policies
                 }
 
                 return Task.FromResult(PolicyEvaluationResult.Deny(
-                    string.Format(PolicyConstants.Messages.PriceExceedsConfiguredLimitTemplate, 
+                    string.Format(PolicyConstants.Messages.PriceExceedsConfiguredLimitTemplate,
                         context.ProductPrice, maxPrice, "basic users")));
             }
 
