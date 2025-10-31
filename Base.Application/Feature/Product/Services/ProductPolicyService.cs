@@ -6,10 +6,6 @@ using Shared.Identity;
 
 namespace Base.Application.Feature.Product.Services
 {
-    /// <summary>
-    /// Service implementation for product policy operations
-    /// This encapsulates all policy-related complexity from controllers
-    /// </summary>
     public class ProductPolicyService : IProductPolicyService
     {
         private readonly IPolicyEvaluator _policyEvaluator;

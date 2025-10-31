@@ -13,13 +13,12 @@ using Shared.SeedWork;
 namespace Base.API.Controllers
 {
     /// <summary>
-    /// Enhanced Product Controller with PBAC (Policy-Based Access Control)
-    /// Demonstrates both RBAC (at Gateway) and PBAC (at Service level)
+    /// Product Controller with layered authorization (RBAC + PBAC)
     /// </summary>
     [ApiController]
     [Route("api/v2/[controller]")]
     [Produces("application/json")]
-    [Authorize] // RBAC: Requires authentication at Gateway level
+    [Authorize]
     public class ProductControllerWithPBAC : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -37,15 +36,10 @@ namespace Base.API.Controllers
         }
 
         /// <summary>
-        /// Get all products with RBAC at Gateway level and PBAC filtering
-        /// Products are filtered based on user role:
-        /// - Basic users: Only products under configured limit (default 5M VND)
-        /// - Premium users: All products
-        /// - Admins: All products
-        /// Filtering is controlled by JWT claims or default configuration
+        /// Get all products with PBAC filtering
         /// </summary>
         [HttpGet]
-        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.BasicUser)] // RBAC at Gateway
+        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.BasicUser)]
         public async Task<IActionResult> GetProducts([FromQuery] PagedRequestParameter parameters)
         {
             _logger.LogInformation("Getting products with page {PageIndex}, page size {PageSize}",
@@ -53,7 +47,6 @@ namespace Base.API.Controllers
 
             var filter = await _productPolicyService.GetProductListFilterAsync();
 
-            // Pass filter to query handler
             var query = new GetProductsQuery
             {
                 Parameters = parameters,
@@ -66,17 +59,14 @@ namespace Base.API.Controllers
         }
 
         /// <summary>
-        /// Get product by ID with PBAC (Policy-Based Access Control)
-        /// Policy: PRODUCT:VIEW - Basic users can only view products under configured limit
-        /// The actual limit is determined by JWT claims or default configuration
+        /// Get product by ID with PBAC validation
         /// </summary>
         [HttpGet("{id}")]
-        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.BasicUser)] // RBAC at Gateway
+        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.BasicUser)]
         public async Task<IActionResult> GetProductById(long id)
         {
             _logger.LogInformation("Getting product with ID: {ProductId}", id);
 
-            // First, get the product
             var query = new GetProductByIdQuery { Id = id };
             var product = await _mediator.Send(query);
 
@@ -87,7 +77,6 @@ namespace Base.API.Controllers
                     ResponseMessages.ItemNotFound("Product", id)));
             }
 
-            // PBAC: Check if user can view this product
             var policyCheck = await _productPolicyService.CanViewProductAsync(id, product.Price);
 
             if (!policyCheck.IsAllowed)
@@ -100,18 +89,14 @@ namespace Base.API.Controllers
         }
 
         /// <summary>
-        /// Create product with RBAC and PBAC
-        /// RBAC: Requires "ManagerOrAdmin" policy at Gateway (coarse-grained)
-        /// PBAC: Requires "PRODUCT:CREATE" policy at Service level (fine-grained)
-        /// Both checks must pass for the request to succeed
+        /// Create product with PBAC validation
         /// </summary>
         [HttpPost]
-        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.ManagerOrAdmin)] // RBAC at Gateway
+        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.ManagerOrAdmin)]
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductCommand command)
         {
             _logger.LogInformation("Creating new product: {ProductName}", command.Name);
 
-            // PBAC: Check if user can create product
             var policyCheck = await _productPolicyService.CanCreateProductAsync();
 
             if (!policyCheck.IsAllowed)
@@ -130,20 +115,14 @@ namespace Base.API.Controllers
         }
 
         /// <summary>
-        /// Update product with layered authorization
-        /// RBAC (Gateway): Requires manager or admin role
-        /// PBAC (Service): Fine-grained checks:
-        /// - Admins can update any product
-        /// - Users can update their own products if they have permission
-        /// - Product managers can update products in their category
+        /// Update product with PBAC validation
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.ManagerOrAdmin)] // RBAC at Gateway
+        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.ManagerOrAdmin)]
         public async Task<IActionResult> UpdateProduct(long id, [FromBody] UpdateProductRequest request)
         {
             _logger.LogInformation("Updating product with ID: {ProductId}", id);
 
-            // Get existing product to check ownership and category
             var query = new GetProductByIdQuery { Id = id };
             var existingProduct = await _mediator.Send(query);
 
@@ -153,11 +132,7 @@ namespace Base.API.Controllers
                     ResponseMessages.ItemNotFound("Product", id)));
             }
 
-            // PBAC: Check if user can update this product
-            var policyCheck = await _productPolicyService.CanUpdateProductAsync(
-                id,
-                null,  // CreatedBy - would need to be added to ProductDto if needed
-                null); // Category - would need to be added to ProductDto if needed
+            var policyCheck = await _productPolicyService.CanUpdateProductAsync(id, null, null);
 
             if (!policyCheck.IsAllowed)
             {
@@ -165,7 +140,6 @@ namespace Base.API.Controllers
                     $"Access denied: {policyCheck.Reason}"));
             }
 
-            // Proceed with update...
             _logger.LogInformation("Product update authorized for product {ProductId}", id);
 
             return Ok(new ApiSuccessResult<object>(
@@ -174,18 +148,13 @@ namespace Base.API.Controllers
         }
 
         /// <summary>
-        /// Delete product - Admin only (RBAC)
-        /// This endpoint uses only RBAC for authorization
-        /// Could be enhanced with PBAC for soft delete, audit requirements, etc.
+        /// Delete product - Admin only
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.AdminOnly)] // RBAC at Gateway - strict admin only
+        [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.AdminOnly)]
         public Task<IActionResult> DeleteProduct(long id)
         {
             _logger.LogInformation("Deleting product with ID: {ProductId}", id);
-
-            // For delete, we rely on RBAC only (admin only)
-            // Could add additional PBAC if needed for soft delete, audit, etc.
 
             return Task.FromResult<IActionResult>(Ok(new ApiSuccessResult<object>(
                 new { id, message = "Product deleted successfully" },

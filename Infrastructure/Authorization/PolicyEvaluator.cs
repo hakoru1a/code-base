@@ -4,9 +4,6 @@ using Shared.DTOs.Authorization;
 
 namespace Infrastructure.Authorization
 {
-    /// <summary>
-    /// Default policy evaluator implementation
-    /// </summary>
     public class PolicyEvaluator : IPolicyEvaluator
     {
         private readonly IServiceProvider _serviceProvider;
@@ -18,18 +15,11 @@ namespace Infrastructure.Authorization
             _policyRegistry = new Dictionary<string, Type>();
         }
 
-        /// <summary>
-        /// Register a policy type with a given name (generic version)
-        /// </summary>
         public void RegisterPolicy<TPolicy>(string policyName) where TPolicy : IPolicy
         {
             _policyRegistry[policyName] = typeof(TPolicy);
         }
 
-        /// <summary>
-        /// Register a policy type with a given name (non-generic version)
-        /// Used internally to avoid reflection in registration
-        /// </summary>
         public void RegisterPolicy(Type policyType, string policyName)
         {
             if (!typeof(IPolicy).IsAssignableFrom(policyType))
