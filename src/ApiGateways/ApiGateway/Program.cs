@@ -45,9 +45,19 @@ var app = builder.Build();
 
 app.UseCors("AllowAll");
 
-// Add Authentication and Authorization middleware
-app.UseAuthentication();
-app.UseAuthorization();
+// Redirect root to Swagger UI - must be before Ocelot middleware
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/")
+    {
+        context.Response.Redirect("/swagger/index.html");
+        return;
+    }
+    await next();
+});
+
+// Add Routing middleware - must be before endpoints
+app.UseRouting();
 
 // Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
@@ -55,7 +65,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API Gateway V1");
         c.SwaggerEndpoint("https://localhost:44315/swagger/v1/swagger.json", "Base API");
         c.SwaggerEndpoint("https://localhost:44319/swagger/v1/swagger.json", "Generate API 1");
         c.SwaggerEndpoint("https://localhost:44319/swagger/v2/swagger.json", "Generate API 2");
@@ -66,7 +75,22 @@ if (app.Environment.IsDevelopment())
         c.EnableValidator();
     });
 }
+else
+{
+    // Enable Swagger UI in non-development for quick access to docs
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API Gateway V1");
+        c.RoutePrefix = "swagger";
+    });
+}
 
+// Add Authentication and Authorization middleware
+app.UseAuthentication();
+app.UseAuthorization();
+
+// Map endpoints BEFORE Ocelot middleware
 // Map Health Check endpoint
 app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
@@ -88,7 +112,7 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
     }
 });
 
-// Use Ocelot middleware
+// Use Ocelot middleware - should be after endpoint mappings
 await app.UseOcelot();
 
 app.Run();

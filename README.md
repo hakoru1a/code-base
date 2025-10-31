@@ -415,7 +415,7 @@ dotnet run --project Base.API
 3. Cấu hình Redis connection (nếu sử dụng)
 4. Cấu hình RabbitMQ cho MassTransit
 5. Cấu hình Elasticsearch cho logging
-6. Cấu hình Keycloak cho authentication
+6. **Cấu hình Keycloak cho authentication** → [📖 Hướng dẫn setup Keycloak Realm](docs/auth/KEYCLOAK-QUICK-START.md)
 
 #### **appsettings.json Example:**
 ```json
@@ -478,6 +478,22 @@ dotnet run --project Base.API
 - [ ] Kubernetes deployment
 - [ ] Performance monitoring
 - [ ] Health checks
+
+
+## 📖 Documentation
+
+### Authentication & Authorization
+- **[Keycloak Quick Start](docs/auth/KEYCLOAK-QUICK-START.md)** - Setup Keycloak realm trong 15 phút ⚡
+- **[Keycloak Realm Setup](docs/auth/KEYCLOAK-REALM-SETUP.md)** - Hướng dẫn đầy đủ về Keycloak configuration
+- **[PBAC Authorization](docs/auth/README.md)** - Policy-Based Access Control documentation 🔐
+
+### Infrastructure
+- **[Docker Infrastructure Setup](infra/README.md)** - Setup toàn bộ infrastructure với Docker Compose
+
+### Services
+- API Gateway - API Gateway documentation (coming soon)
+- Base Service - Base service documentation (coming soon)
+- Generate Service - Code generation service documentation (coming soon)
 
 
 ## 🙏 Acknowledgments

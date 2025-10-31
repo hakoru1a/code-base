@@ -69,6 +69,13 @@ try
 
     app.MapControllers();
 
+    // Redirect root to Swagger UI for quick navigation (similar to Generate.API)
+    app.MapGet("/", async context =>
+    {
+        context.Response.Redirect("/swagger/index.html");
+        await Task.CompletedTask;
+    });
+
     // Map Health Check endpoint
     app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
     {
