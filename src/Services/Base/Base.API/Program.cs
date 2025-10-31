@@ -3,7 +3,7 @@ using Base.Application;
 using Base.Application.Feature.Product.Policies;
 using Base.Infrastructure;
 using Common.Logging;
-using Infrastructure.Extentions;
+using Infrastructure.Extensions;
 using Serilog;
 using Shared.Identity;
 

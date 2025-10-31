@@ -1,7 +1,7 @@
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using Microsoft.OpenApi.Models;
-using Infrastructure.Extentions;
+using Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

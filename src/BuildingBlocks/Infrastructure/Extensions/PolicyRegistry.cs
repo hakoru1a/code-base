@@ -1,7 +1,7 @@
 using Infrastructure.Authorization.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Infrastructure.Extentions
+namespace Infrastructure.Extensions
 {
     /// <summary>
     /// Registry for collecting policy registrations during startup

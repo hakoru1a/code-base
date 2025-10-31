@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Infrastructure.Extentions
+namespace Infrastructure.Extensions
 {
     /// <summary>
     /// Extension methods for configuring PBAC (Policy-Based Access Control)
@@ -29,7 +29,7 @@ namespace Infrastructure.Extentions
             var policyRegistry = new PolicyRegistry(services);
             configurePolicies?.Invoke(policyRegistry);
 
-            services.AddSingleton<PolicyEvaluator>(sp =>
+            services.AddSingleton(sp =>
             {
                 var evaluator = new PolicyEvaluator(sp);
 

@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Net.Http.Headers;
 
-namespace Infrastructure.Extentions
+namespace Infrastructure.Extensions
 {
     public static class HttpClientExtensions
     {
@@ -30,7 +30,7 @@ namespace Infrastructure.Extentions
                 // For boolean results, return true for success
                 if (typeof(T) == typeof(bool))
                     return (T)(object)true;
-                return default(T);
+                return default;
             }
 
             var dataAsString = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -40,7 +40,7 @@ namespace Infrastructure.Extentions
                 // For boolean results, return true for success
                 if (typeof(T) == typeof(bool))
                     return (T)(object)true;
-                return default(T);
+                return default;
             }
 
             return JsonSerializer.Deserialize<T>(dataAsString, new JsonSerializerOptions

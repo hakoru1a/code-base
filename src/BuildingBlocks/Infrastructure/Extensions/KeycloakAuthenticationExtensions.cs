@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,7 +6,7 @@ using Shared.Configurations;
 using System.Security.Claims;
 using System.Text.Json;
 
-namespace Infrastructure.Extentions
+namespace Infrastructure.Extensions
 {
     /// <summary>
     /// Extension methods for configuring Keycloak authentication
@@ -18,7 +17,7 @@ namespace Infrastructure.Extentions
         /// Add Keycloak JWT authentication for RBAC at Gateway level
         /// </summary>
         public static IServiceCollection AddKeycloakAuthentication(
-            this IServiceCollection services, 
+            this IServiceCollection services,
             IConfiguration configuration)
         {
             var keycloakSettings = configuration
@@ -97,58 +96,58 @@ namespace Infrastructure.Extentions
             {
                 // ===== ROLE-BASED POLICIES (RBAC) =====
                 // These provide coarse-grained access control at the gateway/controller level
-                
-                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.AdminOnly, policy => 
+
+                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.AdminOnly, policy =>
                     policy.RequireRole(Shared.Identity.Roles.Admin));
-                
-                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.ManagerOrAdmin, policy => 
+
+                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.ManagerOrAdmin, policy =>
                     policy.RequireRole(
-                        Shared.Identity.Roles.Admin, 
-                        Shared.Identity.Roles.Manager, 
+                        Shared.Identity.Roles.Admin,
+                        Shared.Identity.Roles.Manager,
                         Shared.Identity.Roles.ProductManager));
-                
-                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.AuthenticatedUser, policy => 
+
+                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.AuthenticatedUser, policy =>
                     policy.RequireAuthenticatedUser());
-                
-                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.PremiumUser, policy => 
+
+                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.PremiumUser, policy =>
                     policy.RequireRole(
-                        Shared.Identity.Roles.PremiumUser, 
+                        Shared.Identity.Roles.PremiumUser,
                         Shared.Identity.Roles.Admin));
-                
-                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.BasicUser, policy => 
+
+                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.BasicUser, policy =>
                     policy.RequireRole(
-                        Shared.Identity.Roles.BasicUser, 
-                        Shared.Identity.Roles.PremiumUser, 
+                        Shared.Identity.Roles.BasicUser,
+                        Shared.Identity.Roles.PremiumUser,
                         Shared.Identity.Roles.Admin));
 
                 // ===== HYBRID POLICIES (Role + Permission) =====
                 // These combine roles and permissions for backward compatibility
                 // Consider migrating to pure PBAC for better flexibility
-                
+
                 options.AddPolicy("CanViewProducts", policy =>
                     policy.RequireAssertion(context =>
-                        context.User.HasClaim(c => 
+                        context.User.HasClaim(c =>
                             c.Type == "permissions" && c.Value.Contains(Shared.Identity.Permissions.Product.View)) ||
                         context.User.IsInRole(Shared.Identity.Roles.Admin) ||
                         context.User.IsInRole(Shared.Identity.Roles.Manager)));
 
                 options.AddPolicy("CanCreateProducts", policy =>
                     policy.RequireAssertion(context =>
-                        context.User.HasClaim(c => 
+                        context.User.HasClaim(c =>
                             c.Type == "permissions" && c.Value.Contains(Shared.Identity.Permissions.Product.Create)) ||
                         context.User.IsInRole(Shared.Identity.Roles.Admin) ||
                         context.User.IsInRole(Shared.Identity.Roles.ProductManager)));
 
                 options.AddPolicy("CanUpdateProducts", policy =>
                     policy.RequireAssertion(context =>
-                        context.User.HasClaim(c => 
+                        context.User.HasClaim(c =>
                             c.Type == "permissions" && c.Value.Contains(Shared.Identity.Permissions.Product.Update)) ||
                         context.User.IsInRole(Shared.Identity.Roles.Admin) ||
                         context.User.IsInRole(Shared.Identity.Roles.ProductManager)));
 
                 options.AddPolicy("CanDeleteProducts", policy =>
                     policy.RequireAssertion(context =>
-                        context.User.HasClaim(c => 
+                        context.User.HasClaim(c =>
                             c.Type == "permissions" && c.Value.Contains(Shared.Identity.Permissions.Product.Delete)) ||
                         context.User.IsInRole(Shared.Identity.Roles.Admin)));
             });
@@ -169,7 +168,7 @@ namespace Infrastructure.Extentions
                 {
                     var realmAccess = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
                         realmAccessClaim.Value);
-                    
+
                     if (realmAccess != null && realmAccess.TryGetValue("roles", out var rolesElement))
                     {
                         var roles = JsonSerializer.Deserialize<List<string>>(rolesElement.GetRawText());
@@ -198,7 +197,7 @@ namespace Infrastructure.Extentions
                     {
                         var resourceAccess = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
                             resourceAccessClaim.Value);
-                        
+
                         if (resourceAccess != null)
                         {
                             // Add client-specific roles
@@ -208,7 +207,7 @@ namespace Infrastructure.Extentions
                                 {
                                     var roles = JsonSerializer.Deserialize<List<string>>(
                                         rolesElement.GetRawText());
-                                    
+
                                     if (roles != null)
                                     {
                                         foreach (var role in roles)
