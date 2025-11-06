@@ -22,8 +22,7 @@ namespace Generate.Infrastructure.Persistences.Configurations
                 .IsRequired();
 
             builder.Property(oi => oi.Quantity)
-                .IsRequired()
-                .HasDefaultValue(1);
+                .IsRequired();
 
             // Relationships
             // Many-to-One with Order

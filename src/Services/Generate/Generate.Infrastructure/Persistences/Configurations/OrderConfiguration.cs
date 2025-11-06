@@ -17,7 +17,7 @@ namespace Generate.Infrastructure.Persistences.Configurations
             // Properties
             builder.Property(o => o.CustomerName)
                 .IsRequired()
-                .HasMaxLength(200);
+                .HasMaxLength(100);
 
             // Relationships
             // One-to-Many with OrderItems

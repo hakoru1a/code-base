@@ -17,7 +17,7 @@ namespace Generate.Infrastructure.Persistences.Configurations
             // Properties
             builder.Property(c => c.Name)
                 .IsRequired()
-                .HasMaxLength(200);
+                .HasMaxLength(100);
 
             // Relationships
             builder.HasMany(c => c.Products)
@@ -26,8 +26,7 @@ namespace Generate.Infrastructure.Persistences.Configurations
                 .OnDelete(DeleteBehavior.SetNull); // Set CategoryId to null when Category is deleted
 
             // Indexes
-            builder.HasIndex(c => c.Name)
-                .IsUnique();
+            builder.HasIndex(c => c.Name);
 
             builder.MapAuditColumns();
         }

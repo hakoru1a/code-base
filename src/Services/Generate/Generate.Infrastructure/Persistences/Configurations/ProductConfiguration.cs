@@ -17,7 +17,7 @@ namespace Generate.Infrastructure.Persistences.Configurations
             // Properties
             builder.Property(p => p.Name)
                 .IsRequired()
-                .HasMaxLength(200);
+                .HasMaxLength(100);
 
             builder.Property(p => p.CategoryId)
                 .IsRequired(false);
