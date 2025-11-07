@@ -8,6 +8,17 @@
     public static class Permissions
     {
         /// <summary>
+        /// Category-related permissions
+        /// </summary>
+        public static class Category
+        {
+            public const string View = "category:view";
+            public const string Create = "category:create";
+            public const string Update = "category:update";
+            public const string Delete = "category:delete";
+        }
+
+        /// <summary>
         /// Product-related permissions
         /// </summary>
         public static class Product

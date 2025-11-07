@@ -7,7 +7,9 @@ using Generate.Application.Features.Category.Queries.GetCategories;
 using Generate.Application.Features.Category.Queries.GetCategoriesPaged;
 using Generate.Application.Features.Category.Queries.GetCategoryById;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Identity;
 using Shared.SeedWork;
 
 namespace Generate.API.Controllers
@@ -39,6 +41,7 @@ namespace Generate.API.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(ApiSuccessResult<List<CategoryResponseDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [Authorize(Policy = PolicyNames.Hybrid.Category.CanView)]
         public async Task<IActionResult> GetList()
         {
             _logger.LogInformation("Getting all categories");

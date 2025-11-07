@@ -47,6 +47,11 @@ namespace Shared.DTOs.Authorization
         public Dictionary<string, string> Claims { get; set; } = new();
         public List<string> Permissions { get; set; } = new();
         public Dictionary<string, object> CustomAttributes { get; set; } = new();
+        
+        /// <summary>
+        /// Check if user is authenticated (has UserId)
+        /// </summary>
+        public bool IsAuthenticated => !string.IsNullOrEmpty(UserId);
     }
 }
 

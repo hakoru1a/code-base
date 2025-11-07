@@ -9,6 +9,7 @@ using StackExchange.Redis;
 using Contracts.Common.Interface;
 using Infrastructure.Common.Repository;
 using Polly;
+using Microsoft.AspNetCore.Authentication;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -190,6 +191,39 @@ if (app.Environment.IsDevelopment())
         c.EnableFilter();
         c.EnableValidator();
     });
+
+    app.MapGet("/_whoami", async (HttpContext ctx) =>
+    {
+            var user = ctx.User;
+
+            // Lấy access token từ cookie auth
+            var accessToken = await ctx.GetTokenAsync("access_token");
+            var refreshToken = await ctx.GetTokenAsync("refresh_token");
+            var idToken = await ctx.GetTokenAsync("id_token");
+
+            return Results.Json(new
+            {
+                user = new
+                {
+                    sub = user.FindFirst("sub")?.Value,
+                    username = user.Identity?.Name,
+                    realm_roles = user.FindAll("realm_access/roles").Select(c => c.Value),
+                    resource_roles = user.FindAll("resource_access").Select(c => c.Value),
+                },
+                tokens = new
+                {
+                    access_token = accessToken,
+                    refresh_token = refreshToken, // Chỉ trả trong DEV
+                    id_token = idToken
+                },
+                request = new
+                {
+                    traceId = System.Diagnostics.Activity.Current?.TraceId.ToString(),
+                    correlationId = ctx.Request.Headers["X-Correlation-Id"].FirstOrDefault()
+                }
+            });
+        })
+    .RequireAuthorization();
 }
 else
 {

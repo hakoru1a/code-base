@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -6,6 +7,7 @@ using Shared.Configurations;
 using System.Security.Claims;
 using System.Text.Json;
 using Serilog;
+using System.Linq;
 
 namespace Infrastructure.Extensions
 {
@@ -60,23 +62,74 @@ namespace Infrastructure.Extensions
 
                 options.Events = new JwtBearerEvents
                 {
+                    OnMessageReceived = context =>
+                    {
+                        var authHeader = context.Request.Headers["Authorization"].ToString();
+                        var hasToken = !string.IsNullOrEmpty(context.Token);
+                        var tokenPreview = hasToken && context.Token!.Length > 20
+                            ? context.Token.Substring(0, 20) + "..."
+                            : context.Token ?? "null";
+
+                        Log.Information(
+                            "[JWT] OnMessageReceived - Path: {Path}, Method: {Method}\n" +
+                            "  Authorization Header: {AuthHeader}\n" +
+                            "  Token Present: {HasToken}\n" +
+                            "  Token Preview: {TokenPreview}",
+                            context.Request.Path,
+                            context.Request.Method,
+                            string.IsNullOrEmpty(authHeader) ? "NOT FOUND" : authHeader.Substring(0, Math.Min(50, authHeader.Length)) + "...",
+                            hasToken,
+                            tokenPreview);
+
+                        return Task.CompletedTask;
+                    },
                     OnTokenValidated = context =>
                     {
                         // Extract and map roles from Keycloak token
                         if (context.Principal?.Identity is ClaimsIdentity identity)
                         {
                             MapKeycloakRoles(identity, keycloakSettings);
+                            Log.Information(
+                                "[JWT] OnTokenValidated - User: {Username}, IsAuthenticated: {IsAuthenticated}, Roles: {Roles}",
+                                identity.Name,
+                                identity.IsAuthenticated,
+                                string.Join(", ", identity.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value)));
                         }
                         return Task.CompletedTask;
                     },
                     OnAuthenticationFailed = context =>
                     {
-                        Log.Error(context.Exception, "Authentication failed");
+                        var authHeader = context.Request.Headers["Authorization"].ToString();
+                        Log.Error(
+                            context.Exception,
+                            "[JWT] OnAuthenticationFailed - Path: {Path}, Method: {Method}\n" +
+                            "  Error: {Error}\n" +
+                            "  InnerException: {InnerException}\n" +
+                            "  Authorization Header: {AuthHeader}",
+                            context.Request.Path,
+                            context.Request.Method,
+                            context.Exception?.Message ?? "Unknown error",
+                            context.Exception?.InnerException?.Message ?? "None",
+                            string.IsNullOrEmpty(authHeader) ? "NOT FOUND" : authHeader.Substring(0, Math.Min(50, authHeader.Length)) + "...");
                         return Task.CompletedTask;
                     },
                     OnChallenge = context =>
                     {
-                        Log.Warning("OnChallenge: {Error}, {ErrorDescription}", context.Error, context.ErrorDescription);
+                        var authHeader = context.Request.Headers["Authorization"].ToString();
+                        Log.Warning(
+                            "[JWT] OnChallenge - Path: {Path}, Method: {Method}\n" +
+                            "  Error: {Error}\n" +
+                            "  ErrorDescription: {ErrorDescription}\n" +
+                            "  ErrorUri: {ErrorUri}\n" +
+                            "  Authorization Header: {AuthHeader}\n" +
+                            "  AuthenticateResult: {AuthenticateResult}",
+                            context.Request.Path,
+                            context.Request.Method,
+                            context.Error ?? "null",
+                            context.ErrorDescription ?? "null",
+                            context.ErrorUri ?? "null",
+                            string.IsNullOrEmpty(authHeader) ? "NOT FOUND" : authHeader.Substring(0, Math.Min(50, authHeader.Length)) + "...",
+                            context.AuthenticateFailure?.Message ?? "null");
                         return Task.CompletedTask;
                     }
                 };
@@ -122,38 +175,171 @@ namespace Infrastructure.Extensions
                         Shared.Identity.Roles.Admin));
 
                 // ===== HYBRID POLICIES (Role + Permission) =====
-                // These combine roles and permissions for backward compatibility
-                // Consider migrating to pure PBAC for better flexibility
+                // These combine roles and permissions for flexible access control
+                // Uses helper method for maintainability and consistency
+                // 
+                // Logic: User can access if they have the required permission OR have one of the allowed roles
+                // This provides flexibility: fine-grained control via permissions, quick access via roles
 
-                options.AddPolicy("CanViewProducts", policy =>
-                    policy.RequireAssertion(context =>
-                        context.User.HasClaim(c =>
-                            c.Type == "permissions" && c.Value.Contains(Shared.Identity.Permissions.Product.View)) ||
-                        context.User.IsInRole(Shared.Identity.Roles.Admin) ||
-                        context.User.IsInRole(Shared.Identity.Roles.Manager)));
+                // CanViewProducts: Permission "product:view" OR roles "admin"/"manager"
+                AddHybridPolicy(
+                    options,
+                    Shared.Identity.PolicyNames.Hybrid.Product.CanView,
+                    Shared.Identity.Permissions.Product.View,
+                    Shared.Identity.Roles.Admin,
+                    Shared.Identity.Roles.Manager);
 
-                options.AddPolicy("CanCreateProducts", policy =>
-                    policy.RequireAssertion(context =>
-                        context.User.HasClaim(c =>
-                            c.Type == "permissions" && c.Value.Contains(Shared.Identity.Permissions.Product.Create)) ||
-                        context.User.IsInRole(Shared.Identity.Roles.Admin) ||
-                        context.User.IsInRole(Shared.Identity.Roles.ProductManager)));
+                // CanCreateProducts: Permission "product:create" OR roles "admin"/"product_manager"
+                AddHybridPolicy(
+                    options,
+                    Shared.Identity.PolicyNames.Hybrid.Product.CanCreate,
+                    Shared.Identity.Permissions.Product.Create,
+                    Shared.Identity.Roles.Admin,
+                    Shared.Identity.Roles.ProductManager);
 
-                options.AddPolicy("CanUpdateProducts", policy =>
-                    policy.RequireAssertion(context =>
-                        context.User.HasClaim(c =>
-                            c.Type == "permissions" && c.Value.Contains(Shared.Identity.Permissions.Product.Update)) ||
-                        context.User.IsInRole(Shared.Identity.Roles.Admin) ||
-                        context.User.IsInRole(Shared.Identity.Roles.ProductManager)));
+                // CanUpdateProducts: Permission "product:update" OR roles "admin"/"product_manager"
+                AddHybridPolicy(
+                    options,
+                    Shared.Identity.PolicyNames.Hybrid.Product.CanUpdate,
+                    Shared.Identity.Permissions.Product.Update,
+                    Shared.Identity.Roles.Admin,
+                    Shared.Identity.Roles.ProductManager);
 
-                options.AddPolicy("CanDeleteProducts", policy =>
-                    policy.RequireAssertion(context =>
-                        context.User.HasClaim(c =>
-                            c.Type == "permissions" && c.Value.Contains(Shared.Identity.Permissions.Product.Delete)) ||
-                        context.User.IsInRole(Shared.Identity.Roles.Admin)));
+                // CanDeleteProducts: Permission "product:delete" OR role "admin" (more restrictive)
+                AddHybridPolicy(
+                    options,
+                    Shared.Identity.PolicyNames.Hybrid.Product.CanDelete,
+                    Shared.Identity.Permissions.Product.Delete,
+                    Shared.Identity.Roles.Admin);
+
+                // CanViewCategories: Permission "category:view" OR roles "admin"/"manager"
+                AddHybridPolicy(
+                    options,
+                    Shared.Identity.PolicyNames.Hybrid.Category.CanView,
+                    Shared.Identity.Permissions.Category.View,
+                    Shared.Identity.Roles.Admin,
+                    Shared.Identity.Roles.Manager);
             });
 
             return services;
+        }
+
+        /// <summary>
+        /// Helper method to create flexible hybrid policies that combine permissions and roles.
+        /// This allows for flexible access control where users can access via either:
+        /// 1. Having the required permission (PBAC) - OR
+        /// 2. Having one of the specified roles (RBAC)
+        /// 
+        /// Usage examples:
+        /// <code>
+        /// // Policy with permission and roles
+        /// AddHybridPolicy(options, PolicyNames.Hybrid.Product.CanView, 
+        ///     Permissions.Product.View, Roles.Admin, Roles.Manager);
+        /// 
+        /// // Policy with only roles (no permission check)
+        /// AddHybridPolicy(options, "CanManageSystem", 
+        ///     requiredPermission: null, Roles.Admin);
+        /// 
+        /// // Policy with only permission (no roles)
+        /// AddHybridPolicy(options, "CanViewReports", 
+        ///     Permissions.User.View);
+        /// </code>
+        /// </summary>
+        /// <param name="options">Authorization options to add the policy to</param>
+        /// <param name="policyName">Name of the policy (should use constants from PolicyNames.Hybrid)</param>
+        /// <param name="requiredPermission">Required permission (null to skip permission check)</param>
+        /// <param name="allowedRoles">Roles that can access without the permission (params array)</param>
+        /// <example>
+        /// <code>
+        /// // User can access if they have "product:view" permission OR have "admin"/"manager" role
+        /// AddHybridPolicy(options, PolicyNames.Hybrid.Product.CanView,
+        ///     Permissions.Product.View, Roles.Admin, Roles.Manager);
+        /// </code>
+        /// </example>
+        private static void AddHybridPolicy(
+            AuthorizationOptions options,
+            string policyName,
+            string? requiredPermission = null,
+            params string[] allowedRoles)
+        {
+            options.AddPolicy(policyName, policy =>
+                policy.RequireAssertion(context =>
+                {
+                    // Check if user has required permission (PBAC)
+                    bool hasPermission = false;
+                    if (!string.IsNullOrEmpty(requiredPermission))
+                    {
+                        // Debug: Log all claims
+                        var allClaims = context.User.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
+                        Log.Debug(
+                            "[POLICY DEBUG] Policy: {PolicyName}, RequiredPermission: {RequiredPermission}\n" +
+                            "  User: {Username}, IsAuthenticated: {IsAuthenticated}\n" +
+                            "  All Claims ({Count}): {Claims}",
+                            policyName,
+                            requiredPermission,
+                            context.User.Identity?.Name ?? "Anonymous",
+                            context.User.Identity?.IsAuthenticated ?? false,
+                            allClaims.Count,
+                            string.Join(" | ", allClaims));
+
+                        // Debug: Log permission claims specifically
+                        var permissionClaims = context.User.Claims
+                            .Where(c => c.Type == "permissions")
+                            .Select(c => c.Value)
+                            .ToList();
+                        Log.Debug(
+                            "[POLICY DEBUG] Permission Claims Found: {Count}\n" +
+                            "  Permission Values: {PermissionValues}",
+                            permissionClaims.Count,
+                            string.Join(" | ", permissionClaims));
+
+                        // Check permission
+                        hasPermission = context.User.HasClaim(c =>
+                            c.Type == "permissions" &&
+                            c.Value.Contains(requiredPermission, StringComparison.OrdinalIgnoreCase));
+
+                        Log.Debug(
+                            "[POLICY DEBUG] Permission Check Result: {HasPermission}\n" +
+                            "  Required: {RequiredPermission}\n" +
+                            "  Found in Claims: {Found}",
+                            hasPermission,
+                            requiredPermission,
+                            hasPermission ? "YES" : "NO");
+                    }
+
+                    // Check if user has any of the allowed roles (RBAC)
+                    bool hasRole = allowedRoles.Length > 0 &&
+                        allowedRoles.Any(role => context.User.IsInRole(role));
+
+                    // Debug: Log role check
+                    if (allowedRoles.Length > 0)
+                    {
+                        var userRoles = context.User.Claims
+                            .Where(c => c.Type == ClaimTypes.Role)
+                            .Select(c => c.Value)
+                            .ToList();
+                        Log.Debug(
+                            "[POLICY DEBUG] Role Check\n" +
+                            "  Allowed Roles: {AllowedRoles}\n" +
+                            "  User Roles: {UserRoles}\n" +
+                            "  Has Role: {HasRole}",
+                            string.Join(", ", allowedRoles),
+                            string.Join(", ", userRoles),
+                            hasRole);
+                    }
+
+                    // Grant access if user has permission OR has one of the allowed roles
+                    bool result = hasPermission || hasRole;
+                    Log.Debug(
+                        "[POLICY DEBUG] Final Result for Policy '{PolicyName}': {Result}\n" +
+                        "  HasPermission: {HasPermission}, HasRole: {HasRole}",
+                        policyName,
+                        result ? "ALLOWED" : "DENIED",
+                        hasPermission,
+                        hasRole);
+
+                    return result;
+                }));
         }
 
         /// <summary>

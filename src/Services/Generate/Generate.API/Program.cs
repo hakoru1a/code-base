@@ -1,8 +1,13 @@
 using Generate.API.Extensions;
 using Generate.Application;
+using Generate.Application.Features.Category.Policies;
+using Generate.Application.Features.Product.Policies;
+using Generate.Application.Features.Order.Policies;
 using Generate.Infrastructure;
 using Common.Logging;
+using Infrastructure.Extensions;
 using Serilog;
+using Shared.Identity;
 
 
 
@@ -10,13 +15,39 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
     Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
-    Log.Information("Starting API running");
+    Log.Information("Starting Generate API");
 
     // Add Serilog Configuration
     builder.Host.UseSerilog(SeriLogger.Configure);
 
     // Add Configuration
     builder.Host.AddConfiguration();
+
+    // Add Keycloak Authentication (RBAC at Gateway, but also validated at Service level)
+    builder.Services.AddKeycloakAuthentication(builder.Configuration);
+    builder.Services.AddKeycloakAuthorization();
+
+    // Add Policy-Based Authorization (PBAC at Service level)
+    builder.Services.AddPolicyBasedAuthorization(policies =>
+    {
+        // Category Policies
+        policies.AddPolicy<CategoryViewPolicy>(PolicyNames.Pbac.Category.View);
+        policies.AddPolicy<CategoryCreatePolicy>(PolicyNames.Pbac.Category.Create);
+        policies.AddPolicy<CategoryUpdatePolicy>(PolicyNames.Pbac.Category.Update);
+        policies.AddPolicy<CategoryDeletePolicy>(PolicyNames.Pbac.Category.Delete);
+
+        // Product Policies
+        policies.AddPolicy<ProductViewPolicy>(PolicyNames.Pbac.Product.View);
+        policies.AddPolicy<ProductCreatePolicy>(PolicyNames.Pbac.Product.Create);
+        policies.AddPolicy<ProductUpdatePolicy>(PolicyNames.Pbac.Product.Update);
+        policies.AddPolicy<ProductDeletePolicy>(PolicyNames.Pbac.Product.Delete);
+
+        // Order Policies
+        policies.AddPolicy<OrderViewPolicy>(PolicyNames.Pbac.Order.View);
+        policies.AddPolicy<OrderCreatePolicy>(PolicyNames.Pbac.Order.Create);
+        policies.AddPolicy<OrderUpdatePolicy>(PolicyNames.Pbac.Order.Update);
+        policies.AddPolicy<OrderDeletePolicy>(PolicyNames.Pbac.Order.Delete);
+    });
 
     // Add services to the container
     builder.Services.AddInfrastructureServices(builder.Configuration);
@@ -35,7 +66,11 @@ try
         app.UseDeveloperExceptionPage();
     }
 
+    // Use Infrastructure middleware (includes Authentication and Authorization)
     app.UseInfrastructure();
+
+    // Add Policy-Based Authorization Middleware (PBAC)
+    app.UsePolicyAuthorization();
 
     // Map Health Check endpoint
     app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions

@@ -45,6 +45,17 @@ namespace Shared.Identity
         public static class Pbac
         {
             /// <summary>
+            /// Category policies
+            /// </summary>
+            public static class Category
+            {
+                public const string View = "CATEGORY:VIEW";
+                public const string Create = "CATEGORY:CREATE";
+                public const string Update = "CATEGORY:UPDATE";
+                public const string Delete = "CATEGORY:DELETE";
+            }
+
+            /// <summary>
             /// Product policies
             /// </summary>
             public static class Product
@@ -64,8 +75,39 @@ namespace Shared.Identity
                 public const string View = "ORDER:VIEW";
                 public const string Create = "ORDER:CREATE";
                 public const string Update = "ORDER:UPDATE";
+                public const string Delete = "ORDER:DELETE";
                 public const string Cancel = "ORDER:CANCEL";
                 public const string Approve = "ORDER:APPROVE";
+            }
+        }
+
+        /// <summary>
+        /// Hybrid Policies - Combine roles and permissions (Gateway level)
+        /// These provide flexible access control combining RBAC and PBAC
+        /// Use these with [Authorize(Policy = "...")] attribute
+        /// </summary>
+        public static class Hybrid
+        {
+            /// <summary>
+            /// Product-related hybrid policies
+            /// </summary>
+            public static class Product
+            {
+                public const string CanView = "CanViewProducts";
+                public const string CanCreate = "CanCreateProducts";
+                public const string CanUpdate = "CanUpdateProducts";
+                public const string CanDelete = "CanDeleteProducts";
+            }
+
+            /// <summary>
+            /// Category-related hybrid policies
+            /// </summary>
+            public static class Category
+            {
+                public const string CanView = "CanViewCategories";
+                public const string CanCreate = "CanCreateCategories";
+                public const string CanUpdate = "CanUpdateCategories";
+                public const string CanDelete = "CanDeleteCategories";
             }
         }
     }
