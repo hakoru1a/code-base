@@ -17,7 +17,6 @@ public class SessionValidationMiddleware
     // Paths không cần authentication
     private static readonly HashSet<string> PublicPaths = new(StringComparer.OrdinalIgnoreCase)
     {
-        "/",
         "/health",
         "/swagger",
         "/auth/login",
@@ -77,7 +76,7 @@ public class SessionValidationMiddleware
             return;
         }
 
-        // 4. Kiểm tra token expiration và refresh nếu cần
+        // 4. Kiểm tra token expiration và ssh nếu cần
         if (session.NeedsRefresh())
         {
             _logger.LogInformation(
