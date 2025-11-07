@@ -27,6 +27,23 @@
       "SwaggerKey": "base"
     },
     {
+      "DownstreamPathTemplate": "/api/v{version}/Category",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5027
+        }
+      ],
+      "UpstreamPathTemplate": "/generate-api/v{version}/Category",
+      "UpstreamHttpMethod": [ "POST" ],
+      "SwaggerKey": "generate",
+      "RouteClaimsRequirement": {
+        "http://schemas.microsoft.com/ws/2008/06/identity/claims/role": "admin"
+      },
+      "Priority": 1
+    },
+    {
       "DownstreamPathTemplate": "/api/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
@@ -37,7 +54,8 @@
       ],
       "UpstreamPathTemplate": "/generate-api/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "PATCH" ],
-      "SwaggerKey": "generate"
+      "SwaggerKey": "generate",
+      "Priority": 0
     },
     {
       "DownstreamPathTemplate": "/swagger/{everything}",

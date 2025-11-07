@@ -10,6 +10,7 @@ using Contracts.Common.Interface;
 using Infrastructure.Common.Repository;
 using Polly;
 using Microsoft.AspNetCore.Authentication;
+using Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,6 +74,18 @@ builder.Services.AddHttpClient<IOAuthClient, OAuthClient>()
         .HandleTransientHttpError()
         .WaitAndRetryAsync(3, retryAttempt =>
             TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))); // Exponential backoff
+
+#endregion
+
+#region Authentication & Authorization
+
+// Add Keycloak JWT Authentication for RBAC
+// This will validate JWT tokens and extract roles/claims from access_token in session
+builder.Services.AddKeycloakAuthentication(builder.Configuration);
+
+// Add Keycloak Authorization Policies (RBAC)
+// This registers policies like AdminOnly, ManagerOrAdmin, etc.
+builder.Services.AddKeycloakAuthorization();
 
 #endregion
 
@@ -194,35 +207,35 @@ if (app.Environment.IsDevelopment())
 
     app.MapGet("/_whoami", async (HttpContext ctx) =>
     {
-            var user = ctx.User;
+        var user = ctx.User;
 
-            // Lấy access token từ cookie auth
-            var accessToken = await ctx.GetTokenAsync("access_token");
-            var refreshToken = await ctx.GetTokenAsync("refresh_token");
-            var idToken = await ctx.GetTokenAsync("id_token");
+        // Lấy access token từ cookie auth
+        var accessToken = await ctx.GetTokenAsync("access_token");
+        var refreshToken = await ctx.GetTokenAsync("refresh_token");
+        var idToken = await ctx.GetTokenAsync("id_token");
 
-            return Results.Json(new
+        return Results.Json(new
+        {
+            user = new
             {
-                user = new
-                {
-                    sub = user.FindFirst("sub")?.Value,
-                    username = user.Identity?.Name,
-                    realm_roles = user.FindAll("realm_access/roles").Select(c => c.Value),
-                    resource_roles = user.FindAll("resource_access").Select(c => c.Value),
-                },
-                tokens = new
-                {
-                    access_token = accessToken,
-                    refresh_token = refreshToken, // Chỉ trả trong DEV
-                    id_token = idToken
-                },
-                request = new
-                {
-                    traceId = System.Diagnostics.Activity.Current?.TraceId.ToString(),
-                    correlationId = ctx.Request.Headers["X-Correlation-Id"].FirstOrDefault()
-                }
-            });
-        })
+                sub = user.FindFirst("sub")?.Value,
+                username = user.Identity?.Name,
+                realm_roles = user.FindAll("realm_access/roles").Select(c => c.Value),
+                resource_roles = user.FindAll("resource_access").Select(c => c.Value),
+            },
+            tokens = new
+            {
+                access_token = accessToken,
+                refresh_token = refreshToken, // Chỉ trả trong DEV
+                id_token = idToken
+            },
+            request = new
+            {
+                traceId = System.Diagnostics.Activity.Current?.TraceId.ToString(),
+                correlationId = ctx.Request.Headers["X-Correlation-Id"].FirstOrDefault()
+            }
+        });
+    })
     .RequireAuthorization();
 }
 else
@@ -244,7 +257,13 @@ app.UseRouting();
 // 2. Load session từ Redis
 // 3. Refresh token nếu cần
 // 4. Set AccessToken vào HttpContext.Items
+// 5. Parse JWT và set HttpContext.User (for RBAC)
 app.UseSessionValidation();
+
+// Authentication & Authorization Middleware
+// QUAN TRỌNG: Phải đặt sau UseSessionValidation để có User context
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Map endpoints (Auth Controller)
 // QUAN TRỌNG: app.MapControllers() sẽ tự động gọi app.UseEndpoints()
