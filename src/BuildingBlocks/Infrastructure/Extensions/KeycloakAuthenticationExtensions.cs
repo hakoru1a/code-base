@@ -148,77 +148,8 @@ namespace Infrastructure.Extensions
         {
             services.AddAuthorization(options =>
             {
-                // ===== ROLE-BASED POLICIES (RBAC) =====
-                // These provide coarse-grained access control at the gateway/controller level
-
-                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.AdminOnly, policy =>
-                    policy.RequireRole(Shared.Identity.Roles.Admin));
-
-                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.ManagerOrAdmin, policy =>
-                    policy.RequireRole(
-                        Shared.Identity.Roles.Admin,
-                        Shared.Identity.Roles.Manager,
-                        Shared.Identity.Roles.ProductManager));
-
-                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.AuthenticatedUser, policy =>
-                    policy.RequireAuthenticatedUser());
-
-                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.PremiumUser, policy =>
-                    policy.RequireRole(
-                        Shared.Identity.Roles.PremiumUser,
-                        Shared.Identity.Roles.Admin));
-
-                options.AddPolicy(Shared.Identity.PolicyNames.Rbac.BasicUser, policy =>
-                    policy.RequireRole(
-                        Shared.Identity.Roles.BasicUser,
-                        Shared.Identity.Roles.PremiumUser,
-                        Shared.Identity.Roles.Admin));
-
-                // ===== HYBRID POLICIES (Role + Permission) =====
-                // These combine roles and permissions for flexible access control
-                // Uses helper method for maintainability and consistency
-                // 
-                // Logic: User can access if they have the required permission OR have one of the allowed roles
-                // This provides flexibility: fine-grained control via permissions, quick access via roles
-
-                // CanViewProducts: Permission "product:view" OR roles "admin"/"manager"
-                AddHybridPolicy(
-                    options,
-                    Shared.Identity.PolicyNames.Hybrid.Product.CanView,
-                    Shared.Identity.Permissions.Product.View,
-                    Shared.Identity.Roles.Admin,
-                    Shared.Identity.Roles.Manager);
-
-                // CanCreateProducts: Permission "product:create" OR roles "admin"/"product_manager"
-                AddHybridPolicy(
-                    options,
-                    Shared.Identity.PolicyNames.Hybrid.Product.CanCreate,
-                    Shared.Identity.Permissions.Product.Create,
-                    Shared.Identity.Roles.Admin,
-                    Shared.Identity.Roles.ProductManager);
-
-                // CanUpdateProducts: Permission "product:update" OR roles "admin"/"product_manager"
-                AddHybridPolicy(
-                    options,
-                    Shared.Identity.PolicyNames.Hybrid.Product.CanUpdate,
-                    Shared.Identity.Permissions.Product.Update,
-                    Shared.Identity.Roles.Admin,
-                    Shared.Identity.Roles.ProductManager);
-
-                // CanDeleteProducts: Permission "product:delete" OR role "admin" (more restrictive)
-                AddHybridPolicy(
-                    options,
-                    Shared.Identity.PolicyNames.Hybrid.Product.CanDelete,
-                    Shared.Identity.Permissions.Product.Delete,
-                    Shared.Identity.Roles.Admin);
-
-                // CanViewCategories: Permission "category:view" OR roles "admin"/"manager"
-                AddHybridPolicy(
-                    options,
-                    Shared.Identity.PolicyNames.Hybrid.Category.CanView,
-                    Shared.Identity.Permissions.Category.View,
-                    Shared.Identity.Roles.Admin,
-                    Shared.Identity.Roles.Manager);
+                // Configure all policies from centralized configuration file
+                AuthorizationPolicyConfiguration.ConfigurePolicies(options);
             });
 
             return services;
@@ -256,7 +187,7 @@ namespace Infrastructure.Extensions
         ///     Permissions.Product.View, Roles.Admin, Roles.Manager);
         /// </code>
         /// </example>
-        private static void AddHybridPolicy(
+        internal static void AddHybridPolicy(
             AuthorizationOptions options,
             string policyName,
             string? requiredPermission = null,
