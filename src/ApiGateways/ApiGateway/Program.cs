@@ -7,6 +7,9 @@ using ApiGateway.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add Ocelot configuration file FIRST - before any other configuration
+builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
+
 #region Configuration Settings
 
 // Configure all gateway options from configuration
@@ -37,9 +40,6 @@ builder.Services.AddKeycloakAuthorization();
 #endregion
 
 #region Ocelot Configuration
-
-// Add Ocelot configuration
-builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
 
 // Add Ocelot services với custom DelegatingHandler
 builder.Services.AddOcelot(builder.Configuration)

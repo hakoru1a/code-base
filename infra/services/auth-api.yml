@@ -22,7 +22,7 @@ services:
       # OAuth/Keycloak configuration
       - OAuth__Authority=http://keycloak:8080/realms/base-realm
       - OAuth__ClientId=base-client
-      - OAuth__ClientSecret=your-client-secret
+      - OAuth__ClientSecret=UWP2C8XceQzG6rvdKZd0yuYfTkeisLLV
       - OAuth__RedirectUri=http://localhost:5000/auth/signin-oidc
       - OAuth__PostLogoutRedirectUri=/
       - OAuth__Scopes__0=openid

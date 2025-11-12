@@ -54,7 +54,10 @@ namespace Infrastructure.Extensions
                     ValidateLifetime = keycloakSettings.ValidateLifetime,
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = $"{keycloakSettings.Authority}/realms/{keycloakSettings.Realm}",
-                    ValidAudiences = new[] { keycloakSettings.ClientId, "account" },
+                    // Accept tokens from multiple clients: api-gateway, base-client, account
+                    ValidAudiences = new[] { 
+                        keycloakSettings.ClientId
+                    },
                     ClockSkew = TimeSpan.FromMinutes(5),
                     NameClaimType = "preferred_username",
                     RoleClaimType = ClaimTypes.Role

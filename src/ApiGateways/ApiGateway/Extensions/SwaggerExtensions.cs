@@ -89,6 +89,13 @@ public static class SwaggerExtensions
                         $"{servicesOptions.GenerateAPI.Url}/swagger/v1/swagger.json",
                         servicesOptions.GenerateAPI.Name);
                 }
+
+                if (servicesOptions.AuthAPI.IncludeInSwagger)
+                {
+                    c.SwaggerEndpoint(
+                        $"{servicesOptions.AuthAPI.Url}/swagger/v1/swagger.json",
+                        servicesOptions.AuthAPI.Name);
+                }
                 
                 c.RoutePrefix = SwaggerOptions.RoutePrefix;
                 c.DisplayRequestDuration();

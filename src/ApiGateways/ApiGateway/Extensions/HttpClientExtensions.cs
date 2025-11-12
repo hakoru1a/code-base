@@ -22,7 +22,7 @@ public static class HttpClientExtensions
         // HttpClient for AuthService
         services.AddHttpClient("AuthService", client =>
         {
-            client.BaseAddress = new Uri(servicesOptions.AuthService.Url);
+            client.BaseAddress = new Uri(servicesOptions.AuthAPI.Url);
             client.Timeout = TimeSpan.FromSeconds(30);
         })
         .AddHttpMessageHandler<LoggingDelegatingHandler>()

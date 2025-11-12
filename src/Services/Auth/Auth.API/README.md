@@ -59,7 +59,7 @@ Auth service tách logic authentication ra khỏi API Gateway, tuân thủ nguy�
   "OAuth": {
     "Authority": "http://localhost:8080/realms/base-realm",
     "ClientId": "base-client",
-    "ClientSecret": "your-client-secret",
+    "ClientSecret": "UWP2C8XceQzG6rvdKZd0yuYfTkeisLLV",
     "RedirectUri": "http://localhost:5000/auth/signin-oidc",
     "Scopes": ["openid", "profile", "email"],
     "TokenEndpoint": "http://localhost:8080/realms/base-realm/protocol/openid-connect/token",
