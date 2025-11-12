@@ -36,4 +36,11 @@ public interface ISessionManager
     /// Kiểm tra session validity
     /// </summary>
     Task<bool> IsValidSessionAsync(string sessionId);
+
+    /// <summary>
+    /// Rotate session_id (tạo session_id mới, đưa session_id cũ vào will_remove list)
+    /// </summary>
+    /// <param name="oldSessionId">Session ID cũ</param>
+    /// <returns>Session ID mới</returns>
+    Task<string> RotateSessionIdAsync(string oldSessionId);
 }

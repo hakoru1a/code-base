@@ -47,6 +47,11 @@ public class UserSession
     public DateTime LastAccessedAt { get; set; }
 
     /// <summary>
+    /// Thời điểm session_id được rotate lần cuối (UTC)
+    /// </summary>
+    public DateTime? LastRotatedAt { get; set; }
+
+    /// <summary>
     /// User ID từ token
     /// </summary>
     public string UserId { get; set; } = string.Empty;

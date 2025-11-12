@@ -20,6 +20,7 @@ public class SessionManager : ISessionManager
     private readonly ILogger<SessionManager> _logger;
 
     private const string SessionKeyPrefix = "session:";
+    private const string WillRemoveKeyPrefix = "will_remove:";
 
     public SessionManager(
         IRedisRepository redisRepo,
@@ -96,6 +97,17 @@ public class SessionManager : ISessionManager
 
             if (session == null)
             {
+                // Check xem session_id có trong will_remove list không (đã bị rotate)
+                var newSessionId = await GetNewSessionIdFromWillRemoveListAsync(sessionId);
+                if (!string.IsNullOrEmpty(newSessionId))
+                {
+                    _logger.LogInformation(
+                        "Session ID redirected from will_remove list: {OldSessionId} -> {NewSessionId}",
+                        sessionId,
+                        newSessionId);
+                    return await GetSessionAsync(newSessionId);
+                }
+
                 _logger.LogWarning("Session not found: {SessionId}", sessionId);
                 return null;
             }
@@ -176,6 +188,66 @@ public class SessionManager : ISessionManager
         }
     }
 
+    public async Task<string> RotateSessionIdAsync(string oldSessionId)
+    {
+        try
+        {
+            // Lấy session cũ
+            var oldSession = await GetSessionWithoutUpdateAsync(oldSessionId);
+            if (oldSession == null)
+            {
+                _logger.LogWarning("Cannot rotate: Session not found: {SessionId}", oldSessionId);
+                throw new InvalidOperationException("Session not found");
+            }
+
+            // Tạo session_id mới
+            var newSessionId = GenerateSessionId();
+
+            // Tạo session mới với tất cả data từ session cũ
+            var newSession = new UserSession
+            {
+                SessionId = newSessionId,
+                AccessToken = oldSession.AccessToken,
+                RefreshToken = oldSession.RefreshToken,
+                IdToken = oldSession.IdToken,
+                TokenType = oldSession.TokenType,
+                ExpiresAt = oldSession.ExpiresAt,
+                CreatedAt = oldSession.CreatedAt,
+                LastAccessedAt = DateTime.UtcNow,
+                LastRotatedAt = DateTime.UtcNow,
+                UserId = oldSession.UserId,
+                Username = oldSession.Username,
+                Email = oldSession.Email,
+                Roles = oldSession.Roles,
+                Claims = oldSession.Claims
+            };
+
+            // Lưu session mới
+            await SaveSessionToRedisAsync(newSession);
+
+            // Đưa session_id cũ vào will_remove list với TTL 24h
+            var willRemoveKey = $"{_authSettings.InstanceName}{WillRemoveKeyPrefix}{oldSessionId}";
+            await _redisRepo.SetAsync(willRemoveKey, newSessionId, TimeSpan.FromHours(24));
+
+            // Xóa session cũ khỏi Redis
+            var oldCacheKey = $"{_authSettings.InstanceName}{SessionKeyPrefix}{oldSessionId}";
+            await _redisRepo.DeleteAsync(oldCacheKey);
+
+            _logger.LogInformation(
+                "Session rotated for user {Username}, Old SessionId: {OldSessionId}, New SessionId: {NewSessionId}",
+                oldSession.Username,
+                oldSessionId,
+                newSessionId);
+
+            return newSessionId;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to rotate session: {SessionId}", oldSessionId);
+            throw;
+        }
+    }
+
     #region Private Methods
 
     private async Task SaveSessionToRedisAsync(UserSession session)
@@ -191,6 +263,19 @@ public class SessionManager : ISessionManager
         {
             var cacheKey = $"{_authSettings.InstanceName}{SessionKeyPrefix}{sessionId}";
             return await _redisRepo.GetAsync<UserSession>(cacheKey);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<string?> GetNewSessionIdFromWillRemoveListAsync(string oldSessionId)
+    {
+        try
+        {
+            var willRemoveKey = $"{_authSettings.InstanceName}{WillRemoveKeyPrefix}{oldSessionId}";
+            return await _redisRepo.GetAsync<string>(willRemoveKey);
         }
         catch
         {

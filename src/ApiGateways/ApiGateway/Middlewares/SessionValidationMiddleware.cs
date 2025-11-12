@@ -50,13 +50,33 @@ public class SessionValidationMiddleware
             return;
         }
 
-        // 3. Parse JWT và set HttpContext.User để RBAC hoạt động
+        // 3. Nếu session đã được rotate, update cookie với session_id mới
+        if (!string.IsNullOrEmpty(sessionValidation.NewSessionId))
+        {
+            context.Response.Cookies.Append(
+                CookieConstants.SessionIdCookieName,
+                sessionValidation.NewSessionId,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Lax,
+                    Path = "/",
+                    MaxAge = TimeSpan.FromDays(7)
+                });
+
+            _logger.LogInformation(
+                "Session cookie updated with new session ID: {NewSessionId}",
+                sessionValidation.NewSessionId);
+        }
+
+        // 4. Parse JWT và set HttpContext.User để RBAC hoạt động
         SetUserContextFromJwt(context, sessionValidation.AccessToken);
 
-        // 4. Set access token vào HttpContext.Items để TokenDelegatingHandler sử dụng
+        // 5. Set access token vào HttpContext.Items để TokenDelegatingHandler sử dụng
         context.Items[HttpContextItemKeys.AccessToken] = sessionValidation.AccessToken;
 
-        // 5. Continue pipeline
+        // 6. Continue pipeline
         await _next(context);
     }
 
@@ -154,6 +174,7 @@ public class SessionValidationMiddleware
         public bool IsValid { get; set; }
         public string? AccessToken { get; set; }
         public DateTime? ExpiresAt { get; set; }
+        public string? NewSessionId { get; set; }
     }
 
     #endregion

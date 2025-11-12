@@ -76,7 +76,7 @@ public class AuthController : ControllerBase
         {
             if (!string.IsNullOrEmpty(request.Error))
             {
-                _logger.LogError("OAuth error: {Error}, Description: {Description}", 
+                _logger.LogError("OAuth error: {Error}, Description: {Description}",
                     request.Error, request.ErrorDescription);
 
                 return BadRequest(new
@@ -233,24 +233,60 @@ public class AuthController : ControllerBase
                 return Ok(new SessionValidationResponse { IsValid = false });
             }
 
+            string? newSessionId = null;
+
+            // Check if session needs rotation (> 10 phút kể từ lần rotate cuối hoặc từ lúc tạo)
+            var lastRotateTime = session.LastRotatedAt ?? session.CreatedAt;
+            var minutesSinceLastRotate = (DateTime.UtcNow - lastRotateTime).TotalMinutes;
+
+            if (minutesSinceLastRotate >= 10)
+            {
+                try
+                {
+                    newSessionId = await _sessionManager.RotateSessionIdAsync(session.SessionId);
+
+                    // Lấy lại session mới sau khi rotate
+                    var rotatedSession = await _sessionManager.GetSessionAsync(newSessionId);
+
+                    if (rotatedSession == null)
+                    {
+                        _logger.LogError("Failed to get session after rotation: {NewSessionId}", newSessionId);
+                        return Ok(new SessionValidationResponse { IsValid = false });
+                    }
+
+                    session = rotatedSession;
+
+                    _logger.LogInformation(
+                        "Session rotated: {OldSessionId} -> {NewSessionId}, Minutes since last rotate: {Minutes}",
+                        sessionId,
+                        newSessionId,
+                        minutesSinceLastRotate);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to rotate session: {SessionId}", sessionId);
+                    // Continue với session cũ nếu rotate fail
+                }
+            }
+
             // Check if token needs refresh
             if (session.NeedsRefresh())
             {
                 try
                 {
                     var tokenResponse = await _oauthClient.RefreshTokenAsync(session.RefreshToken);
-                    
+
                     session.AccessToken = tokenResponse.AccessToken;
                     session.RefreshToken = tokenResponse.RefreshToken ?? session.RefreshToken;
                     session.ExpiresAt = tokenResponse.CalculateExpiresAt();
 
                     await _sessionManager.UpdateSessionAsync(session);
 
-                    _logger.LogInformation("Token refreshed for session: {SessionId}", sessionId);
+                    _logger.LogInformation("Token refreshed for session: {SessionId}", session.SessionId);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Failed to refresh token for session: {SessionId}", sessionId);
+                    _logger.LogWarning(ex, "Failed to refresh token for session: {SessionId}", session.SessionId);
                     return Ok(new SessionValidationResponse { IsValid = false });
                 }
             }
@@ -259,7 +295,8 @@ public class AuthController : ControllerBase
             {
                 IsValid = true,
                 AccessToken = session.AccessToken,
-                ExpiresAt = session.ExpiresAt
+                ExpiresAt = session.ExpiresAt,
+                NewSessionId = newSessionId
             });
         }
         catch (Exception ex)
