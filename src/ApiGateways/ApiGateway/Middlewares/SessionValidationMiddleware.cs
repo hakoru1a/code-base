@@ -1,6 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.Extensions.Options;
+using ApiGateway.Configurations;
 
 namespace ApiGateway.Middlewares;
 
@@ -14,16 +16,6 @@ public class SessionValidationMiddleware
     private readonly ILogger<SessionValidationMiddleware> _logger;
     private readonly JwtSecurityTokenHandler _jwtHandler;
 
-    private static readonly HashSet<string> PublicPaths = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "/health",
-        "/swagger",
-        "/auth/login",
-        "/auth/signin-oidc",
-        "/auth/logout",
-        "/auth/signout-callback-oidc"
-    };
-
     public SessionValidationMiddleware(
         RequestDelegate next,
         ILogger<SessionValidationMiddleware> logger)
@@ -36,7 +28,7 @@ public class SessionValidationMiddleware
     public async Task InvokeAsync(
         HttpContext context,
         IHttpClientFactory httpClientFactory,
-        IConfiguration configuration)
+        IOptions<ServicesOptions> servicesOptions)
     {
         var path = context.Request.Path.Value ?? "";
 
@@ -49,11 +41,11 @@ public class SessionValidationMiddleware
 
         // 2. Validate session thông qua Auth service
         var sessionValidation = await ValidateSessionAsync(
-            context, httpClientFactory, configuration);
-        
+            context, httpClientFactory, servicesOptions.Value);
+
         if (sessionValidation == null || !sessionValidation.IsValid)
         {
-            await WriteUnauthorizedResponseAsync(context, "unauthorized",
+            await WriteUnauthorizedResponseAsync(context, AuthenticationConstants.Unauthorized,
                 "Session not found or expired. Please login.");
             return;
         }
@@ -62,7 +54,7 @@ public class SessionValidationMiddleware
         SetUserContextFromJwt(context, sessionValidation.AccessToken);
 
         // 4. Set access token vào HttpContext.Items để TokenDelegatingHandler sử dụng
-        context.Items["AccessToken"] = sessionValidation.AccessToken;
+        context.Items[HttpContextItemKeys.AccessToken] = sessionValidation.AccessToken;
 
         // 5. Continue pipeline
         await _next(context);
@@ -74,24 +66,20 @@ public class SessionValidationMiddleware
     private async Task<SessionValidationResponse?> ValidateSessionAsync(
         HttpContext context,
         IHttpClientFactory httpClientFactory,
-        IConfiguration configuration)
+        ServicesOptions servicesOptions)
     {
         try
         {
-            if (!context.Request.Cookies.TryGetValue("session_id", out var sessionId) ||
+            if (!context.Request.Cookies.TryGetValue(CookieConstants.SessionIdCookieName, out var sessionId) ||
                 string.IsNullOrEmpty(sessionId))
             {
                 _logger.LogWarning("No session cookie found");
                 return null;
             }
 
-            var authServiceUrl = configuration["Services:AuthService:Url"] 
-                ?? "http://localhost:5100";
+            var client = httpClientFactory.CreateClient("AuthService");
 
-            var client = httpClientFactory.CreateClient();
-            
-            var response = await client.GetAsync(
-                $"{authServiceUrl}/api/auth/session/{sessionId}/validate");
+            var response = await client.GetAsync($"/api/auth/session/{sessionId}/validate");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -123,7 +111,7 @@ public class SessionValidationMiddleware
             var jwtToken = _jwtHandler.ReadJwtToken(accessToken);
             var claims = jwtToken.Claims.ToList();
 
-            var identity = new ClaimsIdentity(claims, "Bearer");
+            var identity = new ClaimsIdentity(claims, AuthenticationConstants.BearerScheme);
             var principal = new ClaimsPrincipal(identity);
 
             context.User = principal;
@@ -147,10 +135,10 @@ public class SessionValidationMiddleware
 
     private static bool IsPublicPath(string path)
     {
-        if (PublicPaths.Contains(path))
+        if (PublicPaths.Paths.Contains(path))
             return true;
 
-        foreach (var publicPath in PublicPaths)
+        foreach (var publicPath in PublicPaths.Paths)
         {
             if (path.StartsWith(publicPath, StringComparison.OrdinalIgnoreCase))
                 return true;

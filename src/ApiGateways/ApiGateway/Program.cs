@@ -1,19 +1,16 @@
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
-using Microsoft.OpenApi.Models;
 using ApiGateway.Middlewares;
 using ApiGateway.Handlers;
-using Microsoft.AspNetCore.Authentication;
 using Infrastructure.Extensions;
+using ApiGateway.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 #region Configuration Settings
 
-// Gateway không cần BFF settings nữa vì logic đã chuyển sang Auth service
-// Chỉ cần cấu hình URL của Auth service
-builder.Services.Configure<Dictionary<string, string>>(
-    builder.Configuration.GetSection("Services"));
+// Configure all gateway options from configuration
+var (servicesOptions, oAuthOptions) = builder.Services.ConfigureGatewayOptions(builder.Configuration);
 
 #endregion
 
@@ -22,8 +19,8 @@ builder.Services.Configure<Dictionary<string, string>>(
 // HttpContextAccessor - cần thiết để access HttpContext trong DelegatingHandler
 builder.Services.AddHttpContextAccessor();
 
-// HttpClientFactory để gọi Auth service
-builder.Services.AddHttpClient();
+// Configure named HttpClients with logging and resilience policies
+builder.Services.AddConfiguredHttpClients(servicesOptions);
 
 #endregion
 
@@ -56,65 +53,17 @@ builder.Services.AddTransient<TokenDelegatingHandler>();
 #region Controllers & Swagger
 
 builder.Services.AddControllers();
-
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "API Gateway",
-        Version = "v1",
-        Description = @"
-            API Gateway - Simple Routing & Session Management
-            
-            Architecture:
-            - Gateway chỉ đảm nhận routing và session validation đơn giản
-            - Toàn bộ OAuth 2.0/OIDC logic được xử lý bởi Auth Service
-            - RBAC/PBAC được thực thi tại Gateway và Backend Services
-            
-            Authentication Flow:
-            1. GET /auth/login → Proxy tới Auth Service
-            2. Auth Service xử lý OAuth 2.0 + PKCE với Keycloak
-            3. GET /auth/signin-oidc → Proxy tới Auth Service
-            4. Auth Service tạo session và lưu vào Redis
-            5. Gateway nhận session_id và set HttpOnly cookie
-            6. Các API calls được validate session qua Auth Service
-            7. Gateway inject Bearer token vào requests tới downstream services
-            
-            Security Features:
-            - Session-based authentication với HttpOnly cookies
-            - Token management tại Auth Service (không ở Gateway)
-            - Session validation middleware
-            - Automatic Bearer token injection
-            - RBAC/PBAC policy enforcement
-        "
-    });
 
-    // Add security definition (informational only)
-    c.AddSecurityDefinition("Session", new OpenApiSecurityScheme
-    {
-        Description = "Session-based authentication using HttpOnly cookies",
-        Name = "session_id",
-        In = ParameterLocation.Cookie,
-        Type = SecuritySchemeType.ApiKey
-    });
-});
+// Configure Swagger with OpenAPI documentation
+builder.Services.AddGatewaySwagger();
 
 #endregion
 
 #region CORS
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowWebApp", corsBuilder =>
-    {
-        corsBuilder
-            .WithOrigins(builder.Configuration["OAuth:WebAppUrl"] ?? "http://localhost:3000")
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
-    });
-});
+// Add CORS policy for web application
+builder.Services.AddGatewayCors(oAuthOptions);
 
 #endregion
 
@@ -129,7 +78,7 @@ var app = builder.Build();
 #region Middleware Pipeline
 
 // Apply CORS - PHẢI đặt trước các middleware khác
-app.UseCors("AllowWebApp");
+app.UseGatewayCors();
 
 // Redirect root to Swagger UI
 app.Use(async (context, next) =>
@@ -142,64 +91,8 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// Swagger UI
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API Gateway V1");
-        c.SwaggerEndpoint("http://localhost:5239/swagger/v1/swagger.json", "Base API");
-        c.SwaggerEndpoint("http://localhost:5027/swagger/v1/swagger.json", "Generate API");
-        c.RoutePrefix = "swagger";
-        c.DisplayRequestDuration();
-        c.EnableDeepLinking();
-        c.EnableFilter();
-        c.EnableValidator();
-    });
-
-    app.MapGet("/_whoami", async (HttpContext ctx) =>
-    {
-        var user = ctx.User;
-
-        // Lấy access token từ cookie auth
-        var accessToken = await ctx.GetTokenAsync("access_token");
-        var refreshToken = await ctx.GetTokenAsync("refresh_token");
-        var idToken = await ctx.GetTokenAsync("id_token");
-
-        return Results.Json(new
-        {
-            user = new
-            {
-                sub = user.FindFirst("sub")?.Value,
-                username = user.Identity?.Name,
-                realm_roles = user.FindAll("realm_access/roles").Select(c => c.Value),
-                resource_roles = user.FindAll("resource_access").Select(c => c.Value),
-            },
-            tokens = new
-            {
-                access_token = accessToken,
-                refresh_token = refreshToken, // Chỉ trả trong DEV
-                id_token = idToken
-            },
-            request = new
-            {
-                traceId = System.Diagnostics.Activity.Current?.TraceId.ToString(),
-                correlationId = ctx.Request.Headers["X-Correlation-Id"].FirstOrDefault()
-            }
-        });
-    })
-    .RequireAuthorization();
-}
-else
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "API Gateway V1");
-        c.RoutePrefix = "swagger";
-    });
-}
+// Configure Swagger UI with downstream services
+app.UseGatewaySwaggerUI(app.Environment, servicesOptions);
 
 // Routing
 app.UseRouting();
@@ -223,28 +116,11 @@ app.UseAuthorization();
 // Controller routes sẽ được xử lý trước Ocelot middleware
 app.MapControllers();
 
-// Health check endpoint
-app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json";
-        var result = System.Text.Json.JsonSerializer.Serialize(new
-        {
-            status = report.Status.ToString(),
-            timestamp = DateTime.UtcNow,
-            checks = report.Entries.Select(e => new
-            {
-                name = e.Key,
-                status = e.Value.Status.ToString(),
-                description = e.Value.Description,
-                duration = e.Value.Duration.ToString(),
-                tags = e.Value.Tags
-            })
-        });
-        await context.Response.WriteAsync(result);
-    }
-});
+// Map health check endpoint with custom response writer
+app.MapGatewayHealthChecks();
+
+// Map development-only endpoints like _whoami
+app.MapDevelopmentEndpoints(app.Environment);
 
 // Endpoint routing - PHẢI gọi để đảm bảo controller routes được map
 // app.MapControllers() đã tự động gọi UseEndpoints(), nhưng gọi thêm để chắc chắn

@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using ApiGateway.Configurations;
 
 namespace ApiGateway.Controllers;
 
@@ -11,16 +13,16 @@ namespace ApiGateway.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IConfiguration _configuration;
+    private readonly ServicesOptions _servicesOptions;
     private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         IHttpClientFactory httpClientFactory,
-        IConfiguration configuration,
+        IOptions<ServicesOptions> servicesOptions,
         ILogger<AuthController> logger)
     {
         _httpClientFactory = httpClientFactory;
-        _configuration = configuration;
+        _servicesOptions = servicesOptions.Value;
         _logger = logger;
     }
 
@@ -35,13 +37,10 @@ public class AuthController : ControllerBase
         {
             _logger.LogInformation("Login initiated, returnUrl: {ReturnUrl}", returnUrl);
 
-            var authServiceUrl = _configuration["Services:AuthService:Url"] 
-                ?? "http://localhost:5100";
+            var client = _httpClientFactory.CreateClient("AuthService");
 
-            var client = _httpClientFactory.CreateClient();
-            
             var response = await client.PostAsJsonAsync(
-                $"{authServiceUrl}/api/auth/login/initiate",
+                "/api/auth/login/initiate",
                 new { returnUrl });
 
             if (!response.IsSuccessStatusCode)
@@ -52,7 +51,7 @@ public class AuthController : ControllerBase
             }
 
             var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
-            
+
             if (result == null || string.IsNullOrEmpty(result.AuthorizationUrl))
             {
                 return StatusCode(500, new { error = "invalid_response" });
@@ -80,19 +79,16 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var authServiceUrl = _configuration["Services:AuthService:Url"] 
-                ?? "http://localhost:5100";
+            var client = _httpClientFactory.CreateClient("AuthService");
 
-            var client = _httpClientFactory.CreateClient();
-            
             var response = await client.PostAsJsonAsync(
-                $"{authServiceUrl}/api/auth/login/callback",
-                new 
-                { 
-                    code, 
-                    state, 
-                    error, 
-                    errorDescription 
+                "/api/auth/login/callback",
+                new
+                {
+                    code,
+                    state,
+                    error,
+                    errorDescription
                 });
 
             if (!response.IsSuccessStatusCode)
@@ -109,16 +105,16 @@ public class AuthController : ControllerBase
                 return StatusCode(500, new { error = "invalid_response" });
             }
 
-            Response.Cookies.Append("session_id", result.SessionId, new CookieOptions
+            Response.Cookies.Append(CookieConstants.SessionIdCookieName, result.SessionId, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = Request.IsHttps,
                 SameSite = SameSiteMode.Lax,
-                MaxAge = TimeSpan.FromMinutes(480),
-                Path = "/"
+                MaxAge = TimeSpan.FromMinutes(CookieConstants.SessionMaxAgeMinutes),
+                Path = CookieConstants.CookiePath
             });
 
-            _logger.LogInformation("User logged in successfully, redirecting to: {RedirectUri}", 
+            _logger.LogInformation("User logged in successfully, redirecting to: {RedirectUri}",
                 result.RedirectUri);
 
             return Redirect(result.RedirectUri);
@@ -139,22 +135,22 @@ public class AuthController : ControllerBase
     {
         try
         {
-            if (!Request.Cookies.TryGetValue("session_id", out var sessionId) ||
+            if (!Request.Cookies.TryGetValue(CookieConstants.SessionIdCookieName, out var sessionId) ||
                 string.IsNullOrEmpty(sessionId))
             {
                 return Ok(new { message = "No active session" });
             }
 
-            var authServiceUrl = _configuration["Services:AuthService:Url"] 
-                ?? "http://localhost:5100";
+            var client = _httpClientFactory.CreateClient("AuthService");
 
-            var client = _httpClientFactory.CreateClient();
-            
             await client.PostAsJsonAsync(
-                $"{authServiceUrl}/api/auth/logout",
+                "/api/auth/logout",
                 new { sessionId });
 
-            Response.Cookies.Delete("session_id", new CookieOptions { Path = "/" });
+            Response.Cookies.Delete(CookieConstants.SessionIdCookieName, new CookieOptions
+            {
+                Path = CookieConstants.CookiePath
+            });
 
             _logger.LogInformation("User logged out successfully");
 
@@ -176,19 +172,15 @@ public class AuthController : ControllerBase
     {
         try
         {
-            if (!Request.Cookies.TryGetValue("session_id", out var sessionId) ||
+            if (!Request.Cookies.TryGetValue(CookieConstants.SessionIdCookieName, out var sessionId) ||
                 string.IsNullOrEmpty(sessionId))
             {
                 return Unauthorized(new { error = "no_session", message = "Not logged in" });
             }
 
-            var authServiceUrl = _configuration["Services:AuthService:Url"] 
-                ?? "http://localhost:5100";
+            var client = _httpClientFactory.CreateClient("AuthService");
 
-            var client = _httpClientFactory.CreateClient();
-            
-            var response = await client.GetAsync(
-                $"{authServiceUrl}/api/auth/user/{sessionId}");
+            var response = await client.GetAsync($"/api/auth/user/{sessionId}");
 
             if (!response.IsSuccessStatusCode)
             {
