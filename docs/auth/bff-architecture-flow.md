@@ -32,35 +32,49 @@
                   HttpOnly Cookie: session_id
                             │
 ┌───────────────────────────▼─────────────────────────────────────────────┐
-│                      API Gateway / BFF Layer                             │
+│                          API Gateway                                     │
 │                                                                           │
 │  Components:                                                             │
-│  ├── AuthController         - OAuth login/callback/logout endpoints    │
-│  ├── SessionValidationMiddleware - Validate session, refresh tokens     │
+│  ├── AuthController         - Proxy auth requests to Auth Service      │
+│  ├── SessionValidationMiddleware - Validate session via Auth Service    │
 │  ├── TokenDelegatingHandler - Inject Bearer token to requests          │
-│  ├── PkceService           - Generate & manage PKCE data               │
-│  ├── SessionManager        - Manage user sessions in Redis             │
-│  └── OAuthClient           - Communicate with Keycloak                 │
+│  └── RBAC Policies         - Role-based authorization                  │
 │                                                                           │
-│  Security:                                                               │
-│  ✅ Stores access_token, refresh_token in Redis (not browser)         │
-│  ✅ PKCE data stored in Redis                                          │
-│  ✅ Automatic token refresh                                            │
-│  ✅ Centralized session management                                     │
-└───────────────┬─────────────────────────┬───────────────────────────────┘
-                │                         │
-      Bearer Token                  OAuth 2.0 + PKCE
-                │                         │
-┌───────────────▼─────────┐   ┌───────────▼───────────────────────────────┐
-│   Backend Services      │   │      Keycloak (Identity Provider)         │
-│                         │   │                                            │
-│  - Base.API             │   │  - Authorization Server                   │
-│  - Generate.API         │   │  - Issues JWT tokens                      │
-│  - Other microservices  │   │  - Validates PKCE                         │
-│                         │   │  - User authentication                    │
-│  Validates JWT token    │   │  - Roles & permissions management         │
-│  Checks permissions     │   │                                            │
-└─────────────────────────┘   └───────────────────────────────────────────┘
+│  Responsibilities:                                                       │
+│  ✅ Simple routing and session validation                              │
+│  ✅ RBAC enforcement at gateway level                                  │
+│  ✅ Bearer token injection to downstream services                      │
+│  ❌ NO OAuth logic (moved to Auth Service)                             │
+└──────────┬──────────────────────────┬──────────────────────────────────┘
+           │                          │
+    Bearer Token              Session Validation
+           │                          │
+┌──────────▼─────────┐   ┌────────────▼──────────────────────────────────┐
+│  Backend Services  │   │         Auth Service                           │
+│                    │   │                                                 │
+│  - Base.API        │   │  Components:                                   │
+│  - Generate.API    │   │  ├── PkceService     - PKCE generation        │
+│  - Other services  │   │  ├── SessionManager  - Session management     │
+│                    │   │  └── OAuthClient     - Keycloak communication │
+│  PBAC Enforcement: │   │                                                 │
+│  ✅ JWT validation │   │  Responsibilities:                             │
+│  ✅ Fine-grained   │   │  ✅ OAuth 2.0 + PKCE flow                     │
+│     permissions    │   │  ✅ Token exchange & refresh                  │
+│  ✅ Business logic │   │  ✅ Session storage in Redis                  │
+│     authorization  │   │  ✅ Token lifecycle management                │
+└────────────────────┘   └─────────────┬─────────────────────────────────┘
+                                       │
+                                OAuth 2.0 + PKCE
+                                       │
+                         ┌─────────────▼─────────────────────────────────┐
+                         │     Keycloak (Identity Provider)              │
+                         │                                                │
+                         │  - Authorization Server                       │
+                         │  - Issues JWT tokens                          │
+                         │  - Validates PKCE                             │
+                         │  - User authentication                        │
+                         │  - Roles & permissions management             │
+                         └───────────────────────────────────────────────┘
 ```
 
 ### BFF vs Traditional SPA
@@ -102,52 +116,101 @@
 
 ## 🔧 Architecture Components
 
-### 1. AuthController
+### Gateway Components
+
+#### 1. Gateway AuthController (Proxy)
+
+**Location:** `ApiGateway/Controllers/AuthController.cs`
 
 **Responsibilities:**
-- Handle OAuth login initiation (`/auth/login`)
-- Handle OAuth callback (`/auth/signin-oidc`)
-- Handle logout (`/auth/logout`)
-- Provide user info endpoint (`/auth/user`)
+- Proxy authentication requests to Auth Service
+- Set/clear HttpOnly cookies based on Auth Service responses
+- Simple routing, no business logic
 
 **Key Methods:**
 ```csharp
 [HttpGet("login")]
 public async Task<IActionResult> Login(string returnUrl)
 {
-    // 1. Generate PKCE
-    // 2. Store PKCE in Redis
-    // 3. Redirect to Keycloak authorization endpoint
+    // Proxy to Auth Service: POST /api/auth/login/initiate
+    // Redirect to authorization URL received from Auth Service
 }
 
 [HttpGet("signin-oidc")]
 public async Task<IActionResult> SignInCallback(string code, string state)
 {
-    // 1. Validate state
-    // 2. Get PKCE from Redis
-    // 3. Exchange code + verifier for tokens
-    // 4. Create session in Redis
-    // 5. Set HttpOnly cookie
-    // 6. Redirect to returnUrl
+    // Proxy to Auth Service: POST /api/auth/login/callback
+    // Receive session_id and set HttpOnly cookie
+    // Redirect to returnUrl
 }
 
 [HttpPost("logout")]
 public async Task<IActionResult> Logout()
 {
-    // 1. Get session from cookie
-    // 2. Revoke tokens at Keycloak
-    // 3. Delete session from Redis
-    // 4. Clear cookie
+    // Get session_id from cookie
+    // Proxy to Auth Service: POST /api/auth/logout
+    // Clear cookie
 }
 ```
 
-### 2. SessionValidationMiddleware
+### Auth Service Components
+
+#### 1. Auth Service AuthController
+
+**Location:** `Auth.API/Controllers/AuthController.cs`
+
+**Responsibilities:**
+- Handle OAuth 2.0 + PKCE flow with Keycloak
+- Manage session lifecycle
+- Token exchange and refresh
+
+**Key Endpoints:**
+```csharp
+[HttpPost("login/initiate")]
+public async Task<ActionResult<LoginResponse>> InitiateLogin([FromBody] LoginRequest request)
+{
+    // 1. Generate PKCE (code_verifier, code_challenge, state)
+    // 2. Store PKCE in Redis
+    // 3. Build and return Keycloak authorization URL
+}
+
+[HttpPost("login/callback")]
+public async Task<ActionResult<SignInCallbackResponse>> ProcessCallback([FromBody] SignInCallbackRequest request)
+{
+    // 1. Validate state parameter
+    // 2. Get PKCE data from Redis
+    // 3. Exchange code + code_verifier for tokens
+    // 4. Create session in Redis
+    // 5. Return session_id to Gateway
+}
+
+[HttpPost("logout")]
+public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
+{
+    // 1. Get session from Redis
+    // 2. Revoke tokens at Keycloak
+    // 3. Delete session from Redis
+}
+
+[HttpGet("session/{sessionId}/validate")]
+public async Task<ActionResult<SessionValidationResponse>> ValidateSession(string sessionId)
+{
+    // 1. Get session from Redis
+    // 2. Check if token needs refresh
+    // 3. Refresh token if needed
+    // 4. Return access_token and validity status
+}
+```
+
+#### 2. SessionValidationMiddleware (Gateway)
+
+**Location:** `ApiGateway/Middlewares/SessionValidationMiddleware.cs`
 
 **Responsibilities:**
 - Validate session cookie on every request
-- Load session from Redis
-- Refresh access token if needed
-- Store access token in HttpContext.Items
+- Call Auth Service to validate session and get access_token
+- Parse JWT and set HttpContext.User for RBAC
+- Store access_token in HttpContext.Items for TokenDelegatingHandler
 
 **Flow:**
 ```csharp
@@ -168,37 +231,33 @@ public async Task InvokeAsync(HttpContext context)
         return;
     }
     
-    // 3. Load session from Redis
-    var session = await _sessionManager.GetSessionAsync(sessionId);
-    if (session == null)
+    // 3. Validate session via Auth Service
+    // Auth Service handles token refresh automatically
+    var validationResponse = await CallAuthServiceValidateSession(sessionId);
+    
+    if (validationResponse == null || !validationResponse.IsValid)
     {
         context.Response.StatusCode = 401;
         return;
     }
     
-    // 4. Check if token needs refresh (< 60s before expiry)
-    if (session.NeedsRefresh())
-    {
-        var tokenResponse = await _oauthClient.RefreshTokenAsync(session.RefreshToken);
-        session.AccessToken = tokenResponse.AccessToken;
-        session.RefreshToken = tokenResponse.RefreshToken;
-        session.ExpiresAt = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn);
-        
-        await _sessionManager.UpdateSessionAsync(session);
-    }
+    // 4. Parse JWT and set HttpContext.User for RBAC
+    SetUserContextFromJwt(context, validationResponse.AccessToken);
     
-    // 5. Store access token for downstream use
-    context.Items["AccessToken"] = session.AccessToken;
+    // 5. Store access token for TokenDelegatingHandler
+    context.Items["AccessToken"] = validationResponse.AccessToken;
     
     // 6. Continue pipeline
     await _next(context);
 }
 ```
 
-### 3. TokenDelegatingHandler
+#### 3. TokenDelegatingHandler (Gateway)
+
+**Location:** `ApiGateway/Handlers/TokenDelegatingHandler.cs`
 
 **Responsibilities:**
-- Inject Bearer token vào mọi downstream requests
+- Inject Bearer token vào mọi downstream requests to backend services
 
 **Implementation:**
 ```csharp
@@ -219,12 +278,14 @@ protected override async Task<HttpResponseMessage> SendAsync(
 }
 ```
 
-### 4. PkceService
+#### 4. PkceService (Auth Service)
+
+**Location:** `Auth.Infrastructure/Services/PkceService.cs`
 
 **Responsibilities:**
 - Generate PKCE data (code_verifier, code_challenge)
 - Store PKCE in Redis
-- Retrieve and remove PKCE (one-time use)
+- Retrieve and remove PKCE (one-time use for security)
 
 **Implementation:**
 ```csharp
@@ -251,21 +312,24 @@ public async Task<PkceData> GeneratePkceAsync(string redirectUri)
     
     // Store in Redis with TTL = 10 minutes
     await _redisRepository.SetAsync(
-        key: $"{_bffSettings.InstanceName}pkce:{state}",
+        key: $"{_authSettings.InstanceName}pkce:{state}",
         value: pkceData,
-        expiry: TimeSpan.FromMinutes(_bffSettings.PkceExpirationMinutes)
+        expiry: TimeSpan.FromMinutes(_authSettings.PkceExpirationMinutes)
     );
     
     return pkceData;
 }
 ```
 
-### 5. SessionManager
+#### 5. SessionManager (Auth Service)
+
+**Location:** `Auth.Infrastructure/Services/SessionManager.cs`
 
 **Responsibilities:**
-- Create user sessions
-- Get/update/delete sessions
+- Create user sessions from token response
+- Get/update/delete sessions in Redis
 - Manage session TTL (sliding + absolute expiration)
+- Parse JWT and extract user claims
 
 **Implementation:**
 ```csharp
@@ -291,23 +355,26 @@ public async Task<UserSession> CreateSessionAsync(TokenResponse tokenResponse)
         LastAccessedAt = DateTime.UtcNow
     };
     
-    // Store in Redis with sliding expiration
+    // Store in Redis with TTL
     await _redisRepository.SetAsync(
-        key: $"{_bffSettings.InstanceName}session:{sessionId}",
+        key: $"{_authSettings.InstanceName}session:{sessionId}",
         value: session,
-        expiry: TimeSpan.FromMinutes(_bffSettings.SessionSlidingExpirationMinutes)
+        expiry: TimeSpan.FromMinutes(_authSettings.SessionSlidingExpirationMinutes)
     );
     
     return session;
 }
 ```
 
-### 6. OAuthClient
+#### 6. OAuthClient (Auth Service)
+
+**Location:** `Auth.Infrastructure/Services/OAuthClient.cs`
 
 **Responsibilities:**
+- Communicate with Keycloak OAuth endpoints
 - Exchange authorization code for tokens
 - Refresh access tokens
-- Revoke tokens
+- Revoke tokens on logout
 
 **Implementation:**
 ```csharp
@@ -343,6 +410,7 @@ public async Task<TokenResponse> ExchangeCodeForTokensAsync(string code, string 
 sequenceDiagram
     participant Browser
     participant Gateway
+    participant AuthService
     participant Redis
     participant Keycloak
     participant BackendAPI
@@ -351,8 +419,12 @@ sequenceDiagram
     
     Browser->>Gateway: GET /auth/login?returnUrl=/dashboard
     activate Gateway
-    Gateway->>Gateway: Generate PKCE (verifier, challenge, state)
-    Gateway->>Redis: Store PKCE data (key: BFF_pkce:{state}, TTL: 10min)
+    Gateway->>AuthService: POST /api/auth/login/initiate
+    activate AuthService
+    AuthService->>AuthService: Generate PKCE (verifier, challenge, state)
+    AuthService->>Redis: Store PKCE data (key: Auth_pkce:{state}, TTL: 10min)
+    AuthService->>Gateway: Return authorization URL
+    deactivate AuthService
     Gateway->>Browser: 302 Redirect to Keycloak
     deactivate Gateway
     
@@ -367,36 +439,45 @@ sequenceDiagram
     
     Browser->>Gateway: GET /signin-oidc?code=ABC&state=XYZ
     activate Gateway
-    Gateway->>Redis: Get PKCE data by state
-    Redis->>Gateway: Return PKCE { verifier, challenge }
-    Gateway->>Redis: Delete PKCE (one-time use)
+    Gateway->>AuthService: POST /api/auth/login/callback
+    activate AuthService
+    AuthService->>Redis: Get PKCE data by state
+    Redis->>AuthService: Return PKCE { verifier, challenge }
+    AuthService->>Redis: Delete PKCE (one-time use)
     
-    Gateway->>Keycloak: POST /token (code, verifier, client_secret)
+    AuthService->>Keycloak: POST /token (code, verifier, client_secret)
     Keycloak->>Keycloak: Verify PKCE: sha256(verifier) == challenge
-    Keycloak->>Gateway: Return tokens (access, refresh, id)
+    Keycloak->>AuthService: Return tokens (access, refresh, id)
     
-    Gateway->>Gateway: Parse JWT, extract user info
-    Gateway->>Redis: Store session (key: BFF_session:{id}, TTL: 8h)
+    AuthService->>AuthService: Parse JWT, extract user info
+    AuthService->>Redis: Store session (key: Auth_session:{id}, TTL: 8h)
+    AuthService->>Gateway: Return session_id
+    deactivate AuthService
     Gateway->>Browser: 302 Redirect + Set-Cookie: session_id
     deactivate Gateway
     
-    Note over Browser,BackendAPI: Phase 3: API Call
+    Note over Browser,BackendAPI: Phase 3: API Call with Session Validation
     
     Browser->>Gateway: GET /api/products (Cookie: session_id)
     activate Gateway
-    Gateway->>Redis: Get session by session_id
-    Redis->>Gateway: Return session { accessToken, ... }
-    Gateway->>Gateway: Check token expiry
+    Gateway->>AuthService: GET /api/auth/session/{id}/validate
+    activate AuthService
+    AuthService->>Redis: Get session by session_id
+    Redis->>AuthService: Return session { accessToken, ... }
+    AuthService->>AuthService: Check token expiry
     
     alt Token needs refresh
-        Gateway->>Keycloak: POST /token (refresh_token)
-        Keycloak->>Gateway: New access_token
-        Gateway->>Redis: Update session
+        AuthService->>Keycloak: POST /token (refresh_token)
+        Keycloak->>AuthService: New access_token
+        AuthService->>Redis: Update session
     end
     
+    AuthService->>Gateway: Return { isValid: true, accessToken }
+    deactivate AuthService
+    Gateway->>Gateway: Parse JWT, set HttpContext.User (RBAC)
     Gateway->>BackendAPI: GET /products (Bearer token)
     activate BackendAPI
-    BackendAPI->>BackendAPI: Validate JWT, check permissions
+    BackendAPI->>BackendAPI: Validate JWT, check permissions (PBAC)
     BackendAPI->>Gateway: 200 OK + products
     deactivate BackendAPI
     Gateway->>Browser: 200 OK + products

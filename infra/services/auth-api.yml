@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  auth-api:
+    image: auth-api:latest
+    container_name: auth-api
+    build:
+      context: ../../src/Services/Auth
+      dockerfile: Auth.API/Dockerfile
+    ports:
+      - "5100:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      # Redis configuration
+      - Auth__ConnectionStrings=redis:6379
+      - Auth__InstanceName=Auth_
+      - Auth__SessionSlidingExpirationMinutes=60
+      - Auth__SessionAbsoluteExpirationMinutes=480
+      - Auth__PkceExpirationMinutes=10
+      - Auth__RefreshTokenBeforeExpirationSeconds=60
+      # OAuth/Keycloak configuration
+      - OAuth__Authority=http://keycloak:8080/realms/base-realm
+      - OAuth__ClientId=base-client
+      - OAuth__ClientSecret=your-client-secret
+      - OAuth__RedirectUri=http://localhost:5000/auth/signin-oidc
+      - OAuth__PostLogoutRedirectUri=/
+      - OAuth__Scopes__0=openid
+      - OAuth__Scopes__1=profile
+      - OAuth__Scopes__2=email
+      - OAuth__ResponseType=code
+      - OAuth__UsePkce=true
+      - OAuth__WebAppUrl=http://localhost:3000
+      - OAuth__TokenEndpoint=http://keycloak:8080/realms/base-realm/protocol/openid-connect/token
+      - OAuth__AuthorizationEndpoint=http://keycloak:8080/realms/base-realm/protocol/openid-connect/auth
+      - OAuth__EndSessionEndpoint=http://keycloak:8080/realms/base-realm/protocol/openid-connect/logout
+    depends_on:
+      - redis
+      - keycloak
+    networks:
+      - base-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  base-network:
+    external: true

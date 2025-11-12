@@ -1,69 +1,58 @@
-using ApiGateway.Configurations;
-using ApiGateway.Models;
+using Auth.Application.Interfaces;
+using Auth.Domain.Configurations;
+using Auth.Domain.Models;
 using Contracts.Common.Interface;
+using Microsoft.Extensions.Logging;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text.Json;
 
-namespace ApiGateway.Services;
+namespace Auth.Infrastructure.Services;
 
 /// <summary>
 /// Implementation của Session Manager
-/// Quản lý user sessions với Redis sử dụng IRedisRepository có sẵn từ Infrastructure
 /// </summary>
 public class SessionManager : ISessionManager
 {
     private readonly IRedisRepository _redisRepo;
-    private readonly BffSettings _bffSettings;
+    private readonly AuthSettings _authSettings;
     private readonly OAuthSettings _oauthSettings;
     private readonly ILogger<SessionManager> _logger;
 
-    // Key prefix cho session trong Redis
     private const string SessionKeyPrefix = "session:";
 
     public SessionManager(
         IRedisRepository redisRepo,
-        BffSettings bffSettings,
+        AuthSettings authSettings,
         OAuthSettings oauthSettings,
         ILogger<SessionManager> logger)
     {
         _redisRepo = redisRepo;
-        _bffSettings = bffSettings;
+        _authSettings = authSettings;
         _oauthSettings = oauthSettings;
         _logger = logger;
     }
 
-    /// <summary>
-    /// Tạo session mới từ token response
-    /// </summary>
     public async Task<string> CreateSessionAsync(TokenResponse tokenResponse)
     {
         try
         {
-            // 1. Tạo random session ID
             var sessionId = GenerateSessionId();
 
-            // 2. Parse access token để lấy user claims
             var handler = new JwtSecurityTokenHandler();
             var jwtToken = handler.ReadJwtToken(tokenResponse.AccessToken);
 
-            // 3. Extract user info từ JWT claims
             var userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value ?? "";
             var username = jwtToken.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value ?? "";
             var email = jwtToken.Claims.FirstOrDefault(c => c.Type == "email")?.Value ?? "";
 
-            // 4. Extract roles
             var roles = ExtractRoles(jwtToken);
 
-            // 5. Extract additional claims
-            // Group by Type để handle duplicate claims (ví dụ: allowed-origins có nhiều giá trị)
-            // Lấy giá trị đầu tiên cho mỗi claim type
             var claims = jwtToken.Claims
                 .Where(c => c.Type != "sub" && c.Type != "preferred_username" && c.Type != "email")
                 .GroupBy(c => c.Type)
                 .ToDictionary(g => g.Key, g => g.First().Value);
 
-            // 6. Tạo UserSession object
             var session = new UserSession
             {
                 SessionId = sessionId,
@@ -81,7 +70,6 @@ public class SessionManager : ISessionManager
                 Claims = claims
             };
 
-            // 7. Lưu vào Redis
             await SaveSessionToRedisAsync(session);
 
             _logger.LogInformation(
@@ -99,14 +87,11 @@ public class SessionManager : ISessionManager
         }
     }
 
-    /// <summary>
-    /// Lấy session từ Redis dùng IRedisRepository
-    /// </summary>
     public async Task<UserSession?> GetSessionAsync(string sessionId)
     {
         try
         {
-            var cacheKey = $"{_bffSettings.InstanceName}{SessionKeyPrefix}{sessionId}";
+            var cacheKey = $"{_authSettings.InstanceName}{SessionKeyPrefix}{sessionId}";
             var session = await _redisRepo.GetAsync<UserSession>(cacheKey);
 
             if (session == null)
@@ -115,7 +100,6 @@ public class SessionManager : ISessionManager
                 return null;
             }
 
-            // Update last accessed time (sliding expiration)
             await UpdateLastAccessedAsync(sessionId);
 
             return session;
@@ -127,9 +111,6 @@ public class SessionManager : ISessionManager
         }
     }
 
-    /// <summary>
-    /// Update session (sau khi refresh token)
-    /// </summary>
     public async Task UpdateSessionAsync(UserSession session)
     {
         try
@@ -149,14 +130,11 @@ public class SessionManager : ISessionManager
         }
     }
 
-    /// <summary>
-    /// Xóa session (logout) dùng IRedisRepository
-    /// </summary>
     public async Task RemoveSessionAsync(string sessionId)
     {
         try
         {
-            var cacheKey = $"{_bffSettings.InstanceName}{SessionKeyPrefix}{sessionId}";
+            var cacheKey = $"{_authSettings.InstanceName}{SessionKeyPrefix}{sessionId}";
             await _redisRepo.DeleteAsync(cacheKey);
 
             _logger.LogInformation("Session removed: {SessionId}", sessionId);
@@ -168,9 +146,6 @@ public class SessionManager : ISessionManager
         }
     }
 
-    /// <summary>
-    /// Update last accessed time cho sliding expiration
-    /// </summary>
     public async Task UpdateLastAccessedAsync(string sessionId)
     {
         try
@@ -184,18 +159,14 @@ public class SessionManager : ISessionManager
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to update last accessed: {SessionId}", sessionId);
-            // Không throw để không break request flow
         }
     }
 
-    /// <summary>
-    /// Kiểm tra session validity dùng IRedisRepository
-    /// </summary>
     public async Task<bool> IsValidSessionAsync(string sessionId)
     {
         try
         {
-            var cacheKey = $"{_bffSettings.InstanceName}{SessionKeyPrefix}{sessionId}";
+            var cacheKey = $"{_authSettings.InstanceName}{SessionKeyPrefix}{sessionId}";
             return await _redisRepo.ExistsAsync(cacheKey);
         }
         catch (Exception ex)
@@ -207,31 +178,18 @@ public class SessionManager : ISessionManager
 
     #region Private Methods
 
-    /// <summary>
-    /// Lưu session vào Redis với expiration dùng IRedisRepository
-    /// Note: IRedisRepository không support sliding expiration, chỉ dùng absolute
-    /// Sliding expiration được implement thông qua UpdateLastAccessedAsync
-    /// </summary>
     private async Task SaveSessionToRedisAsync(UserSession session)
     {
-        var cacheKey = $"{_bffSettings.InstanceName}{SessionKeyPrefix}{session.SessionId}";
-
-        // Dùng absolute expiration (Redis TTL)
-        // Sliding expiration được handle bằng cách update lại TTL mỗi lần access
-        var expiry = TimeSpan.FromMinutes(_bffSettings.SessionAbsoluteExpirationMinutes);
-
+        var cacheKey = $"{_authSettings.InstanceName}{SessionKeyPrefix}{session.SessionId}";
+        var expiry = TimeSpan.FromMinutes(_authSettings.SessionAbsoluteExpirationMinutes);
         await _redisRepo.SetAsync(cacheKey, session, expiry);
     }
 
-    /// <summary>
-    /// Lấy session mà không update last accessed
-    /// (dùng internally để tránh infinite loop)
-    /// </summary>
     private async Task<UserSession?> GetSessionWithoutUpdateAsync(string sessionId)
     {
         try
         {
-            var cacheKey = $"{_bffSettings.InstanceName}{SessionKeyPrefix}{sessionId}";
+            var cacheKey = $"{_authSettings.InstanceName}{SessionKeyPrefix}{sessionId}";
             return await _redisRepo.GetAsync<UserSession>(cacheKey);
         }
         catch
@@ -240,9 +198,6 @@ public class SessionManager : ISessionManager
         }
     }
 
-    /// <summary>
-    /// Generate random session ID (32 bytes = 256 bits)
-    /// </summary>
     private static string GenerateSessionId()
     {
         var bytes = new byte[32];
@@ -255,15 +210,10 @@ public class SessionManager : ISessionManager
             .Replace("=", "");
     }
 
-    /// <summary>
-    /// Extract roles từ JWT token
-    /// Keycloak có 2 loại roles: realm_access và resource_access
-    /// </summary>
     private static List<string> ExtractRoles(JwtSecurityToken token)
     {
         var roles = new List<string>();
 
-        // Realm roles
         var realmAccess = token.Claims.FirstOrDefault(c => c.Type == "realm_access")?.Value;
         if (!string.IsNullOrEmpty(realmAccess))
         {
@@ -277,10 +227,9 @@ public class SessionManager : ISessionManager
                         roles.AddRange(realmRoles);
                 }
             }
-            catch { /* Ignore parse errors */ }
+            catch { }
         }
 
-        // Resource/Client roles
         var resourceAccess = token.Claims.FirstOrDefault(c => c.Type == "resource_access")?.Value;
         if (!string.IsNullOrEmpty(resourceAccess))
         {
@@ -300,7 +249,7 @@ public class SessionManager : ISessionManager
                     }
                 }
             }
-            catch { /* Ignore parse errors */ }
+            catch { }
         }
 
         return roles.Distinct().ToList();
@@ -308,4 +257,3 @@ public class SessionManager : ISessionManager
 
     #endregion
 }
-

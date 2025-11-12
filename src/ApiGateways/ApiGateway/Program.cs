@@ -1,14 +1,8 @@
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using Microsoft.OpenApi.Models;
-using ApiGateway.Configurations;
-using ApiGateway.Services;
 using ApiGateway.Middlewares;
 using ApiGateway.Handlers;
-using StackExchange.Redis;
-using Contracts.Common.Interface;
-using Infrastructure.Common.Repository;
-using Polly;
 using Microsoft.AspNetCore.Authentication;
 using Infrastructure.Extensions;
 
@@ -16,64 +10,20 @@ var builder = WebApplication.CreateBuilder(args);
 
 #region Configuration Settings
 
-// Load configuration settings - sử dụng BffSettings kế thừa từ CacheSettings có sẵn
-var bffSettings = builder.Configuration
-    .GetSection(BffSettings.SectionName)
-    .Get<BffSettings>() ?? new BffSettings();
-
-var oauthSettings = builder.Configuration
-    .GetSection(OAuthSettings.SectionName)
-    .Get<OAuthSettings>() ?? throw new InvalidOperationException("OAuth settings not configured");
-
-// Register settings as singletons
-builder.Services.AddSingleton(bffSettings);
-builder.Services.AddSingleton(oauthSettings);
+// Gateway không cần BFF settings nữa vì logic đã chuyển sang Auth service
+// Chỉ cần cấu hình URL của Auth service
+builder.Services.Configure<Dictionary<string, string>>(
+    builder.Configuration.GetSection("Services"));
 
 #endregion
 
-#region Redis Configuration - Sử dụng Infrastructure có sẵn
-
-// Cấu hình Redis connection
-// Redis được dùng để:
-// 1. Lưu user sessions (session_id -> UserSession)
-// 2. Lưu PKCE data (state -> PkceData)
-// 3. Share sessions giữa multiple gateway instances (scalability)
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-{
-    var configuration = ConfigurationOptions.Parse(bffSettings.ConnectionStrings);
-    configuration.AbortOnConnectFail = false; // Không crash app nếu Redis down
-    configuration.ConnectRetry = 3;
-    configuration.ConnectTimeout = 5000;
-
-    return ConnectionMultiplexer.Connect(configuration);
-});
-
-// Register IRedisRepository từ Infrastructure có sẵn
-builder.Services.AddScoped<IRedisRepository, RedisRepository>();
-
-#endregion
-
-#region BFF Services
+#region HTTP Client
 
 // HttpContextAccessor - cần thiết để access HttpContext trong DelegatingHandler
 builder.Services.AddHttpContextAccessor();
 
-// PKCE Service - handle PKCE flow security
-builder.Services.AddScoped<IPkceService, PkceService>();
-
-// Session Manager - quản lý user sessions trong Redis
-builder.Services.AddScoped<ISessionManager, SessionManager>();
-
-// OAuth Client - communicate với Keycloak Token Endpoint
-builder.Services.AddHttpClient<IOAuthClient, OAuthClient>()
-    .ConfigureHttpClient(client =>
-    {
-        client.Timeout = TimeSpan.FromSeconds(30);
-    })
-    .AddPolicyHandler(Polly.Extensions.Http.HttpPolicyExtensions
-        .HandleTransientHttpError()
-        .WaitAndRetryAsync(3, retryAttempt =>
-            TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)))); // Exponential backoff
+// HttpClientFactory để gọi Auth service
+builder.Services.AddHttpClient();
 
 #endregion
 
@@ -112,25 +62,31 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "API Gateway - BFF Pattern",
+        Title = "API Gateway",
         Version = "v1",
         Description = @"
-            API Gateway với Backend-for-Frontend (BFF) Pattern
+            API Gateway - Simple Routing & Session Management
+            
+            Architecture:
+            - Gateway chỉ đảm nhận routing và session validation đơn giản
+            - Toàn bộ OAuth 2.0/OIDC logic được xử lý bởi Auth Service
+            - RBAC/PBAC được thực thi tại Gateway và Backend Services
             
             Authentication Flow:
-            1. GET /auth/login - Khởi tạo OAuth login flow
-            2. User login tại Keycloak
-            3. GET /auth/signin-oidc - Callback xử lý tokens
-            4. Session được tạo và lưu trong Redis
-            5. HttpOnly cookie được set với session_id
-            6. Các API calls tự động có Bearer token từ session
+            1. GET /auth/login → Proxy tới Auth Service
+            2. Auth Service xử lý OAuth 2.0 + PKCE với Keycloak
+            3. GET /auth/signin-oidc → Proxy tới Auth Service
+            4. Auth Service tạo session và lưu vào Redis
+            5. Gateway nhận session_id và set HttpOnly cookie
+            6. Các API calls được validate session qua Auth Service
+            7. Gateway inject Bearer token vào requests tới downstream services
             
             Security Features:
-            - OAuth 2.0 Authorization Code Flow + PKCE
-            - Tokens được lưu backend (Redis), không expose ra browser
-            - HttpOnly cookies cho session management
-            - Automatic token refresh
-            - CSRF protection với state parameter
+            - Session-based authentication với HttpOnly cookies
+            - Token management tại Auth Service (không ở Gateway)
+            - Session validation middleware
+            - Automatic Bearer token injection
+            - RBAC/PBAC policy enforcement
         "
     });
 
@@ -148,17 +104,15 @@ builder.Services.AddSwaggerGen(c =>
 
 #region CORS
 
-// CORS configuration
-// QUAN TRỌNG: Phải configure credentials = true để browser gửi cookies
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowWebApp", corsBuilder =>
     {
         corsBuilder
-            .WithOrigins(oauthSettings.WebAppUrl) // Chỉ allow webapp origin
+            .WithOrigins(builder.Configuration["OAuth:WebAppUrl"] ?? "http://localhost:3000")
             .AllowAnyMethod()
             .AllowAnyHeader()
-            .AllowCredentials(); // Cho phép browser gửi cookies
+            .AllowCredentials();
     });
 });
 
@@ -166,8 +120,7 @@ builder.Services.AddCors(options =>
 
 #region Health Checks
 
-builder.Services.AddHealthChecks()
-    .AddRedis(bffSettings.ConnectionStrings, name: "redis", tags: new[] { "cache" });
+builder.Services.AddHealthChecks();
 
 #endregion
 

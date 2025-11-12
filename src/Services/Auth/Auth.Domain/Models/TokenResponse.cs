@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace ApiGateway.Models;
+namespace Auth.Domain.Models;
 
 /// <summary>
 /// Response từ Keycloak Token Endpoint
@@ -76,4 +76,3 @@ public class TokenResponse
         return DateTime.UtcNow.AddSeconds(ExpiresIn);
     }
 }
-

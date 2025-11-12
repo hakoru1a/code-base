@@ -1,14 +1,5 @@
 # JWT Claims & Authorization Flow
 
-## 📋 Mục Lục
-
-1. [JWT Token Structure](#jwt-token-structure)
-2. [Claims Parsing Flow](#claims-parsing-flow)
-3. [RBAC (Role-Based Access Control)](#rbac-role-based-access-control)
-4. [PBAC (Permission-Based/Policy-Based Access Control)](#pbac-permission-basedpolicy-based-access-control)
-5. [Hybrid Authorization](#hybrid-authorization)
-6. [Code Examples](#code-examples)
-
 ---
 
 ## 🎯 JWT Token Structure
@@ -88,22 +79,28 @@
 ### Flow Overview
 
 ```
-1. Keycloak Issues JWT Token
+1. Browser sends request with session cookie
          ↓
-2. Gateway validates JWT signature
+2. Gateway → SessionValidationMiddleware
          ↓
-3. KeycloakAuthenticationExtensions.MapKeycloakRoles()
+3. Gateway calls Auth Service to validate session
+         ↓
+4. Auth Service returns access_token from session
+         ↓
+5. Gateway parses JWT and validates signature
+         ↓
+6. KeycloakAuthenticationExtensions.MapKeycloakRoles()
    - Extract realm_access.roles → Add to ClaimTypes.Role
    - Extract resource_access.{client}.roles → Add to ClaimTypes.Role
    - Extract scope → Add to "permissions" claim
          ↓
-4. ClaimsPrincipalExtensions.ToUserClaimsContext()
+7. ClaimsPrincipalExtensions.ToUserClaimsContext()
    - Extract UserId from "sub"
    - Collect all Roles (from ClaimTypes.Role)
    - Parse Permissions (from "permissions" or "scope")
    - Extract CustomAttributes (department, region, etc.)
          ↓
-5. UserClaimsContext Object
+8. UserClaimsContext Object
    {
      UserId: "...",
      Roles: ["admin", "user", ...],
@@ -112,7 +109,11 @@
      CustomAttributes: { ... }
    }
          ↓
-6. Authorization Check (RBAC/PBAC)
+9. Authorization Check at Gateway (RBAC)
+         ↓
+10. Gateway injects Bearer token and forwards to Backend Services
+         ↓
+11. Backend Services perform additional PBAC checks
 ```
 
 ### Step-by-Step Code Flow
@@ -821,7 +822,13 @@ _logger.LogDebug("UserContext: UserId={UserId}, Roles={Roles}, Permissions={Perm
 ### Claims Flow
 
 ```
-JWT Token (Keycloak)
+Browser Request (session cookie)
+    ↓
+Gateway SessionValidationMiddleware
+    ↓
+Auth Service validates session → returns access_token
+    ↓
+Gateway parses JWT Token
     ↓
 JwtBearerAuthentication validates signature
     ↓
@@ -835,10 +842,14 @@ ClaimsPrincipal with all claims
 ToUserClaimsContext() creates:
     - UserClaimsContext { UserId, Roles, Permissions, ... }
     ↓
-Authorization Check:
-    - RBAC: Check Roles
-    - PBAC: Check Permissions + Business Logic
-    - Hybrid: Check Permissions OR Roles
+Authorization Check at Gateway (RBAC):
+    - Check Roles with [Authorize] policies
+    ↓
+Gateway injects Bearer token → forwards to Backend Service
+    ↓
+Backend Service Authorization (PBAC):
+    - Check Permissions + Business Logic
+    - Apply fine-grained access control
     ↓
 Result: Allow (200 OK) or Deny (403 Forbidden)
 ```

@@ -1,52 +1,42 @@
-using ApiGateway.Configurations;
-using ApiGateway.Models;
+using Auth.Application.Interfaces;
+using Auth.Domain.Configurations;
+using Auth.Domain.Models;
 using Contracts.Common.Interface;
+using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace ApiGateway.Services;
+namespace Auth.Infrastructure.Services;
 
 /// <summary>
 /// Implementation của PKCE service
-/// Handles PKCE flow security cho OAuth 2.0
-/// Sử dụng IRedisRepository có sẵn từ Infrastructure
 /// </summary>
 public class PkceService : IPkceService
 {
     private readonly IRedisRepository _redisRepo;
-    private readonly BffSettings _bffSettings;
+    private readonly AuthSettings _authSettings;
     private readonly ILogger<PkceService> _logger;
 
-    // Key prefix cho PKCE data trong Redis
     private const string PkceKeyPrefix = "pkce:";
 
     public PkceService(
         IRedisRepository redisRepo,
-        BffSettings bffSettings,
+        AuthSettings authSettings,
         ILogger<PkceService> logger)
     {
         _redisRepo = redisRepo;
-        _bffSettings = bffSettings;
+        _authSettings = authSettings;
         _logger = logger;
     }
 
-    /// <summary>
-    /// Tạo PKCE data và lưu vào Redis
-    /// </summary>
     public async Task<PkceData> GeneratePkceAsync(string redirectUri)
     {
         try
         {
-            // 1. Tạo random code_verifier (độ dài 43-128 chars theo spec)
             var codeVerifier = GenerateCodeVerifier();
-
-            // 2. Hash code_verifier thành code_challenge
             var codeChallenge = GenerateCodeChallenge(codeVerifier);
-
-            // 3. Tạo random state cho CSRF protection
             var state = GenerateState();
 
-            // 4. Tạo PKCE data object
             var pkceData = new PkceData
             {
                 CodeVerifier = codeVerifier,
@@ -55,12 +45,11 @@ public class PkceService : IPkceService
                 State = state,
                 RedirectUri = redirectUri,
                 CreatedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(_bffSettings.PkceExpirationMinutes)
+                ExpiresAt = DateTime.UtcNow.AddMinutes(_authSettings.PkceExpirationMinutes)
             };
 
-            // 5. Lưu vào Redis với key = "pkce:{state}" dùng IRedisRepository
-            var cacheKey = $"{_bffSettings.InstanceName}{PkceKeyPrefix}{state}";
-            var expiry = TimeSpan.FromMinutes(_bffSettings.PkceExpirationMinutes);
+            var cacheKey = $"{_authSettings.InstanceName}{PkceKeyPrefix}{state}";
+            var expiry = TimeSpan.FromMinutes(_authSettings.PkceExpirationMinutes);
 
             await _redisRepo.SetAsync(cacheKey, pkceData, expiry);
 
@@ -78,16 +67,12 @@ public class PkceService : IPkceService
         }
     }
 
-    /// <summary>
-    /// Lấy và xóa PKCE data (one-time use)
-    /// </summary>
     public async Task<PkceData?> GetAndRemovePkceAsync(string state)
     {
         try
         {
-            var cacheKey = $"{_bffSettings.InstanceName}{PkceKeyPrefix}{state}";
+            var cacheKey = $"{_authSettings.InstanceName}{PkceKeyPrefix}{state}";
 
-            // 1. Lấy data từ Redis dùng IRedisRepository
             var pkceData = await _redisRepo.GetAsync<PkceData>(cacheKey);
 
             if (pkceData == null)
@@ -96,7 +81,6 @@ public class PkceService : IPkceService
                 return null;
             }
 
-            // 2. Kiểm tra expiration
             if (DateTime.UtcNow > pkceData.ExpiresAt)
             {
                 _logger.LogWarning("PKCE data expired for state: {State}", state);
@@ -104,7 +88,6 @@ public class PkceService : IPkceService
                 return null;
             }
 
-            // 3. Xóa khỏi Redis (one-time use để prevent replay attack)
             await _redisRepo.DeleteAsync(cacheKey);
 
             _logger.LogInformation("PKCE data retrieved and removed for state: {State}", state);
@@ -118,14 +101,9 @@ public class PkceService : IPkceService
         }
     }
 
-    /// <summary>
-    /// Tạo code verifier theo spec:
-    /// - Length: 43-128 characters (chọn 64 cho balanced security)
-    /// - Characters: [A-Z] [a-z] [0-9] - . _ ~
-    /// </summary>
     public string GenerateCodeVerifier()
     {
-        const int length = 64; // Balanced length (spec allows 43-128)
+        const int length = 64;
         const string unreservedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
 
         var bytes = new byte[length];
@@ -141,22 +119,13 @@ public class PkceService : IPkceService
         return result.ToString();
     }
 
-    /// <summary>
-    /// Tạo code challenge từ verifier
-    /// Method: S256 = BASE64URL(SHA256(ASCII(code_verifier)))
-    /// </summary>
     public string GenerateCodeChallenge(string codeVerifier)
     {
         using var sha256 = SHA256.Create();
         var hash = sha256.ComputeHash(Encoding.ASCII.GetBytes(codeVerifier));
-
-        // Base64Url encode (không có padding và replace chars)
         return Base64UrlEncode(hash);
     }
 
-    /// <summary>
-    /// Tạo random state (32 chars)
-    /// </summary>
     public string GenerateState()
     {
         const int length = 32;
@@ -168,13 +137,6 @@ public class PkceService : IPkceService
         return Base64UrlEncode(bytes);
     }
 
-    /// <summary>
-    /// Base64Url encoding (RFC 4648 Section 5)
-    /// Khác Base64 thường:
-    /// - Không có padding (=)
-    /// - Replace + với -
-    /// - Replace / với _
-    /// </summary>
     private static string Base64UrlEncode(byte[] input)
     {
         return Convert.ToBase64String(input)
@@ -183,4 +145,3 @@ public class PkceService : IPkceService
             .Replace('/', '_');
     }
 }
-

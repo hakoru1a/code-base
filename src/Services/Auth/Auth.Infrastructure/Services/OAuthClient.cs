@@ -1,14 +1,14 @@
-using ApiGateway.Configurations;
-using ApiGateway.Models;
+using Auth.Application.Interfaces;
+using Auth.Domain.Configurations;
+using Auth.Domain.Models;
 using Microsoft.AspNetCore.WebUtilities;
-using System.Text;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
-namespace ApiGateway.Services;
+namespace Auth.Infrastructure.Services;
 
 /// <summary>
 /// Implementation của OAuth Client
-/// Communicate với Keycloak OAuth endpoints
 /// </summary>
 public class OAuthClient : IOAuthClient
 {
@@ -26,10 +26,6 @@ public class OAuthClient : IOAuthClient
         _logger = logger;
     }
 
-    /// <summary>
-    /// Exchange authorization code để lấy tokens
-    /// Đây là bước cuối của Authorization Code Flow
-    /// </summary>
     public async Task<TokenResponse> ExchangeCodeForTokensAsync(
         string code,
         string codeVerifier,
@@ -39,7 +35,6 @@ public class OAuthClient : IOAuthClient
         {
             _logger.LogInformation("Exchanging authorization code for tokens");
 
-            // 1. Prepare request body theo OAuth 2.0 spec
             var requestBody = new Dictionary<string, string>
             {
                 ["grant_type"] = "authorization_code",
@@ -47,17 +42,15 @@ public class OAuthClient : IOAuthClient
                 ["client_id"] = _oauthSettings.ClientId,
                 ["client_secret"] = _oauthSettings.ClientSecret,
                 ["redirect_uri"] = redirectUri,
-                ["code_verifier"] = codeVerifier // PKCE
+                ["code_verifier"] = codeVerifier
             };
 
-            // 2. Call Keycloak Token Endpoint
             var response = await _httpClient.PostAsync(
                 _oauthSettings.TokenEndpoint,
                 new FormUrlEncodedContent(requestBody));
 
             var content = await response.Content.ReadAsStringAsync();
 
-            // 3. Parse response
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogError(
@@ -87,17 +80,12 @@ public class OAuthClient : IOAuthClient
         }
     }
 
-    /// <summary>
-    /// Refresh access token
-    /// Call này được trigger tự động khi access token sắp expire
-    /// </summary>
     public async Task<TokenResponse> RefreshTokenAsync(string refreshToken)
     {
         try
         {
             _logger.LogInformation("Refreshing access token");
 
-            // 1. Prepare request body
             var requestBody = new Dictionary<string, string>
             {
                 ["grant_type"] = "refresh_token",
@@ -106,14 +94,12 @@ public class OAuthClient : IOAuthClient
                 ["client_secret"] = _oauthSettings.ClientSecret
             };
 
-            // 2. Call Token Endpoint
             var response = await _httpClient.PostAsync(
                 _oauthSettings.TokenEndpoint,
                 new FormUrlEncodedContent(requestBody));
 
             var content = await response.Content.ReadAsStringAsync();
 
-            // 3. Parse response
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
@@ -143,20 +129,14 @@ public class OAuthClient : IOAuthClient
         }
     }
 
-    /// <summary>
-    /// Revoke token (logout)
-    /// Best practice: revoke refresh token khi logout
-    /// </summary>
     public async Task RevokeTokenAsync(string refreshToken)
     {
         try
         {
             _logger.LogInformation("Revoking refresh token");
 
-            // Keycloak revocation endpoint
             var revokeEndpoint = _oauthSettings.TokenEndpoint.Replace("/token", "/revoke");
 
-            // Prepare request
             var requestBody = new Dictionary<string, string>
             {
                 ["token"] = refreshToken,
@@ -185,14 +165,10 @@ public class OAuthClient : IOAuthClient
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error revoking token");
-            // Không throw vì revoke failure không nên block logout flow
         }
     }
 
-    /// <summary>
-    /// Build Authorization URL để redirect browser tới Keycloak
-    /// </summary>
-    public string BuildAuthorizationUrl(Models.PkceData pkceData, string redirectUri)
+    public string BuildAuthorizationUrl(PkceData pkceData, string redirectUri)
     {
         var queryParams = new Dictionary<string, string?>
         {
@@ -208,4 +184,3 @@ public class OAuthClient : IOAuthClient
         return QueryHelpers.AddQueryString(_oauthSettings.AuthorizationEndpoint, queryParams);
     }
 }
-
