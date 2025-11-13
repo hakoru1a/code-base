@@ -1,4 +1,4 @@
-using Generate.Application.Common.DTOs.Category;
+using Shared.DTOs.Category;
 using MediatR;
 
 namespace Generate.Application.Features.Category.Queries.GetCategories

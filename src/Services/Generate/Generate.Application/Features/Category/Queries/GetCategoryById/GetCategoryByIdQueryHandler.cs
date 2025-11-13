@@ -1,5 +1,5 @@
 using AutoMapper;
-using Generate.Application.Common.DTOs.Category;
+using Shared.DTOs.Category;
 using Generate.Infrastructure.Interfaces;
 using MediatR;
 

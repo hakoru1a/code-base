@@ -1,4 +1,4 @@
-using Auth.Application.DTOs;
+using Shared.DTOs.Auth;
 using Auth.Application.Interfaces;
 using Auth.Domain.Configurations;
 using Microsoft.AspNetCore.Mvc;

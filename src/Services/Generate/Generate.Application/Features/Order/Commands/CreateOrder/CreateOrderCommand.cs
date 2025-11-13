@@ -1,4 +1,4 @@
-using Generate.Application.Common.DTOs.Order;
+using Shared.DTOs.Order;
 using MediatR;
 
 namespace Generate.Application.Features.Order.Commands.CreateOrder

@@ -1,4 +1,4 @@
-using Base.Application.Common.Models.Product;
+using Shared.DTOs.Product;
 using MediatR;
 using Shared.SeedWork;
 using System;

@@ -1,5 +1,5 @@
 using Asp.Versioning;
-using Generate.Application.Common.DTOs.Category;
+using Shared.DTOs.Category;
 using Generate.Application.Features.Category.Commands.CreateCategory;
 using Generate.Application.Features.Category.Commands.DeleteCategory;
 using Generate.Application.Features.Category.Commands.UpdateCategory;

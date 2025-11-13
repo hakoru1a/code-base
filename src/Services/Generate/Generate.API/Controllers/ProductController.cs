@@ -1,5 +1,5 @@
 using Asp.Versioning;
-using Generate.Application.Common.DTOs.Product;
+using Shared.DTOs.Product;
 using Generate.Application.Features.Product.Commands.CreateProduct;
 using Generate.Application.Features.Product.Commands.DeleteProduct;
 using Generate.Application.Features.Product.Commands.UpdateProduct;

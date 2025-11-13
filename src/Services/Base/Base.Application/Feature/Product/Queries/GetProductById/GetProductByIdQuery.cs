@@ -1,4 +1,4 @@
-using Base.Application.Common.Models.Product;
+using Shared.DTOs.Product;
 using MediatR;
 using System;
 using System.Collections.Generic;

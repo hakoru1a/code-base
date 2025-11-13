@@ -1,4 +1,4 @@
-using Generate.Application.Common.DTOs.Product;
+using Shared.DTOs.Product;
 using MediatR;
 
 namespace Generate.Application.Features.Product.Queries.GetProductById

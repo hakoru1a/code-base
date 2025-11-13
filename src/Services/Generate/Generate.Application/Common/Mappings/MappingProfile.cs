@@ -1,7 +1,7 @@
 using AutoMapper;
-using Generate.Application.Common.DTOs.Category;
-using Generate.Application.Common.DTOs.Order;
-using Generate.Application.Common.DTOs.Product;
+using Shared.DTOs.Category;
+using Shared.DTOs.Order;
+using Shared.DTOs.Product;
 using Generate.Domain.Entities;
 
 namespace Generate.Application.Common.Mappings

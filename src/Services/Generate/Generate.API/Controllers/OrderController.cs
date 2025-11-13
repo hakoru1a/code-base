@@ -1,5 +1,5 @@
 using Asp.Versioning;
-using Generate.Application.Common.DTOs.Order;
+using Shared.DTOs.Order;
 using Generate.Application.Features.Order.Commands.CreateOrder;
 using Generate.Application.Features.Order.Commands.DeleteOrder;
 using Generate.Application.Features.Order.Commands.UpdateOrder;

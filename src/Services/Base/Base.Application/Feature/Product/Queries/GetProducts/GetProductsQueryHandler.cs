@@ -1,5 +1,5 @@
 using AutoMapper;
-using Base.Application.Common.Models.Product;
+using Shared.DTOs.Product;
 using Base.Infrastructure.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

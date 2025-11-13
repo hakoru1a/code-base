@@ -1,4 +1,4 @@
-using Base.Application.Common.Models.Product;
+using Shared.DTOs.Product;
 using Base.Application.Feature.Product.Commands.CreateProduct;
 using Base.Application.Feature.Product.Queries.GetProductById;
 using Base.Application.Feature.Product.Queries.GetProducts;
