@@ -343,10 +343,16 @@ public class ErrorWrappingMiddleware
 - **Serilog**: Structured logging với Elasticsearch
 - **Swagger/OpenAPI**: API documentation
 - **MailKit**: Email services
-- **Hangfire**: Background jobs
+- **Hangfire**: Background jobs & scheduled tasks
 - **MassTransit**: Message queuing với RabbitMQ
 - **MediatR**: In-memory messaging
 - **Keycloak**: OAuth 2.0 / OpenID Connect authentication
+- **Elasticsearch.NET**: Full-text search & log aggregation
+- **Kibana**: Data visualization & log analysis
+- **Polly**: Circuit breaker & resilience patterns
+- **AspNetCoreRateLimit**: Rate limiting middleware
+- **Grpc.Net.Client**: gRPC client communication
+- **SignalR**: Real-time WebSocket communication
 
 ## 📁 Project Structure
 
@@ -385,13 +391,15 @@ CodeBase/
 ## 🚀 Getting Started
 
 ### Prerequisites
-- .NET 9 SDK
-- MySQL/PostgreSQL/Oracle (chọn một)
-- Redis (optional)
-- MongoDB (optional)
-- RabbitMQ (cho MassTransit)
-- Elasticsearch (cho logging)
-- Keycloak (cho authentication)
+- **.NET 9 SDK**
+- **Database**: MySQL/PostgreSQL/Oracle (chọn một)
+- **Redis**: Caching layer (optional)
+- **MongoDB**: Document storage (optional)
+- **RabbitMQ**: Message queuing cho MassTransit
+- **Elasticsearch**: Logging & full-text search
+- **Kibana**: Data visualization (optional, đi kèm Elasticsearch)
+- **Keycloak**: OAuth 2.0 / OpenID Connect authentication
+- **Docker & Docker Compose**: Cho infrastructure setup (recommended)
 
 ### Installation
 ```bash
@@ -466,19 +474,30 @@ dotnet run --project Base.API
 - [x] Event-driven architecture
 - [x] OAuth 2.0 / OpenID Connect (Keycloak)
 
-### 🔄 In Progress
-- [ ] Background jobs (Hangfire)
-- [ ] JWT token refresh flow
-- [ ] API versioning
-- [ ] Role-based authorization 
+### 📋 Planned (Theo độ ưu tiên)
 
-### 📋 Planned
-- [ ] Microservices support
-- [ ] Docker containerization
-- [ ] Kubernetes deployment
-- [ ] Performance monitoring
-- [ ] Health checks
+#### 🔴 Ưu tiên cao (High Priority)
+- [ ] **Health Checks** - Tích hợp ASP.NET Core Health Checks để monitor database, Redis, RabbitMQ, và external services
+- [ ] **Rate Limiting** - Giới hạn số lượng requests từ client để bảo vệ backend services khỏi DDoS và abuse
+- [ ] **Circuit Breaker & Resilience** - Sử dụng Polly để implement circuit breaker pattern, retry policies, và timeout handling
+- [ ] **Outbox Pattern** - Đảm bảo tính nhất quán dữ liệu khi publish events, tránh mất message khi database transaction commit nhưng message chưa được gửi
+- [ ] **Message Queue Enhancement** - Mở rộng MassTransit với dead-letter queue, message priority, và delayed messages
 
+#### 🟡 Ưu tiên trung bình (Medium Priority)
+- [ ] **Hangfire Scheduled Jobs** - Tích hợp Hangfire cho background jobs và scheduled tasks (cron jobs, recurring jobs, delayed jobs)
+- [ ] **gRPC Communication** - Sử dụng gRPC cho giao tiếp giữa các business services với hiệu năng cao, type-safe contracts, và streaming support
+- [ ] **Full Text Search với Elasticsearch** - Tích hợp Elasticsearch cho tìm kiếm toàn văn (full-text search) với khả năng tìm kiếm nâng cao, fuzzy matching, và faceted search
+- [ ] **Elasticsearch + Kibana Application** - Ứng dụng Elasticsearch kết hợp Kibana cho log analysis, monitoring, và data visualization dashboard
+- [ ] **Saga Pattern** - Quản lý distributed transactions giữa các microservices với compensation logic
+- [ ] **CI/CD Pipeline** - Automated build, test, và deployment với GitHub Actions/GitLab CI/Azure DevOps
+- [ ] **Feature Flags** - Sử dụng feature flags để enable/disable features mà không cần deploy, hỗ trợ A/B testing
+
+#### 🟢 Ưu tiên thấp (Low Priority)
+- [ ] **WebSocket/SignalR** - Real-time communication cho notifications và live updates
+- [ ] **Microservices Support** - Chia nhỏ monolith thành microservices với service discovery
+- [ ] **Docker Containerization** - Containerize applications với Docker và Docker Compose
+- [ ] **Kubernetes Deployment** - Deploy và orchestrate containers với Kubernetes
+- [ ] **Performance Monitoring** - Tích hợp APM tools (Application Performance Monitoring) như Application Insights, New Relic
 
 ## 📖 Documentation
 
