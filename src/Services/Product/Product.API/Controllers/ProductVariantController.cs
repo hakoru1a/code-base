@@ -4,6 +4,7 @@ using Shared.DTOs.Product;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Shared.SeedWork;
+using Product.Application.Features.ProductVariants.Commands.UpdateVariant;
 
 namespace Product.API.Controllers
 {
@@ -44,7 +45,7 @@ namespace Product.API.Controllers
             // TODO: Implement GetVariantsByProductIdQuery
             // var query = new GetVariantsByProductIdQuery(productId);
             // var result = await _mediator.Send(query);
-            
+
             // For now, return empty list
             var result = new List<ProductVariantDto>();
             return Ok(new ApiSuccessResult<IEnumerable<ProductVariantDto>>(result, ResponseMessages.RetrieveItemsSuccess));
@@ -132,7 +133,7 @@ namespace Product.API.Controllers
                 // var result = await _mediator.Send(command);
                 // _logger.LogInformation("Variant with ID: {VariantId} updated successfully", id);
                 // return Ok(new ApiSuccessResult<ProductVariantDto>(result, ResponseMessages.ItemUpdated("Variant")));
-                
+
                 return NotFound(new ApiErrorResult<ProductVariantDto>(
                     ResponseMessages.ItemNotFound("Variant", id)));
             }
@@ -167,7 +168,7 @@ namespace Product.API.Controllers
                 // var result = await _mediator.Send(command);
                 // _logger.LogInformation("Variant with ID: {VariantId} deleted successfully", id);
                 // return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.ItemDeleted("Variant")));
-                
+
                 return NotFound(new ApiErrorResult<bool>(
                     ResponseMessages.ItemNotFound("Variant", id)));
             }

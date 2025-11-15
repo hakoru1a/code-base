@@ -1,4 +1,6 @@
 using Asp.Versioning;
+using Product.Application.Features.ProductVariants.Commands.CreateVariantAttribute;
+using Product.Application.Features.ProductVariants.Commands.UpdateVariantAttribute;
 using Shared.DTOs.Product;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;

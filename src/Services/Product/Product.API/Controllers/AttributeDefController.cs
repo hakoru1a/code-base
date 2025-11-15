@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using Product.Application.Features.AttributeDefs.Commands.CreateAttribute;
+using Product.Application.Features.AttributeDefs.Commands.UpdateAttribute;
 using Shared.DTOs.Product;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -42,7 +43,7 @@ namespace Product.API.Controllers
             // TODO: Implement GetAttributeDefsQuery
             // var query = new GetAttributeDefsQuery { IsActive = isActive };
             // var result = await _mediator.Send(query);
-            
+
             // For now, return empty list
             var result = new List<AttributeDefDto>();
             return Ok(new ApiSuccessResult<IEnumerable<AttributeDefDto>>(result, ResponseMessages.RetrieveItemsSuccess));
@@ -113,7 +114,7 @@ namespace Product.API.Controllers
         [ProducesResponseType(typeof(ApiErrorResult<AttributeDefDto>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiErrorResult<AttributeDefDto>), StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Update(long id, [FromBody] UpdateAttributeDefCommand command)
+        public async Task<IActionResult> Update(long id, [FromBody] UpdateAttributeCommand command)
         {
             _logger.LogInformation("Updating attribute definition with ID: {AttributeId}", id);
 
@@ -129,7 +130,7 @@ namespace Product.API.Controllers
                 // var result = await _mediator.Send(command);
                 // _logger.LogInformation("Attribute definition with ID: {AttributeId} updated successfully", id);
                 // return Ok(new ApiSuccessResult<AttributeDefDto>(result, ResponseMessages.ItemUpdated("Attribute Definition")));
-                
+
                 return NotFound(new ApiErrorResult<AttributeDefDto>(
                     ResponseMessages.ItemNotFound("Attribute Definition", id)));
             }
@@ -164,7 +165,7 @@ namespace Product.API.Controllers
                 // var result = await _mediator.Send(command);
                 // _logger.LogInformation("Attribute definition with ID: {AttributeId} deleted successfully", id);
                 // return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.ItemDeleted("Attribute Definition")));
-                
+
                 return NotFound(new ApiErrorResult<bool>(
                     ResponseMessages.ItemNotFound("Attribute Definition", id)));
             }
@@ -199,7 +200,7 @@ namespace Product.API.Controllers
                 // var result = await _mediator.Send(command);
                 // _logger.LogInformation("Attribute definition with ID: {AttributeId} status toggled successfully", id);
                 // return Ok(new ApiSuccessResult<AttributeDefDto>(result, "Status updated successfully"));
-                
+
                 return NotFound(new ApiErrorResult<AttributeDefDto>(
                     ResponseMessages.ItemNotFound("Attribute Definition", id)));
             }
