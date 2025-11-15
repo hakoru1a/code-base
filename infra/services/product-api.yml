@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  product-api:
+    image: product-api:latest
+    container_name: product-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=mysql;Port=3306;Database=ProductDb;Uid=root;Pwd=password123;
+      - Redis__ConnectionString=redis:6379
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+      - Keycloak__Authority=http://keycloak:8080/auth/realms/codebase
+      - Keycloak__Audience=product-api
+      - ApiGateway__BaseUrl=http://api-gateway:8080
+      - Logging__LogLevel__Default=Information
+      - Logging__LogLevel__Microsoft=Warning
+      - Logging__LogLevel__System=Warning
+      - ElasticSearch__Uri=http://elasticsearch:9200
+      - ElasticSearch__DefaultIndex=product-logs
+    ports:
+      - "8083:8080"
+    depends_on:
+      - mysql
+      - redis
+      - rabbitmq
+      - keycloak
+    networks:
+      - codebase-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - ./logs/product-api:/app/logs
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.product-api.rule=PathPrefix(`/api/product`)"
+      - "traefik.http.routers.product-api.entrypoints=web"
+      - "traefik.http.services.product-api.loadbalancer.server.port=8080"
+
+networks:
+  codebase-network:
+    external: true
+
+volumes:
+  product-logs:
+    driver: local
