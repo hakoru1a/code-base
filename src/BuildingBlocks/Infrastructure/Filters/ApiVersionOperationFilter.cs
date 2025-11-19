@@ -1,7 +1,7 @@
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-namespace Base.API.Filters
+namespace Infrastructure.Filters
 {
     /// <summary>
     /// Operation filter to add x-api-version header to all API operations

@@ -1,5 +1,4 @@
 using Generate.API.Extensions;
-using Generate.Application;
 using Generate.Application.Features.Category.Policies;
 using Generate.Application.Features.Product.Policies;
 using Generate.Application.Features.Order.Policies;
@@ -19,9 +18,6 @@ try
 
     // Add Serilog Configuration
     builder.Host.UseSerilog(SeriLogger.Configure);
-
-    // Add Configuration
-    builder.Host.AddConfiguration();
 
     // Add Keycloak Authentication (RBAC at Gateway, but also validated at Service level)
     builder.Services.AddKeycloakAuthentication(builder.Configuration);
@@ -51,9 +47,6 @@ try
 
     // Add services to the container
     builder.Services.AddInfrastructureServices(builder.Configuration);
-
-    // Add Application Services (MediatR, Mapster, FluentValidation)
-    builder.Services.AddApplicationServices();
 
     // Add Infrastructure Services (Database, Repositories, etc.)
     builder.Services.AddInfrastructure(builder.Configuration);
