@@ -32,8 +32,14 @@ var oAuthOptions = builder.Configuration.GetOptions<OAuthOptions>(OAuthOptions.S
 // HttpContextAccessor - cần thiết để access HttpContext trong DelegatingHandler
 builder.Services.AddHttpContextAccessor();
 
-// Configure named HttpClients with logging and resilience policies
-builder.Services.AddConfiguredHttpClients(servicesOptions);
+// Configure named HttpClients with logging and resilience policies using Infrastructure extension
+var httpClients = new Dictionary<string, string>
+{
+    { "AuthService", servicesOptions.AuthAPI.Url },
+    { "BaseAPI", servicesOptions.BaseAPI.Url },
+    { "GenerateAPI", servicesOptions.GenerateAPI.Url }
+};
+builder.Services.AddMultipleHttpClientsWithResilience(httpClients, timeoutSeconds: 30, retryCount: 3, circuitBreakerEvents: 5, circuitBreakerDuration: 30);
 
 #endregion
 
@@ -72,8 +78,10 @@ builder.Services.AddGatewaySwagger();
 
 #region CORS
 
-// Add CORS policy for web application
-builder.Services.AddGatewayCors(oAuthOptions);
+// Add CORS policy for web application using Infrastructure extension
+builder.Services.AddCorsForProduction(
+    allowedOrigins: new[] { oAuthOptions.WebAppUrl },
+    policyName: "AllowWebApp");
 
 #endregion
 
@@ -89,7 +97,7 @@ var app = builder.Build();
 #region Middleware Pipeline
 
 // Apply CORS - PHẢI đặt trước các middleware khác
-app.UseGatewayCors();
+app.UseCorsConfiguration("AllowWebApp");
 
 // Redirect root to Swagger UI
 app.Use(async (context, next) =>
