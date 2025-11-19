@@ -3,7 +3,7 @@ using Contracts.Domain.Interface;
 
 namespace Generate.Domain.Entities;
 
-public class OrderItem : AuditableBase<long>
+public class OrderItem : EntityAuditBase<long>
 {
     public long OrderId { get; set; }
     public long ProductId { get; set; }

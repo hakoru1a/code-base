@@ -36,6 +36,11 @@ public static class SwaggerExtensions
                     6. Các API calls được validate session qua Auth Service
                     7. Gateway inject Bearer token vào requests tới downstream services
                     
+                    API Versioning:
+                    - All downstream services now use header-based versioning
+                    - Send 'x-api-version' header (e.g., 1.0) instead of URL versioning
+                    - Default version: 1.0 if header is not provided
+                    
                     Security Features:
                     - Session-based authentication với HttpOnly cookies
                     - Token management tại Auth Service (không ở Gateway)
@@ -116,6 +121,9 @@ public static class SwaggerExtensions
         return app;
     }
 }
+
+
+
 
 
 

@@ -6,6 +6,7 @@ using Generate.Application.Features.Category.Commands.UpdateCategory;
 using Generate.Application.Features.Category.Queries.GetCategories;
 using Generate.Application.Features.Category.Queries.GetCategoriesPaged;
 using Generate.Application.Features.Category.Queries.GetCategoryById;
+using Infrastructure.Common;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,19 +18,14 @@ namespace Generate.API.Controllers
     /// <summary>
     /// Controller for managing categories
     /// </summary>
-    [ApiController]
     [ApiVersion("2.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
-    [Produces("application/json")]
-    public class CategoryController : ControllerBase
+    public class CategoryController : ApiControllerBase<CategoryController>
     {
-        private readonly IMediator _mediator;
-        private readonly ILogger<CategoryController> _logger;
+        private const string EntityName = "Category";
 
-        public CategoryController(IMediator mediator, ILogger<CategoryController> logger)
+        public CategoryController(IMediator mediator, ILogger<CategoryController> logger) 
+            : base(mediator, logger)
         {
-            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -44,10 +40,8 @@ namespace Generate.API.Controllers
         [Authorize(Policy = PolicyNames.Hybrid.Category.CanView)]
         public async Task<IActionResult> GetList()
         {
-            _logger.LogInformation("Getting all categories");
             var query = new GetCategoriesQuery();
-            var result = await _mediator.Send(query);
-            return Ok(new ApiSuccessResult<List<CategoryResponseDto>>(result, ResponseMessages.RetrieveItemsSuccess));
+            return await HandleGetAllAsync<GetCategoriesQuery, CategoryResponseDto>(query, EntityName);
         }
 
         /// <summary>
@@ -62,20 +56,9 @@ namespace Generate.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetPagedList([FromQuery] CategoryFilterDto filter)
         {
-            _logger.LogInformation("Getting paginated categories - Page: {PageNumber}, Size: {PageSize}",
-                filter.PageNumber, filter.PageSize);
-
             var query = new GetCategoriesPagedQuery { Filter = filter };
-            var pagedResult = await _mediator.Send(query);
-            var metadata = pagedResult.GetMetaData();
-
-            _logger.LogInformation("Retrieved {Count} categories out of {TotalCount}",
-                pagedResult.Count, metadata.TotalItems);
-
-            return Ok(new ApiSuccessResult<List<CategoryResponseDto>>(
-                pagedResult.ToList(),
-                ResponseMessages.RetrieveItemsSuccess,
-                metadata));
+            return await HandleGetPagedAsync<GetCategoriesPagedQuery, CategoryResponseDto>(
+                query, EntityName, filter.PageNumber, filter.PageSize);
         }
 
         /// <summary>
@@ -92,18 +75,8 @@ namespace Generate.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetById(long id)
         {
-            _logger.LogInformation("Getting category with ID: {CategoryId}", id);
             var query = new GetCategoryByIdQuery { Id = id };
-            var result = await _mediator.Send(query);
-
-            if (result == null)
-            {
-                _logger.LogWarning("Category with ID: {CategoryId} not found", id);
-                return NotFound(new ApiErrorResult<CategoryResponseDto>(
-                    ResponseMessages.ItemNotFound("Category", id)));
-            }
-
-            return Ok(new ApiSuccessResult<CategoryResponseDto>(result, ResponseMessages.RetrieveItemSuccess));
+            return await HandleGetByIdAsync<GetCategoryByIdQuery, CategoryResponseDto>(query, id, EntityName);
         }
 
         /// <summary>
@@ -120,21 +93,12 @@ namespace Generate.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Create([FromBody] CategoryCreateDto dto)
         {
-            _logger.LogInformation("Creating new category: {CategoryName}", dto.Name);
-
             var command = new CreateCategoryCommand
             {
                 Name = dto.Name
             };
 
-            var categoryId = await _mediator.Send(command);
-            _logger.LogInformation("Category created successfully with ID: {CategoryId}", categoryId);
-
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = categoryId },
-                new ApiSuccessResult<long>(categoryId, ResponseMessages.ItemCreated("Category"))
-            );
+            return await HandleCreateAsync(command, EntityName, dto.Name);
         }
 
         /// <summary>
@@ -154,31 +118,13 @@ namespace Generate.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Update(long id, [FromBody] CategoryUpdateDto dto)
         {
-            _logger.LogInformation("Updating category with ID: {CategoryId}", id);
-
-            if (id != dto.Id)
-            {
-                _logger.LogWarning("ID mismatch - URL ID: {UrlId}, Body ID: {BodyId}", id, dto.Id);
-                return BadRequest(new ApiErrorResult<bool>("ID in URL does not match ID in body"));
-            }
-
             var command = new UpdateCategoryCommand
             {
                 Id = dto.Id,
                 Name = dto.Name
             };
 
-            var result = await _mediator.Send(command);
-
-            if (!result)
-            {
-                _logger.LogWarning("Category with ID: {CategoryId} not found for update", id);
-                return NotFound(new ApiErrorResult<bool>(
-                    ResponseMessages.ItemNotFound("Category", id)));
-            }
-
-            _logger.LogInformation("Category with ID: {CategoryId} updated successfully", id);
-            return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.ItemUpdated("Category")));
+            return await HandleUpdateAsync(command, id, dto.Id, EntityName);
         }
 
         /// <summary>
@@ -195,20 +141,8 @@ namespace Generate.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Delete(long id)
         {
-            _logger.LogInformation("Deleting category with ID: {CategoryId}", id);
-
             var command = new DeleteCategoryCommand { Id = id };
-            var result = await _mediator.Send(command);
-
-            if (!result)
-            {
-                _logger.LogWarning("Category with ID: {CategoryId} not found for deletion", id);
-                return NotFound(new ApiErrorResult<bool>(
-                    ResponseMessages.ItemNotFound("Category", id)));
-            }
-
-            _logger.LogInformation("Category with ID: {CategoryId} deleted successfully", id);
-            return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.ItemDeleted("Category")));
+            return await HandleDeleteAsync(command, id, EntityName);
         }
     }
 }

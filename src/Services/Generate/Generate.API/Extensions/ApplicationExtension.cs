@@ -1,4 +1,5 @@
 using Infrastructure.Middlewares;
+using Infrastructure.Extensions;
 
 namespace Generate.API.Extensions
 {
@@ -9,20 +10,9 @@ namespace Generate.API.Extensions
             // Error handling middleware - should be first in the pipeline
             app.UseMiddleware<ErrorWrappingMiddleware>();
 
-            // CORS - must be before Swagger to allow cross-origin requests
-            app.UseCors("AllowAllOrigins");
-
-            // Swagger - should be early for development tools
-            app.UseSwagger();
-            app.UseSwaggerUI(options =>
-            {
-                var provider = app.ApplicationServices.GetRequiredService<Asp.Versioning.ApiExplorer.IApiVersionDescriptionProvider>();
-                foreach (var description in provider.ApiVersionDescriptions)
-                {
-                    options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", $"Generate API {description.GroupName.ToUpperInvariant()}");
-                }
-                options.RoutePrefix = "swagger";
-            });
+            // Use modular infrastructure services
+            app.UseCorsConfiguration();
+            app.UseSwaggerConfiguration();
 
             // Routing
             app.UseRouting();
@@ -32,6 +22,9 @@ namespace Generate.API.Extensions
 
             // Authorization
             app.UseAuthorization();
+
+            // Health Check
+            app.UseHealthCheckConfiguration();
 
             // Endpoints
             app.UseEndpoints(endpoints =>

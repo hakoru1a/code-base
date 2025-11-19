@@ -1,4 +1,5 @@
 using Auth.Domain.Configurations;
+using Infrastructure.Extensions;
 
 namespace Auth.API.Extensions;
 
@@ -14,13 +15,11 @@ public static class ConfigurationExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var authSettings = configuration
-            .GetSection(AuthSettings.SectionName)
-            .Get<AuthSettings>() ?? new AuthSettings();
+        var authSettings = configuration.GetOptions<AuthSettings>(AuthSettings.SectionName);
+        var oauthSettings = configuration.GetOptions<OAuthSettings>(OAuthSettings.SectionName);
 
-        var oauthSettings = configuration
-            .GetSection(OAuthSettings.SectionName)
-            .Get<OAuthSettings>() ?? throw new InvalidOperationException("OAuth settings not configured");
+        if (oauthSettings == null)
+            throw new InvalidOperationException("OAuth settings not configured");
 
         services.AddSingleton(authSettings);
         services.AddSingleton(oauthSettings);
@@ -28,6 +27,9 @@ public static class ConfigurationExtensions
         return (authSettings, oauthSettings);
     }
 }
+
+
+
 
 
 

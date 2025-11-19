@@ -1,4 +1,4 @@
-using AutoMapper;
+using Mapster;
 using Shared.DTOs.Category;
 using Generate.Infrastructure.Interfaces;
 using MediatR;
@@ -10,12 +10,10 @@ namespace Generate.Application.Features.Category.Queries.GetCategoriesPaged
     public class GetCategoriesPagedQueryHandler : IRequestHandler<GetCategoriesPagedQuery, PagedList<CategoryResponseDto>>
     {
         private readonly ICategoryRepository _categoryRepository;
-        private readonly IMapper _mapper;
 
-        public GetCategoriesPagedQueryHandler(ICategoryRepository categoryRepository, IMapper mapper)
+        public GetCategoriesPagedQueryHandler(ICategoryRepository categoryRepository)
         {
             _categoryRepository = categoryRepository;
-            _mapper = mapper;
         }
 
         public async Task<PagedList<CategoryResponseDto>> Handle(GetCategoriesPagedQuery request, CancellationToken cancellationToken)
@@ -57,7 +55,7 @@ namespace Generate.Application.Features.Category.Queries.GetCategoriesPaged
                 cancellationToken);
 
             // Map to DTOs
-            var categoryDtos = _mapper.Map<List<CategoryResponseDto>>(pagedCategories);
+            var categoryDtos = pagedCategories.Adapt<List<CategoryResponseDto>>();
 
             return new PagedList<CategoryResponseDto>(
                 categoryDtos,

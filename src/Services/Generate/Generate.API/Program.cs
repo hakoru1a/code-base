@@ -1,5 +1,4 @@
 using Generate.API.Extensions;
-using Generate.Application;
 using Generate.Application.Features.Category.Policies;
 using Generate.Application.Features.Product.Policies;
 using Generate.Application.Features.Order.Policies;
@@ -20,44 +19,15 @@ try
     // Add Serilog Configuration
     builder.Host.UseSerilog(SeriLogger.Configure);
 
-    // Add Configuration
-    builder.Host.AddConfiguration();
-
-    // Add Keycloak Authentication (RBAC at Gateway, but also validated at Service level)
-    builder.Services.AddKeycloakAuthentication(builder.Configuration);
-    builder.Services.AddKeycloakAuthorization();
-
-    // Add Policy-Based Authorization (PBAC at Service level)
-    builder.Services.AddPolicyBasedAuthorization(policies =>
-    {
-        // Category Policies
-        policies.AddPolicy<CategoryViewPolicy>(PolicyNames.Pbac.Category.View);
-        policies.AddPolicy<CategoryCreatePolicy>(PolicyNames.Pbac.Category.Create);
-        policies.AddPolicy<CategoryUpdatePolicy>(PolicyNames.Pbac.Category.Update);
-        policies.AddPolicy<CategoryDeletePolicy>(PolicyNames.Pbac.Category.Delete);
-
-        // Product Policies
-        policies.AddPolicy<ProductViewPolicy>(PolicyNames.Pbac.Product.View);
-        policies.AddPolicy<ProductCreatePolicy>(PolicyNames.Pbac.Product.Create);
-        policies.AddPolicy<ProductUpdatePolicy>(PolicyNames.Pbac.Product.Update);
-        policies.AddPolicy<ProductDeletePolicy>(PolicyNames.Pbac.Product.Delete);
-
-        // Order Policies
-        policies.AddPolicy<OrderViewPolicy>(PolicyNames.Pbac.Order.View);
-        policies.AddPolicy<OrderCreatePolicy>(PolicyNames.Pbac.Order.Create);
-        policies.AddPolicy<OrderUpdatePolicy>(PolicyNames.Pbac.Order.Update);
-        policies.AddPolicy<OrderDeletePolicy>(PolicyNames.Pbac.Order.Delete);
-    });
-
     // Add services to the container
     builder.Services.AddInfrastructureServices(builder.Configuration);
-
-    // Add Application Services (MediatR, AutoMapper, FluentValidation)
-    builder.Services.AddApplicationServices();
 
     // Add Infrastructure Services (Database, Repositories, etc.)
     builder.Services.AddInfrastructure(builder.Configuration);
 
+    // Add Authentication and Authorization
+    builder.Services.AddAuthenticationConfiguration(builder.Configuration);
+    
     var app = builder.Build();
 
     // Configure the HTTP request pipeline

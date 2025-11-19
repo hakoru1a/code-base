@@ -1,4 +1,9 @@
 using Microsoft.OpenApi.Models;
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
+using Microsoft.Extensions.Options;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Auth.API.Filters;
 
 namespace Auth.API.Extensions;
 
@@ -12,15 +17,22 @@ public static class SwaggerExtensions
     /// </summary>
     public static IServiceCollection AddAuthSwagger(this IServiceCollection services)
     {
-        services.AddSwaggerGen(c =>
+        // API Versioning
+        services.AddApiVersioning(options =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo
-            {
-                Title = "Auth API",
-                Version = "v1",
-                Description = "Authentication service xử lý OAuth 2.0/OIDC với Keycloak"
-            });
+            options.DefaultApiVersion = new ApiVersion(1, 0);
+            options.AssumeDefaultVersionWhenUnspecified = true;
+            options.ReportApiVersions = true;
+            options.ApiVersionReader = new HeaderApiVersionReader("x-api-version");
+        })
+        .AddApiExplorer(options =>
+        {
+            options.GroupNameFormat = "'v'VVV";
+            options.SubstituteApiVersionInUrl = false;
         });
+
+        services.AddSwaggerGen();
+        services.ConfigureOptions<ConfigureSwaggerOptions>();
 
         return services;
     }
@@ -32,15 +44,64 @@ public static class SwaggerExtensions
         this IApplicationBuilder app,
         IWebHostEnvironment environment)
     {
+        app.UseSwagger();
+
         if (environment.IsDevelopment())
         {
-            app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(options =>
+            {
+                var provider = app.ApplicationServices.GetRequiredService<IApiVersionDescriptionProvider>();
+                foreach (var description in provider.ApiVersionDescriptions)
+                {
+                    options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", 
+                        $"Auth API {description.GroupName.ToUpperInvariant()}");
+                }
+                options.RoutePrefix = "swagger";
+            });
         }
 
         return app;
     }
+
+    /// <summary>
+    /// Configure Swagger options using IConfigureOptions pattern
+    /// </summary>
+    public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
+    {
+        private readonly IApiVersionDescriptionProvider _provider;
+
+        public ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider)
+        {
+            _provider = provider;
+        }
+
+        public void Configure(SwaggerGenOptions options)
+        {
+            foreach (var description in _provider.ApiVersionDescriptions)
+            {
+                options.SwaggerDoc(description.GroupName, new OpenApiInfo
+                {
+                    Version = description.ApiVersion.ToString(),
+                    Title = "Auth API",
+                    Description = "Authentication service xử lý OAuth 2.0/OIDC với Keycloak"
+                });
+            }
+
+            // Add x-api-version header parameter for all operations
+            options.AddSecurityDefinition("ApiVersion", new OpenApiSecurityScheme
+            {
+                Description = "API Version Header",
+                Name = "x-api-version",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "ApiKey"
+            });
+
+            options.OperationFilter<ApiVersionOperationFilter>();
+        }
+    }
 }
+
 
 
 
