@@ -82,7 +82,7 @@ public static class MapsterConfig
             .Map(dest => dest.Id, src => src.Id)
             .Map(dest => dest.ProductId, src => src.ProductId)
             .Map(dest => dest.Quantity, src => src.Quantity)
-            .Map(dest => dest.ProductName, src => src.Product != null ? src.Product.Name : null);
+            .Map(dest => dest.ProductName, src => src.Product.Name);
 
         TypeAdapterConfig<OrderItemCreateDto, OrderItem>
             .NewConfig()

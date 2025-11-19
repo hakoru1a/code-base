@@ -16,7 +16,7 @@ namespace Generate.API.Extensions
                 .AddControllerServices()
                 .AddConfigurationSettings(configuration)
                 .AddInfrastructureModules()
-                .AddApplicationServicesIntegrated() // Integrated Application services
+                .AddApplicationServicesIntegrated() 
                 .AddCommonServices();
         }
 
