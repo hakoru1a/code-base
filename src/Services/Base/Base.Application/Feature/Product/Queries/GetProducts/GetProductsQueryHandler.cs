@@ -1,4 +1,4 @@
-using AutoMapper;
+using Mapster;
 using Shared.DTOs.Product;
 using Base.Infrastructure.Interfaces;
 using MediatR;
@@ -15,12 +15,10 @@ namespace Base.Application.Feature.Product.Queries.GetProducts
     public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, PagedResult<ProductDto>>
     {
         private readonly IProductRepository _productRepository;
-        private readonly IMapper _mapper;
 
-        public GetProductsQueryHandler(IProductRepository productRepository, IMapper mapper)
+        public GetProductsQueryHandler(IProductRepository productRepository)
         {
             _productRepository = productRepository;
-            _mapper = mapper;
         }
 
         public async Task<PagedResult<ProductDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
@@ -72,7 +70,7 @@ namespace Base.Application.Feature.Product.Queries.GetProducts
                 .Take(request.Parameters.PageSize)
                 .ToListAsync(cancellationToken);
 
-            var productDtos = _mapper.Map<List<ProductDto>>(products);
+            var productDtos = products.Adapt<List<ProductDto>>();
 
             return PagedResult<ProductDto>.Create(
                 productDtos,

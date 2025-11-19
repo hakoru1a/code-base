@@ -52,7 +52,7 @@ try
     // Add services to the container
     builder.Services.AddInfrastructureServices(builder.Configuration);
 
-    // Add Application Services (MediatR, AutoMapper, FluentValidation)
+    // Add Application Services (MediatR, Mapster, FluentValidation)
     builder.Services.AddApplicationServices();
 
     // Add Infrastructure Services (Database, Repositories, etc.)

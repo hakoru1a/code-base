@@ -39,6 +39,7 @@ namespace Base.API.Controllers
         /// </summary>
         [HttpGet]
         [Authorize(Policy = Shared.Identity.PolicyNames.Rbac.BasicUser)]
+        
         public async Task<IActionResult> GetProducts([FromQuery] PagedRequestParameter parameters)
         {
             _logger.LogInformation("Getting products with page {PageIndex}, page size {PageSize}",

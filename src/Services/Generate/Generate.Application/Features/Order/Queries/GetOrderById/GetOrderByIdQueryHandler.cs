@@ -1,4 +1,4 @@
-using AutoMapper;
+using Mapster;
 using Shared.DTOs.Order;
 using Generate.Infrastructure.Interfaces;
 using MediatR;
@@ -9,12 +9,10 @@ namespace Generate.Application.Features.Order.Queries.GetOrderById
     public class GetOrderByIdQueryHandler : IRequestHandler<GetOrderByIdQuery, OrderResponseDto?>
     {
         private readonly IOrderRepository _orderRepository;
-        private readonly IMapper _mapper;
 
-        public GetOrderByIdQueryHandler(IOrderRepository orderRepository, IMapper mapper)
+        public GetOrderByIdQueryHandler(IOrderRepository orderRepository)
         {
             _orderRepository = orderRepository;
-            _mapper = mapper;
         }
 
         public async Task<OrderResponseDto?> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
@@ -24,7 +22,7 @@ namespace Generate.Application.Features.Order.Queries.GetOrderById
                 .ThenInclude(oi => oi.Product)
                 .FirstOrDefaultAsync(o => o.Id == request.Id, cancellationToken);
 
-            return order == null ? null : _mapper.Map<OrderResponseDto>(order);
+            return order?.Adapt<OrderResponseDto>();
         }
     }
 }

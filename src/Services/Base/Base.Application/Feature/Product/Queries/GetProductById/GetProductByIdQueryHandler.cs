@@ -1,4 +1,4 @@
-using AutoMapper;
+using Mapster;
 using Shared.DTOs.Product;
 using Base.Infrastructure.Interfaces;
 using MediatR;
@@ -13,18 +13,16 @@ namespace Base.Application.Feature.Product.Queries.GetProductById
     public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, ProductDto?>
     {
         private readonly IProductRepository _productRepository;
-        private readonly IMapper _mapper;
 
-        public GetProductByIdQueryHandler(IProductRepository productRepository, IMapper mapper)
+        public GetProductByIdQueryHandler(IProductRepository productRepository)
         {
             _productRepository = productRepository;
-            _mapper = mapper;
         }
 
         public async Task<ProductDto?> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
         {
             var product = await _productRepository.GetByIdAsync(request.Id);
-            return product != null ? _mapper.Map<ProductDto>(product) : null;
+            return product?.Adapt<ProductDto>();
         }
     }
 }

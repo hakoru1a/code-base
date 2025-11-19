@@ -5,6 +5,7 @@ using Generate.Application.Features.Product.Commands.DeleteProduct;
 using Generate.Application.Features.Product.Commands.UpdateProduct;
 using Generate.Application.Features.Product.Queries.GetProductById;
 using Generate.Application.Features.Product.Queries.GetProducts;
+using Infrastructure.Common;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Shared.SeedWork;
@@ -14,19 +15,14 @@ namespace Generate.API.Controllers
     /// <summary>
     /// Controller for managing products
     /// </summary>
-    [ApiController]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
-    [Produces("application/json")]
-    public class ProductController : ControllerBase
+    public class ProductController : ApiControllerBase<ProductController>
     {
-        private readonly IMediator _mediator;
-        private readonly ILogger<ProductController> _logger;
+        private const string EntityName = "Product";
 
-        public ProductController(IMediator mediator, ILogger<ProductController> logger)
+        public ProductController(IMediator mediator, ILogger<ProductController> logger) 
+            : base(mediator, logger)
         {
-            _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         /// <summary>
@@ -40,10 +36,8 @@ namespace Generate.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetList()
         {
-            _logger.LogInformation("Getting all products");
             var query = new GetProductsQuery();
-            var result = await _mediator.Send(query);
-            return Ok(new ApiSuccessResult<List<ProductResponseDto>>(result, ResponseMessages.RetrieveItemsSuccess));
+            return await HandleGetAllAsync<GetProductsQuery, ProductResponseDto>(query, EntityName);
         }
 
         /// <summary>
@@ -60,18 +54,8 @@ namespace Generate.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetById(long id)
         {
-            _logger.LogInformation("Getting product with ID: {ProductId}", id);
             var query = new GetProductByIdQuery { Id = id };
-            var result = await _mediator.Send(query);
-
-            if (result == null)
-            {
-                _logger.LogWarning("Product with ID: {ProductId} not found", id);
-                return NotFound(new ApiErrorResult<ProductResponseDto>(
-                    ResponseMessages.ItemNotFound("Product", id)));
-            }
-
-            return Ok(new ApiSuccessResult<ProductResponseDto>(result, ResponseMessages.RetrieveItemSuccess));
+            return await HandleGetByIdAsync<GetProductByIdQuery, ProductResponseDto>(query, id, EntityName);
         }
 
         /// <summary>
@@ -88,22 +72,13 @@ namespace Generate.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Create([FromBody] ProductCreateDto dto)
         {
-            _logger.LogInformation("Creating new product: {ProductName}", dto.Name);
-
             var command = new CreateProductCommand
             {
                 Name = dto.Name,
                 CategoryId = dto.CategoryId
             };
 
-            var productId = await _mediator.Send(command);
-            _logger.LogInformation("Product created successfully with ID: {ProductId}", productId);
-
-            return CreatedAtAction(
-                nameof(GetById),
-                new { id = productId },
-                new ApiSuccessResult<long>(productId, ResponseMessages.ItemCreated("Product"))
-            );
+            return await HandleCreateAsync(command, EntityName, dto.Name);
         }
 
         /// <summary>
@@ -123,14 +98,6 @@ namespace Generate.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Update(long id, [FromBody] ProductUpdateDto dto)
         {
-            _logger.LogInformation("Updating product with ID: {ProductId}", id);
-
-            if (id != dto.Id)
-            {
-                _logger.LogWarning("ID mismatch - URL ID: {UrlId}, Body ID: {BodyId}", id, dto.Id);
-                return BadRequest(new ApiErrorResult<bool>("ID in URL does not match ID in body"));
-            }
-
             var command = new UpdateProductCommand
             {
                 Id = dto.Id,
@@ -138,17 +105,7 @@ namespace Generate.API.Controllers
                 CategoryId = dto.CategoryId
             };
 
-            var result = await _mediator.Send(command);
-
-            if (!result)
-            {
-                _logger.LogWarning("Product with ID: {ProductId} not found for update", id);
-                return NotFound(new ApiErrorResult<bool>(
-                    ResponseMessages.ItemNotFound("Product", id)));
-            }
-
-            _logger.LogInformation("Product with ID: {ProductId} updated successfully", id);
-            return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.ItemUpdated("Product")));
+            return await HandleUpdateAsync(command, id, dto.Id, EntityName);
         }
 
         /// <summary>
@@ -165,20 +122,8 @@ namespace Generate.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Delete(long id)
         {
-            _logger.LogInformation("Deleting product with ID: {ProductId}", id);
-
             var command = new DeleteProductCommand { Id = id };
-            var result = await _mediator.Send(command);
-
-            if (!result)
-            {
-                _logger.LogWarning("Product with ID: {ProductId} not found for deletion", id);
-                return NotFound(new ApiErrorResult<bool>(
-                    ResponseMessages.ItemNotFound("Product", id)));
-            }
-
-            _logger.LogInformation("Product with ID: {ProductId} deleted successfully", id);
-            return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.ItemDeleted("Product")));
+            return await HandleDeleteAsync(command, id, EntityName);
         }
     }
 }

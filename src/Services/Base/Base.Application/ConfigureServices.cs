@@ -1,5 +1,4 @@
 using System.Reflection;
-using AutoMapper;
 using Base.Infrastructure.Interfaces;
 using Base.Infrastructure.Repositories;
 using Base.Application.Common;
@@ -11,13 +10,20 @@ using Infrastructure.Common.Behavior;
 using Infrastructure.Common.Repository;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Mapster;
+using MapsterMapper;
 
 namespace Base.Application;
 public static class ConfigureServices
 {
-    public static IServiceCollection AddApplicationServices(this IServiceCollection services) =>
-        services
-            .AddSingleton(AddMapper())
+    public static IServiceCollection AddApplicationServices(this IServiceCollection services)
+    {
+        // Configure Mapster mappings
+        MapsterConfig.ConfigureMappings();
+        
+        return services
+            .AddSingleton(TypeAdapterConfig.GlobalSettings)
+            .AddScoped<IMapper, ServiceMapper>()
             .AddValidatorsFromAssembly(Assembly.GetExecutingAssembly())
             .AddScoped<ISerializeService, SerializeService>()
             .AddScoped<IProductRepository, ProductRepository>()
@@ -26,14 +32,5 @@ public static class ConfigureServices
             .AddTransient(serviceType: typeof(IPipelineBehavior<,>), implementationType: typeof(UnhandledExceptionBehaviour<,>))
             .AddTransient(serviceType: typeof(IPipelineBehavior<,>), implementationType: typeof(PerformanceBehaviour<,>))
             .AddTransient(serviceType: typeof(IPipelineBehavior<,>), implementationType: typeof(ValidationBehaviour<,>));
-    private static IMapper AddMapper()
-    {
-        var mapperConfig = new MapperConfiguration(mc =>
-        {
-            mc.AddProfile(new MappingProfile());
-        });
-
-        return mapperConfig.CreateMapper();
-
     }
 }

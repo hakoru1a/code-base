@@ -1,4 +1,4 @@
-using AutoMapper;
+using Mapster;
 using Shared.DTOs.Product;
 using Generate.Infrastructure.Interfaces;
 using MediatR;
@@ -9,12 +9,10 @@ namespace Generate.Application.Features.Product.Queries.GetProducts
     public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, List<ProductResponseDto>>
     {
         private readonly IProductRepository _productRepository;
-        private readonly IMapper _mapper;
 
-        public GetProductsQueryHandler(IProductRepository productRepository, IMapper mapper)
+        public GetProductsQueryHandler(IProductRepository productRepository)
         {
             _productRepository = productRepository;
-            _mapper = mapper;
         }
 
         public async Task<List<ProductResponseDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
@@ -23,7 +21,7 @@ namespace Generate.Application.Features.Product.Queries.GetProducts
                 .Include(p => p.Category)
                 .ToListAsync(cancellationToken);
 
-            return _mapper.Map<List<ProductResponseDto>>(products);
+            return products.Adapt<List<ProductResponseDto>>();
         }
     }
 }
