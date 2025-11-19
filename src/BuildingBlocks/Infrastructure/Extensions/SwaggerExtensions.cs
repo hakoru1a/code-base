@@ -8,8 +8,41 @@ using Infrastructure.Filters;
 
 namespace Infrastructure.Extensions
 {
+    /// <summary>
+    /// Extension methods cho Swagger/OpenAPI documentation
+    /// 
+    /// MỤC ĐÍCH:
+    /// - Tự động generate API documentation từ code
+    /// - Cung cấp Swagger UI để test API trực tiếp trên browser
+    /// - Hỗ trợ API versioning và JWT authentication trong Swagger UI
+    /// 
+    /// SỬ DỤNG:
+    /// 1. Trong Program.cs/Startup.cs:
+    ///    services.AddSwaggerConfiguration("Product API", "API quản lý sản phẩm", "Dev Team", "dev@company.com");
+    ///    app.UseSwaggerConfiguration(); // hoặc app.UseSwaggerConfiguration("api-docs") để đổi route
+    /// 
+    /// 2. Truy cập Swagger UI tại: https://localhost:5001/swagger
+    /// 
+    /// IMPACT:
+    /// + Developer Experience: Dev có thể test API ngay trên browser không cần Postman
+    /// + Documentation: API docs luôn sync với code, không bị outdated
+    /// + Client Integration: Frontend/Mobile team có thể generate client code từ OpenAPI spec
+    /// + JWT Testing: Có thể nhập JWT token để test các endpoint có authentication
+    /// - Performance: Chỉ nên enable trong Development/Staging, không nên expose trong Production
+    /// </summary>
     public static class SwaggerExtensions
     {
+        /// <summary>
+        /// Đăng ký Swagger với cấu hình đầy đủ (API versioning + JWT authentication)
+        /// 
+        /// CÁCH DÙNG:
+        /// services.AddSwaggerConfiguration(
+        ///     apiTitle: "Order Service API",
+        ///     apiDescription: "API quản lý đơn hàng và thanh toán",
+        ///     contactName: "Backend Team",
+        ///     contactEmail: "backend@company.com"
+        /// );
+        /// </summary>
         public static IServiceCollection AddSwaggerConfiguration(this IServiceCollection services, string apiTitle = "API", string apiDescription = "A Web API service", string contactName = "API Team", string contactEmail = "support@api.com")
         {
             // Register the Swagger configuration options
@@ -63,6 +96,15 @@ namespace Infrastructure.Extensions
             return services;
         }
 
+        /// <summary>
+        /// Bật Swagger UI trong application pipeline
+        /// 
+        /// CÁCH DÙNG:
+        /// app.UseSwaggerConfiguration(); // Mặc định tại /swagger
+        /// app.UseSwaggerConfiguration("api-docs"); // Custom route: /api-docs
+        /// 
+        /// LƯU Ý: Nên đặt sau UseRouting() và trước UseEndpoints()
+        /// </summary>
         public static IApplicationBuilder UseSwaggerConfiguration(this IApplicationBuilder app, string routePrefix = "swagger")
         {
             app.UseSwagger();
