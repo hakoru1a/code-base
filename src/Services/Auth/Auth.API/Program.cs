@@ -1,4 +1,5 @@
 using Auth.API.Extensions;
+using Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,8 +12,8 @@ var (authSettings, oauthSettings) = builder.Services.ConfigureAuthSettings(build
 
 #region Redis Configuration
 
-// Configure Redis connection and repository
-builder.Services.AddRedisConfiguration(authSettings);
+// Configure Redis connection using Infrastructure extension
+builder.Services.AddRedisInfrastructure(builder.Configuration);
 
 #endregion
 
@@ -35,15 +36,16 @@ builder.Services.AddAuthSwagger();
 
 #region CORS
 
-// Add CORS policy that allows all origins
-builder.Services.AddAuthCors();
+// Add CORS policy using Infrastructure extension
+builder.Services.AddCorsForDevelopment("AllowAll");
 
 #endregion
 
 #region Health Checks
 
-// Add health checks for Auth API
-builder.Services.AddAuthHealthChecks();
+// Add health checks for Auth API using Infrastructure extension
+builder.Services.AddHealthCheckWithRedis(authSettings.ConnectionStrings, "redis")
+                .AddHealthCheckConfiguration();
 
 #endregion
 
@@ -51,8 +53,8 @@ var app = builder.Build();
 
 #region Middleware Pipeline
 
-// Apply CORS
-app.UseAuthCors();
+// Apply CORS using Infrastructure extension
+app.UseCorsConfiguration("AllowAll");
 
 // Configure Swagger UI for development
 app.UseAuthSwagger(app.Environment);
@@ -63,8 +65,8 @@ app.UseRouting();
 // Map controllers
 app.MapControllers();
 
-// Map health check endpoint
-app.MapAuthHealthChecks();
+// Map health check endpoint using Infrastructure extension
+app.UseHealthCheckConfiguration();
 
 #endregion
 

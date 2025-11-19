@@ -2,6 +2,7 @@ using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 using ApiGateway.Middlewares;
 using ApiGateway.Handlers;
+using ApiGateway.Configurations;
 using Infrastructure.Extensions;
 using ApiGateway.Extensions;
 
@@ -12,8 +13,17 @@ builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange
 
 #region Configuration Settings
 
-// Configure all gateway options from configuration
-var (servicesOptions, oAuthOptions) = builder.Services.ConfigureGatewayOptions(builder.Configuration);
+// Configure services options
+builder.Services.Configure<ServicesOptions>(
+    builder.Configuration.GetSection(ServicesOptions.SectionName));
+
+// Configure OAuth options
+builder.Services.Configure<OAuthOptions>(
+    builder.Configuration.GetSection(OAuthOptions.SectionName));
+
+// Get options for immediate use using Infrastructure extension
+var servicesOptions = builder.Configuration.GetOptions<ServicesOptions>(ServicesOptions.SectionName);
+var oAuthOptions = builder.Configuration.GetOptions<OAuthOptions>(OAuthOptions.SectionName);
 
 #endregion
 
@@ -69,7 +79,8 @@ builder.Services.AddGatewayCors(oAuthOptions);
 
 #region Health Checks
 
-builder.Services.AddHealthChecks();
+// Add health checks using Infrastructure extension
+builder.Services.AddHealthCheckConfiguration();
 
 #endregion
 
@@ -116,8 +127,8 @@ app.UseAuthorization();
 // Controller routes sẽ được xử lý trước Ocelot middleware
 app.MapControllers();
 
-// Map health check endpoint with custom response writer
-app.MapGatewayHealthChecks();
+// Map health check endpoint using Infrastructure extension
+app.UseHealthCheckConfiguration();
 
 // Map development-only endpoints like _whoami
 app.MapDevelopmentEndpoints(app.Environment);
