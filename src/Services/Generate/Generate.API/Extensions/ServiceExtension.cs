@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using Shared.Configurations;
 using Shared.Configurations.Database;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Generate.API.Filters;
 
 namespace Generate.API.Extensions
 {
@@ -39,12 +40,12 @@ namespace Generate.API.Extensions
                 options.DefaultApiVersion = new ApiVersion(1, 0);
                 options.AssumeDefaultVersionWhenUnspecified = true;
                 options.ReportApiVersions = true;
-                options.ApiVersionReader = new UrlSegmentApiVersionReader();
+                options.ApiVersionReader = new HeaderApiVersionReader("x-api-version");
             })
             .AddApiExplorer(options =>
             {
                 options.GroupNameFormat = "'v'VVV";
-                options.SubstituteApiVersionInUrl = true;
+                options.SubstituteApiVersionInUrl = false;
             });
 
             // Add Configuration Settings
@@ -162,6 +163,18 @@ namespace Generate.API.Extensions
                     }
                 });
             }
+
+            // Add x-api-version header parameter for all operations
+            options.AddSecurityDefinition("ApiVersion", new OpenApiSecurityScheme
+            {
+                Description = "API Version Header",
+                Name = "x-api-version",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "ApiKey"
+            });
+
+            options.OperationFilter<ApiVersionOperationFilter>();
         }
     }
 }

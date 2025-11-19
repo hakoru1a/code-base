@@ -16,7 +16,7 @@ namespace Generate.API.Controllers
     /// </summary>
     [ApiController]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
+    [Route("api/[controller]")]
     [Produces("application/json")]
     public class OrderController : ControllerBase
     {

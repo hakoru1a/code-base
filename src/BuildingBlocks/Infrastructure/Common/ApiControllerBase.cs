@@ -9,7 +9,7 @@ namespace Infrastructure.Common;
 /// Base class for API controllers providing common functionality
 /// </summary>
 [ApiController]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api/[controller]")]
 [Produces("application/json")]
 public abstract class ApiControllerBase<T> : ControllerBase where T : class
 {

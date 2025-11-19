@@ -81,7 +81,8 @@ namespace Base.Infrastructure
             //    });
             //});
 
-            services.ConfigureSwagger();
+            // Note: Swagger configuration is now handled by Base.API.Extensions.ServiceExtensions
+            // services.ConfigureSwagger();
             return services;
         }
 

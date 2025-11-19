@@ -30,7 +30,9 @@ try
     builder.Services.AddInfrastructure(builder.Configuration)
                     .AddConfigurationSettings(builder.Configuration)
                     .AddApplicationServices()
-                    .AddHealthCheckServices();
+                    .AddHealthCheckServices()
+                    .AddBaseApiVersioning()
+                    .AddBaseSwaggerConfiguration();
 
     builder.Services.AddControllers();
 
@@ -57,13 +59,8 @@ try
     // Add Policy-Based Authorization Middleware (PBAC)
     app.UsePolicyAuthorization();
 
-    app.UseSwagger();
-
-    app.UseSwaggerUI(options =>
-    {
-        // Change the Swagger endpoint
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-    });
+    // Configure Swagger UI with versioning
+    app.UseBaseSwaggerUI(app.Environment);
 
     app.UseHttpsRedirection();
 

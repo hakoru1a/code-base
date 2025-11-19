@@ -2,6 +2,7 @@ using Shared.DTOs.Auth;
 using Auth.Application.Interfaces;
 using Auth.Domain.Configurations;
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 
 namespace Auth.API.Controllers;
 
@@ -10,6 +11,7 @@ namespace Auth.API.Controllers;
 /// Xử lý tất cả logic authentication với Keycloak
 /// </summary>
 [ApiController]
+[ApiVersion("1.0")]
 [Route("api/auth")]
 public class AuthController : ControllerBase
 {
