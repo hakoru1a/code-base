@@ -1,5 +1,6 @@
 using Infrastructure.Authorization.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Shared.Attributes;
 using System.Reflection;
 
@@ -11,12 +12,24 @@ namespace Infrastructure.Extensions
     public class PolicyRegistry
     {
         private readonly Dictionary<string, Type> _policies = new();
+        private readonly ILogger<PolicyRegistry>? _logger;
+
+        public PolicyRegistry(ILogger<PolicyRegistry>? logger = null)
+        {
+            _logger = logger;
+        }
 
         /// <summary>
         /// Scan assemblies for policies marked with [Policy] attribute
         /// </summary>
         public PolicyRegistry ScanAssemblies(params Assembly[] assemblies)
         {
+            if (assemblies == null || assemblies.Length == 0)
+            {
+                throw new ArgumentException("At least one assembly must be provided", nameof(assemblies));
+            }
+
+            var discoveredCount = 0;
             foreach (var assembly in assemblies)
             {
                 var policyTypes = assembly.GetTypes()
@@ -28,10 +41,15 @@ namespace Infrastructure.Extensions
                     var attribute = policyType.GetCustomAttribute<PolicyAttribute>();
                     if (attribute != null)
                     {
-                        _policies[attribute.Name] = policyType;
+                        RegisterPolicy(attribute.Name, policyType);
+                        discoveredCount++;
                     }
                 }
             }
+
+            _logger?.LogInformation(
+                "Policy registry: Discovered {Count} policies from {AssemblyCount} assembly(ies)",
+                discoveredCount, assemblies.Length);
 
             return this;
         }
@@ -47,7 +65,7 @@ namespace Infrastructure.Extensions
                 throw new ArgumentException("Policy name cannot be empty", nameof(policyName));
             }
 
-            _policies[policyName] = typeof(TPolicy);
+            RegisterPolicy(policyName, typeof(TPolicy));
             return this;
         }
 
@@ -66,13 +84,44 @@ namespace Infrastructure.Extensions
                     $"Use AddPolicy<{policyType.Name}>(\"NAME\") instead.");
             }
 
-            _policies[attribute.Name] = policyType;
+            RegisterPolicy(attribute.Name, policyType);
             return this;
+        }
+
+        /// <summary>
+        /// Register a policy with duplicate name validation
+        /// </summary>
+        private void RegisterPolicy(string policyName, Type policyType)
+        {
+            if (_policies.TryGetValue(policyName, out var existingType))
+            {
+                var errorMessage =
+                    $"Duplicate policy name '{policyName}' detected. " +
+                    $"Already registered: {existingType.FullName}, " +
+                    $"Attempting to register: {policyType.FullName}";
+
+                _logger?.LogError(errorMessage);
+                throw new InvalidOperationException(errorMessage);
+            }
+
+            _policies[policyName] = policyType;
+            _logger?.LogDebug("Registered policy '{PolicyName}' -> {PolicyType}",
+                policyName, policyType.FullName);
         }
 
         /// <summary>
         /// Get all registered policies
         /// </summary>
         internal Dictionary<string, Type> GetPolicies() => new(_policies);
+
+        /// <summary>
+        /// Get count of registered policies
+        /// </summary>
+        public int Count => _policies.Count;
+
+        /// <summary>
+        /// Get all registered policy names
+        /// </summary>
+        public IEnumerable<string> GetPolicyNames() => _policies.Keys;
     }
 }

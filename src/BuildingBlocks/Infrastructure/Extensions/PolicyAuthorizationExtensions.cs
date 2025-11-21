@@ -3,6 +3,7 @@ using Infrastructure.Authorization.Interfaces;
 using Infrastructure.Middlewares;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Extensions
 {
@@ -27,7 +28,7 @@ namespace Infrastructure.Extensions
             services.AddHttpContextAccessor();
             services.AddScoped<IUserContextAccessor, UserContextAccessor>();
 
-            // Build policy registry
+            // Build policy registry (logger will be available at runtime)
             var policyRegistry = new PolicyRegistry();
             configurePolicies.Invoke(policyRegistry);
             
@@ -41,7 +42,19 @@ namespace Infrastructure.Extensions
 
             // Register policy evaluator with registry
             services.AddSingleton<IPolicyEvaluator>(sp => 
-                new PolicyEvaluator(sp, policies));
+            {
+                var logger = sp.GetService<ILogger<PolicyEvaluator>>();
+                var evaluator = new PolicyEvaluator(sp, policies, logger);
+                
+                // Log registered policies count at startup
+                var registryLogger = sp.GetService<ILogger<PolicyRegistry>>();
+                registryLogger?.LogInformation(
+                    "Policy-Based Authorization initialized with {Count} registered policies: {Policies}",
+                    policies.Count,
+                    string.Join(", ", policies.Keys));
+                
+                return evaluator;
+            });
 
             return services;
         }
