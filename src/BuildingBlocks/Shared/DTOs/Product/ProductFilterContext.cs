@@ -1,0 +1,64 @@
+using Shared.DTOs.Authorization;
+
+namespace Shared.DTOs.Product
+{
+    /// <summary>
+    /// Product-specific filter context returned by product policies
+    /// Contains filtering criteria extracted from JWT claims and user context
+    /// </summary>
+    public class ProductFilterContext : IPolicyFilterContext
+    {
+        /// <summary>
+        /// Maximum price user can view (from JWT claim max_product_price)
+        /// Example: JWT claim "max_product_price": "20000000" (20 triệu VND)
+        /// </summary>
+        public decimal? MaxPrice { get; set; }
+        
+        /// <summary>
+        /// Minimum price user can view
+        /// </summary>
+        public decimal? MinPrice { get; set; }
+        
+        /// <summary>
+        /// Categories user is allowed to view
+        /// Extracted from permissions like "category:view:electronics", "category:view:books"
+        /// </summary>
+        public List<string>? AllowedCategories { get; set; }
+        
+        /// <summary>
+        /// Department-based filter (from JWT department claim)
+        /// Example: JWT claim "department": "sales" => only see sales products
+        /// </summary>
+        public string? DepartmentFilter { get; set; }
+        
+        /// <summary>
+        /// Region-based filter (from JWT region claim)
+        /// Example: JWT claim "region": "north" => only see products for north region
+        /// </summary>
+        public string? RegionFilter { get; set; }
+        
+        /// <summary>
+        /// Whether user can see products from other departments
+        /// Typically true for managers and premium users
+        /// </summary>
+        public bool CanViewCrossDepartment { get; set; } = false;
+        
+        /// <summary>
+        /// Whether user can see all products (admin/manager privilege)
+        /// When true, all other filters are ignored
+        /// </summary>
+        public bool CanViewAll { get; set; } = false;
+        
+        /// <summary>
+        /// Brand restrictions (if any)
+        /// Example: Some users can only see certain brands
+        /// </summary>
+        public List<string>? AllowedBrands { get; set; }
+        
+        /// <summary>
+        /// Whether to include discontinued products
+        /// Typically only admin/manager can see discontinued products
+        /// </summary>
+        public bool IncludeDiscontinued { get; set; } = false;
+    }
+}

@@ -1,3 +1,5 @@
+using Shared.DTOs.Authorization;
+
 namespace Shared.DTOs.Authorization
 {
     /// <summary>
@@ -10,7 +12,7 @@ namespace Shared.DTOs.Authorization
     }
     
     /// <summary>
-    /// Policy evaluation result
+    /// Policy evaluation result with optional filter context
     /// </summary>
     public class PolicyEvaluationResult
     {
@@ -18,12 +20,19 @@ namespace Shared.DTOs.Authorization
         public string? Reason { get; set; }
         public Dictionary<string, object>? Metadata { get; set; }
         
-        public static PolicyEvaluationResult Allow(string? reason = null)
+        /// <summary>
+        /// Filter context returned by policy for application layer to apply business filters
+        /// For example: max_product_price, allowed_categories, etc.
+        /// </summary>
+        public IPolicyFilterContext? FilterContext { get; set; }
+        
+        public static PolicyEvaluationResult Allow(string? reason = null, IPolicyFilterContext? filterContext = null)
         {
             return new PolicyEvaluationResult 
             { 
                 IsAllowed = true, 
-                Reason = reason ?? "Access granted" 
+                Reason = reason ?? "Access granted",
+                FilterContext = filterContext
             };
         }
         

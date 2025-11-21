@@ -67,16 +67,29 @@ namespace Infrastructure.Middlewares
                     return;
                 }
 
+                // Store filter context in HttpContext for application layer to use
+                if (result.FilterContext != null)
+                {
+                    context.Items[$"PolicyFilterContext:{policyName}"] = result.FilterContext;
+                    context.Items["PolicyFilterContext"] = result.FilterContext; // For backward compatibility
+                    
+                    _logger.LogDebug(
+                        "[POLICY FILTER] Policy {PolicyName} returned filter context for user {UserId}: {FilterType}",
+                        policyName, userContext.UserId, result.FilterContext.GetType().Name);
+                }
+
                 // Audit log: Policy allowed
                 _logger.LogInformation(
                     "[AUDIT] Policy ALLOWED - Policy: {PolicyName}, User: {UserId}, " +
-                    "Path: {Path}, Method: {Method}, Reason: {Reason}, Duration: {Duration}ms",
+                    "Path: {Path}, Method: {Method}, Reason: {Reason}, Duration: {Duration}ms, " +
+                    "HasFilterContext: {HasFilterContext}",
                     policyName,
                     userContext.UserId,
                     context.Request.Path,
                     context.Request.Method,
                     result.Reason,
-                    duration);
+                    duration,
+                    result.FilterContext != null);
             }
 
             await _next(context);
