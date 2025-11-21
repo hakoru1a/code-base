@@ -4,30 +4,19 @@ using Shared.DTOs.Authorization;
 
 namespace Infrastructure.Authorization
 {
+    /// <summary>
+    /// Evaluates policies by name
+    /// Policies are registered via dependency injection
+    /// </summary>
     public class PolicyEvaluator : IPolicyEvaluator
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly Dictionary<string, Type> _policyRegistry;
 
-        public PolicyEvaluator(IServiceProvider serviceProvider)
+        public PolicyEvaluator(IServiceProvider serviceProvider, Dictionary<string, Type> policyRegistry)
         {
             _serviceProvider = serviceProvider;
-            _policyRegistry = new Dictionary<string, Type>();
-        }
-
-        public void RegisterPolicy<TPolicy>(string policyName) where TPolicy : IPolicy
-        {
-            _policyRegistry[policyName] = typeof(TPolicy);
-        }
-
-        public void RegisterPolicy(Type policyType, string policyName)
-        {
-            if (!typeof(IPolicy).IsAssignableFrom(policyType))
-            {
-                throw new ArgumentException($"Type {policyType.Name} does not implement IPolicy", nameof(policyType));
-            }
-
-            _policyRegistry[policyName] = policyType;
+            _policyRegistry = policyRegistry;
         }
 
         public async Task<PolicyEvaluationResult> EvaluateAsync(

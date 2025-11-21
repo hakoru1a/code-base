@@ -38,48 +38,6 @@ namespace Shared.Identity
             public const string BasicUser = "BasicUser";
         }
 
-        /// <summary>
-        /// PBAC Policies - Policy-based authorization (Service level)
-        /// These are used with [RequirePolicy("...")] attribute or IProductPolicyService
-        /// </summary>
-        public static class Pbac
-        {
-            /// <summary>
-            /// Category policies
-            /// </summary>
-            public static class Category
-            {
-                public const string View = "CATEGORY:VIEW";
-                public const string Create = "CATEGORY:CREATE";
-                public const string Update = "CATEGORY:UPDATE";
-                public const string Delete = "CATEGORY:DELETE";
-            }
-
-            /// <summary>
-            /// Product policies
-            /// </summary>
-            public static class Product
-            {
-                public const string View = "PRODUCT:VIEW";
-                public const string Create = "PRODUCT:CREATE";
-                public const string Update = "PRODUCT:UPDATE";
-                public const string Delete = "PRODUCT:DELETE";
-                public const string ListFilter = "PRODUCT:LIST_FILTER";
-            }
-
-            /// <summary>
-            /// Order policies
-            /// </summary>
-            public static class Order
-            {
-                public const string View = "ORDER:VIEW";
-                public const string Create = "ORDER:CREATE";
-                public const string Update = "ORDER:UPDATE";
-                public const string Delete = "ORDER:DELETE";
-                public const string Cancel = "ORDER:CANCEL";
-                public const string Approve = "ORDER:APPROVE";
-            }
-        }
 
         /// <summary>
         /// Hybrid Policies - Combine roles and permissions (Gateway level)

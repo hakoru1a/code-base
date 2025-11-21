@@ -1,0 +1,3 @@
+2. Cải thiện RBAC/PBAC sử dụng attribute 
+4. Dùng kĩ thuật CorelationId 
+5. logging & monitoring (demo)

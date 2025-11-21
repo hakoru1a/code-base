@@ -501,10 +501,16 @@ dotnet run --project Base.API
 
 ## 📖 Documentation
 
+### 🎯 PBAC (Policy-Based Access Control) - **NEW** ✨
+- **[Quick Start](PBAC_QUICK_START.md)** ⚡ - Tạo policy mới trong 30 giây
+- **[PBAC Guide](docs/auth/pbac-guide.md)** 📖 - Hướng dẫn đầy đủ với workflow và examples
+- **[PBAC Cheat Sheet](docs/auth/pbac-cheatsheet.md)** 📝 - Templates và quick reference
+- **[Documentation Index](docs/auth/INDEX.md)** 📚 - Tổng hợp tất cả tài liệu
+
 ### Authentication & Authorization
 - **[Keycloak Quick Start](docs/auth/KEYCLOAK-QUICK-START.md)** - Setup Keycloak realm trong 15 phút ⚡
 - **[Keycloak Realm Setup](docs/auth/KEYCLOAK-REALM-SETUP.md)** - Hướng dẫn đầy đủ về Keycloak configuration
-- **[PBAC Authorization](docs/auth/README.md)** - Policy-Based Access Control documentation 🔐
+- **[Keycloak Complete Guide](docs/auth/keycloak-complete-guide.md)** - Chi tiết đầy đủ về Keycloak integration
 
 ### Infrastructure
 - **[Docker Infrastructure Setup](infra/README.md)** - Setup toàn bộ infrastructure với Docker Compose
