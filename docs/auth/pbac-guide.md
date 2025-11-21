@@ -1,9 +1,110 @@
 # PBAC Guide - Hướng dẫn sử dụng Policy-Based Access Control
 
+## ⚡ Quick Start - Tạo Policy trong 30 giây
+
+### 1. Tạo file Policy (10s)
+
+```csharp
+// File: Features/Invoice/Policies/InvoiceViewPolicy.cs
+using Infrastructure.Authorization;
+using Shared.Attributes;
+using Shared.DTOs.Authorization;
+using Shared.Identity;
+
+[Policy("INVOICE:VIEW", Description = "View invoices")]
+public class InvoiceViewPolicy : BasePolicy
+{
+    public override Task<PolicyEvaluationResult> EvaluateAsync(
+        UserClaimsContext user,
+        Dictionary<string, object> context)
+    {
+        if (HasRole(user, Roles.Admin))
+            return Task.FromResult(PolicyEvaluationResult.Allow("Admin access"));
+
+        return Task.FromResult(PolicyEvaluationResult.Deny("Admin only"));
+    }
+}
+```
+
+### 2. Policy tự động register ✅ (0s)
+**Không cần làm gì!** Auto-discovery hoạt động tự động.
+
+### 3. Sử dụng trong Controller (20s)
+
+```csharp
+[RequirePolicy("INVOICE:VIEW")]
+public async Task<IActionResult> GetInvoice(long id)
+{
+    // Your code here
+    return Ok(invoice);
+}
+```
+
+**Xong!** 🎉
+
+---
+
+## 📋 Copy/Paste Templates
+
+### Template 1: Chỉ cần authenticated
+```csharp
+[Policy("RESOURCE:ACTION")]
+public class ResourceActionPolicy : BasePolicy
+{
+    public override Task<PolicyEvaluationResult> EvaluateAsync(
+        UserClaimsContext user, Dictionary<string, object> context)
+    {
+        if (IsAuthenticated(user))
+            return Task.FromResult(PolicyEvaluationResult.Allow("OK"));
+
+        return Task.FromResult(PolicyEvaluationResult.Deny("Must be authenticated"));
+    }
+}
+```
+
+### Template 2: Check role
+```csharp
+[Policy("RESOURCE:ACTION")]
+public class ResourceActionPolicy : BasePolicy
+{
+    public override Task<PolicyEvaluationResult> EvaluateAsync(
+        UserClaimsContext user, Dictionary<string, object> context)
+    {
+        if (HasAnyRole(user, Roles.Admin, Roles.Manager))
+            return Task.FromResult(PolicyEvaluationResult.Allow("Has required role"));
+
+        return Task.FromResult(PolicyEvaluationResult.Deny("Admin or Manager required"));
+    }
+}
+```
+
+### Template 3: Check permission
+```csharp
+[Policy("RESOURCE:ACTION")]
+public class ResourceActionPolicy : BasePolicy
+{
+    public override Task<PolicyEvaluationResult> EvaluateAsync(
+        UserClaimsContext user, Dictionary<string, object> context)
+    {
+        if (HasPermission(user, Permissions.Resource.Action))
+            return Task.FromResult(PolicyEvaluationResult.Allow("Has permission"));
+
+        return Task.FromResult(PolicyEvaluationResult.Deny("Permission required"));
+    }
+}
+```
+
+---
+
 ## 📖 Table of Contents
 1. [Cách sử dụng](#cách-sử-dụng)
 2. [Workflow](#workflow)
 3. [Implement Policy mới](#implement-policy-mới)
+4. [Ví dụ thực tế](#ví-dụ-thực-tế)
+5. [Helper Methods](#-helper-methods-trong-basepolicy)
+6. [Convention đặt tên](#-convention-đặt-tên-policy)
+7. [Troubleshooting](#-troubleshooting)
+8. [FAQ](#-faq)
 
 ---
 
@@ -34,20 +135,6 @@ public class ProductController : ControllerBase
     public async Task<IActionResult> CreateProduct(ProductDto dto)
     {
         // Chỉ user có quyền tạo product mới vào được
-        return Ok();
-    }
-
-    [HttpPut("{id}")]
-    [RequirePolicy("PRODUCT:UPDATE")]
-    public async Task<IActionResult> UpdateProduct(long id, ProductDto dto)
-    {
-        return Ok();
-    }
-
-    [HttpDelete("{id}")]
-    [RequirePolicy("PRODUCT:DELETE")]
-    public async Task<IActionResult> DeleteProduct(long id)
-    {
         return Ok();
     }
 }
@@ -125,24 +212,6 @@ public async Task<IActionResult> GetProductWithCategory(long id)
                                 }
 ```
 
-### Minh họa cụ thể:
-
-**Request:**
-```http
-GET /api/product/123
-Authorization: Bearer eyJhbGc...
-```
-
-**Flow:**
-1. ✅ JWT valid → Extract user claims
-2. ✅ User authenticated → Continue
-3. ✅ Check `[RequirePolicy("PRODUCT:VIEW")]` → Found
-4. 🔍 Find `ProductViewPolicy` in registry
-5. 🔍 Execute `ProductViewPolicy.EvaluateAsync()`
-   - Check: `if (IsAuthenticated(user))` → ✅ True
-6. ✅ Policy Allow → Continue to controller
-7. ✅ Return product data
-
 ---
 
 ## 🚀 Implement Policy mới
@@ -159,9 +228,6 @@ using Shared.Identity;
 
 namespace Generate.Application.Features.Invoice.Policies
 {
-    /// <summary>
-    /// Policy cho việc xem invoice
-    /// </summary>
     [Policy("INVOICE:VIEW", Description = "View invoices")]
     public class InvoiceViewPolicy : BasePolicy
     {
@@ -169,7 +235,6 @@ namespace Generate.Application.Features.Invoice.Policies
             UserClaimsContext user,
             Dictionary<string, object> context)
         {
-            // Business logic ở đây
             if (IsAuthenticated(user))
             {
                 return Task.FromResult(PolicyEvaluationResult.Allow(
@@ -185,16 +250,7 @@ namespace Generate.Application.Features.Invoice.Policies
 
 ### Bước 2: Policy đã tự động register! ✅
 
-Không cần làm gì thêm! Policy sẽ tự động được discover và register nhờ:
-
-```csharp
-// Trong Generate.API/Extensions/AuthenticationExtension.cs
-services.AddPolicyBasedAuthorization(registry =>
-{
-    registry.ScanAssemblies(typeof(ProductViewPolicy).Assembly);
-    // ↑ Tự động scan tất cả policies trong assembly này
-});
-```
+Không cần làm gì thêm! Policy sẽ tự động được discover và register.
 
 ### Bước 3: Sử dụng Policy
 
@@ -206,8 +262,6 @@ public async Task<IActionResult> GetInvoice(long id)
     return Ok();
 }
 ```
-
-**Xong!** 🎉
 
 ---
 
@@ -224,14 +278,9 @@ public class DashboardViewPolicy : BasePolicy
         Dictionary<string, object> context)
     {
         if (IsAuthenticated(user))
-        {
-            return Task.FromResult(PolicyEvaluationResult.Allow(
-                "User is authenticated"));
-        }
-
-        return Task.FromResult(PolicyEvaluationResult.Deny(
-            "Authentication required"));
-        }
+            return Task.FromResult(PolicyEvaluationResult.Allow("OK"));
+        
+        return Task.FromResult(PolicyEvaluationResult.Deny("Authentication required"));
     }
 }
 ```
@@ -246,13 +295,9 @@ public class ReportExportPolicy : BasePolicy
         UserClaimsContext user,
         Dictionary<string, object> context)
     {
-        // Chỉ Admin và Manager mới export được
         if (HasAnyRole(user, Roles.Admin, Roles.Manager))
-        {
-            return Task.FromResult(PolicyEvaluationResult.Allow(
-                "User has required role"));
-        }
-
+            return Task.FromResult(PolicyEvaluationResult.Allow("OK"));
+        
         return Task.FromResult(PolicyEvaluationResult.Deny(
             "Only Admin or Manager can export reports"));
     }
@@ -269,21 +314,10 @@ public class FinanceApprovePolicy : BasePolicy
         UserClaimsContext user,
         Dictionary<string, object> context)
     {
-        // Cần cả role VÀ permission
-        if (HasRole(user, Roles.Manager))
-        {
-            if (HasPermission(user, "finance:approve"))
-            {
-                return Task.FromResult(PolicyEvaluationResult.Allow(
-                    "User has role and permission"));
-            }
-
-            return Task.FromResult(PolicyEvaluationResult.Deny(
-                "Manager role but missing finance:approve permission"));
-        }
-
-        return Task.FromResult(PolicyEvaluationResult.Deny(
-            "Manager role required"));
+        if (HasRole(user, Roles.Manager) && HasPermission(user, "finance:approve"))
+            return Task.FromResult(PolicyEvaluationResult.Allow("OK"));
+        
+        return Task.FromResult(PolicyEvaluationResult.Deny("Permission denied"));
     }
 }
 ```
@@ -298,61 +332,14 @@ public class OrderCancelPolicy : BasePolicy
         UserClaimsContext user,
         Dictionary<string, object> context)
     {
-        // Admin luôn được cancel
         if (HasRole(user, Roles.Admin))
-        {
-            return Task.FromResult(PolicyEvaluationResult.Allow(
-                "Admin can cancel any order"));
-        }
+            return Task.FromResult(PolicyEvaluationResult.Allow("Admin can cancel"));
 
-        // User thường chỉ cancel được order của mình
         var orderOwnerId = GetContextValue<string>(context, "OwnerId");
         if (user.UserId == orderOwnerId)
-        {
-            return Task.FromResult(PolicyEvaluationResult.Allow(
-                "User can cancel own order"));
-        }
+            return Task.FromResult(PolicyEvaluationResult.Allow("User can cancel own order"));
 
-        return Task.FromResult(PolicyEvaluationResult.Deny(
-            "Cannot cancel other user's order"));
-    }
-}
-```
-
-### Ví dụ 5: Policy phức tạp với business logic
-
-```csharp
-[Policy("DISCOUNT:APPLY")]
-public class DiscountApplyPolicy : BasePolicy
-{
-    public override Task<PolicyEvaluationResult> EvaluateAsync(
-        UserClaimsContext user,
-        Dictionary<string, object> context)
-    {
-        // Admin không bị giới hạn
-        if (HasRole(user, Roles.Admin))
-        {
-            return Task.FromResult(PolicyEvaluationResult.Allow(
-                "Admin unlimited discount"));
-        }
-
-        // Manager có thể apply discount <= 20%
-        if (HasRole(user, Roles.Manager))
-        {
-            var discountPercent = GetContextValue<decimal>(context, "DiscountPercent");
-            if (discountPercent <= 20)
-            {
-                return Task.FromResult(PolicyEvaluationResult.Allow(
-                    "Manager can apply discount up to 20%"));
-            }
-
-            return Task.FromResult(PolicyEvaluationResult.Deny(
-                $"Manager cannot apply {discountPercent}% discount (max 20%)"));
-        }
-
-        // User thường không được apply discount
-        return Task.FromResult(PolicyEvaluationResult.Deny(
-            "Only Manager or Admin can apply discounts"));
+        return Task.FromResult(PolicyEvaluationResult.Deny("Cannot cancel other user's order"));
     }
 }
 ```
@@ -361,71 +348,27 @@ public class DiscountApplyPolicy : BasePolicy
 
 ## 🛠️ Helper Methods trong BasePolicy
 
-| Method | Mô tả | Ví dụ |
-|--------|-------|-------|
-| `IsAuthenticated(user)` | Check user đã login | `if (IsAuthenticated(user))` |
-| `HasRole(user, role)` | Check 1 role | `HasRole(user, Roles.Admin)` |
-| `HasAnyRole(user, ...roles)` | Check có 1 trong các roles | `HasAnyRole(user, Roles.Admin, Roles.Manager)` |
-| `HasAllRoles(user, ...roles)` | Check có tất cả roles | `HasAllRoles(user, Roles.Admin, Roles.Premium)` |
-| `HasPermission(user, permission)` | Check permission | `HasPermission(user, "product:delete")` |
-| `GetContextValue<T>(context, key)` | Lấy data từ context | `GetContextValue<string>(context, "OwnerId")` |
+| Method | Mô tả |
+|--------|-------|
+| `IsAuthenticated(user)` | Check user đã login |
+| `HasRole(user, role)` | Check 1 role |
+| `HasAnyRole(user, ...roles)` | Check có 1 trong các roles (OR) |
+| `HasAllRoles(user, ...roles)` | Check có tất cả roles (AND) |
+| `HasPermission(user, permission)` | Check permission |
+| `GetContextValue<T>(context, key)` | Lấy data từ context |
 
 ---
 
 ## 📝 Convention đặt tên Policy
 
-### Policy Name Format:
-```
-{RESOURCE}:{ACTION}
-```
+### Policy Name Format: `{RESOURCE}:{ACTION}`
+**Ví dụ:** `PRODUCT:VIEW`, `ORDER:CANCEL`
 
-**Ví dụ:**
-- `PRODUCT:VIEW` - Xem product
-- `PRODUCT:CREATE` - Tạo product
-- `PRODUCT:UPDATE` - Cập nhật product
-- `PRODUCT:DELETE` - Xóa product
-- `ORDER:CANCEL` - Hủy order
-- `ORDER:APPROVE` - Phê duyệt order
-- `INVOICE:EXPORT` - Export invoice
-- `REPORT:DOWNLOAD` - Download report
+### Policy Class Name: `{Resource}{Action}Policy`
+**Ví dụ:** `ProductViewPolicy`, `OrderCancelPolicy`
 
-### Policy Class Name:
-```
-{Resource}{Action}Policy
-```
-
-**Ví dụ:**
-- `ProductViewPolicy`
-- `ProductCreatePolicy`
-- `OrderCancelPolicy`
-- `InvoiceExportPolicy`
-
----
-
-## ⚡ Quick Reference
-
-### Tạo Policy mới trong 3 bước:
-
-```bash
-# 1. Tạo file Policy
-src/Services/Generate/Generate.Application/Features/{Resource}/Policies/{Resource}{Action}Policy.cs
-
-# 2. Code Policy
-[Policy("{RESOURCE}:{ACTION}")]
-public class {Resource}{Action}Policy : BasePolicy
-{
-    public override Task<PolicyEvaluationResult> EvaluateAsync(...)
-    {
-        // Business logic
-    }
-}
-
-# 3. Sử dụng trong Controller
-[RequirePolicy("{RESOURCE}:{ACTION}")]
-public async Task<IActionResult> {Action}{Resource}() { }
-```
-
-**Xong!** Không cần register thủ công! 🎉
+### File Path: `Features/{Resource}/Policies/`
+**Ví dụ:** `Features/Product/Policies/`
 
 ---
 
@@ -446,18 +389,46 @@ public async Task<IActionResult> {Action}{Resource}() { }
 2. Verify roles/permissions trong JWT token
 3. Check business logic trong `EvaluateAsync()`
 
-### Policy không được discover?
+---
 
-✅ Check:
-1. Policy class có inherit `BasePolicy` chưa?
-2. Policy class có `[Policy]` attribute chưa?
-3. Assembly có được scan trong `AddPolicyBasedAuthorization()` chưa?
+## ❓ FAQ
+
+### Q: Policy không được gọi?
+**A:** Check:
+1. Có `[RequirePolicy("...")]` attribute chưa?
+2. Policy name đúng chưa? (Case sensitive!)
+3. Policy có `[Policy("...")]` attribute chưa?
+
+### Q: Policy luôn return Deny?
+**A:** Check:
+1. User có đúng role/permission chưa?
+2. Log user claims để debug: `Console.WriteLine($"Roles: {string.Join(", ", user.Roles)}");`
+
+### Q: Làm sao để test policy?
+**A:** Unit test:
+```csharp
+var policy = new InvoiceViewPolicy();
+var user = new UserClaimsContext { 
+    Roles = new List<string> { Roles.Admin } 
+};
+var result = await policy.EvaluateAsync(user, new Dictionary<string, object>());
+Assert.True(result.IsAllowed);
+```
+
+---
+## 🚀 Next Steps
+
+1. ✅ Copy một template phù hợp
+2. ✅ Đổi tên và logic theo yêu cầu
+3. ✅ Sử dụng `[RequirePolicy]` trong controller
+4. ✅ Test thử!
 
 ---
 
-## 📚 Tài liệu thêm
+## 💡 Tips
 
-- [Authorization README](../../src/BuildingBlocks/Infrastructure/Authorization/README.md)
-- [PBAC Refactor Summary](../../PBAC_REFACTOR_SUMMARY.md)
-- [JWT Claims Authorization](./jwt-claims-authorization.md)
-
+- 💡 Bắt đầu với template đơn giản nhất
+- 💡 Đặt tên policy theo convention
+- 💡 Sử dụng helper methods từ BasePolicy
+- 💡 Log để debug nếu cần
+- 💡 Keep it simple!

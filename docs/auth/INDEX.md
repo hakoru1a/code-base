@@ -6,7 +6,7 @@
 
 | Tài liệu | Mô tả | Link |
 |----------|-------|------|
-| **PBAC Quick Start** | Bắt đầu nhanh với PBAC trong 30 giây | [⚡ Xem](./PBAC_QUICK_START.md) |
+| **PBAC Filter Context** | **NEW!** Dynamic filtering từ JWT claims | [🔥 Xem](./PBAC_FILTER_CONTEXT_QUICK_START.md) |
 | **PBAC Guide** | Hướng dẫn đầy đủ: Cách sử dụng, Workflow, Implement | [📖 Xem](./pbac-guide.md) |
 | **PBAC Cheat Sheet** | Tài liệu tham khảo nhanh với templates | [⚡ Xem](./pbac-cheatsheet.md) |
 | **Refactor Summary** | Chi tiết về việc refactor PBAC | [📋 Xem](./PBAC_REFACTOR_SUMMARY.md) |
@@ -17,7 +17,6 @@
 |----------|-------|------|
 | **JWT Claims Authorization** | RBAC, PBAC, Hybrid policies | [📖 Xem](./jwt-claims-authorization.md) |
 | **Keycloak Complete Guide** | Hướng dẫn setup Keycloak đầy đủ | [📖 Xem](./keycloak-complete-guide.md) |
-| **Keycloak Setup** | Quick setup guide | [📖 Xem](./KEYCLOAK_SETUP.md) |
 
 ### 🏗️ Architecture
 
@@ -31,7 +30,8 @@
 
 ### Tôi muốn...
 
-#### ✅ Tạo một policy mới
+#### ✅ Tạo một policy với FilterContext
+→ [PBAC Filter Context - Quick Start](./PBAC_FILTER_CONTEXT_QUICK_START.md) 🔥 **NEW!**  
 → [PBAC Guide - Implement Policy mới](./pbac-guide.md#implement-policy-mới)  
 → [PBAC Cheat Sheet - Templates](./pbac-cheatsheet.md#templates)
 
@@ -44,8 +44,7 @@
 → [PBAC Cheat Sheet - Request Flow](./pbac-cheatsheet.md#request-flow-simple)
 
 #### ✅ Setup Keycloak
-→ [Keycloak Complete Guide](./keycloak-complete-guide.md)  
-→ [Keycloak Setup](./KEYCLOAK_SETUP.md)
+→ [Keycloak Complete Guide](./keycloak-complete-guide.md)
 
 #### ✅ Hiểu về JWT claims và roles
 → [JWT Claims Authorization](./jwt-claims-authorization.md)
@@ -55,10 +54,9 @@
 ## 📖 Tài liệu theo level
 
 ### 🟢 Beginner
-1. [PBAC Quick Start](./PBAC_QUICK_START.md) - Bắt đầu ở đây! ⚡
+1. [PBAC Filter Context](./PBAC_FILTER_CONTEXT_QUICK_START.md) - Dynamic filtering 🔥
 2. [PBAC Cheat Sheet](./pbac-cheatsheet.md)
 3. [PBAC Guide - Cách sử dụng](./pbac-guide.md#cách-sử-dụng)
-4. [Keycloak Setup](./KEYCLOAK_SETUP.md)
 
 ### 🟡 Intermediate
 1. [PBAC Guide - Workflow](./pbac-guide.md#workflow)
@@ -83,7 +81,6 @@
 - [PBAC Cheat Sheet - Templates](./pbac-cheatsheet.md#templates)
 
 ### 🔧 Setup & Configuration
-- [Keycloak Setup](./KEYCLOAK_SETUP.md)
 - [Keycloak Complete Guide](./keycloak-complete-guide.md)
 
 ### 🏗️ Architecture
@@ -95,12 +92,11 @@
 ## 🔍 Search by Topic
 
 ### Authentication
-- [Keycloak Setup](./KEYCLOAK_SETUP.md)
 - [Keycloak Complete Guide](./keycloak-complete-guide.md)
 - [JWT Claims Authorization](./jwt-claims-authorization.md)
 
 ### Authorization (PBAC)
-- [PBAC Quick Start](./PBAC_QUICK_START.md) ⚡ **Start here!**
+- [PBAC Filter Context](./PBAC_FILTER_CONTEXT_QUICK_START.md) 🔥 **Dynamic Filtering!**
 - [PBAC Guide](./pbac-guide.md) ⭐ **Recommended**
 - [PBAC Cheat Sheet](./pbac-cheatsheet.md)
 - [Refactor Summary](./PBAC_REFACTOR_SUMMARY.md)
@@ -159,7 +155,6 @@ public async Task<IActionResult> GetInvoice(long id) { }
 - ✅ Không cần manual registration
 
 **Đọc thêm:**
-- [PBAC Quick Start](./PBAC_QUICK_START.md) ⚡
 - [Refactor Summary](./PBAC_REFACTOR_SUMMARY.md)
 - [PBAC Guide](./pbac-guide.md)
 
