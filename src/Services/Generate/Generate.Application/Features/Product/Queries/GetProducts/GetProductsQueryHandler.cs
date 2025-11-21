@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Infrastructure.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace Generate.Application.Features.Product.Queries.GetProducts
 {
@@ -12,18 +13,21 @@ namespace Generate.Application.Features.Product.Queries.GetProducts
     {
         private readonly IProductRepository _productRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger<GetProductsQueryHandler>? _logger;
 
         public GetProductsQueryHandler(
             IProductRepository productRepository,
-            IHttpContextAccessor httpContextAccessor)
+            IHttpContextAccessor httpContextAccessor,
+            ILogger<GetProductsQueryHandler>? logger = null)
         {
             _productRepository = productRepository;
             _httpContextAccessor = httpContextAccessor;
+            _logger = logger;
         }
 
         public async Task<List<ProductResponseDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
         {
-            var query = _productRepository.FindAll().Include(p => p.Category);
+            IQueryable<Generate.Domain.Entities.Product> query = _productRepository.FindAll().Include(p => p.Category);
 
             // Apply filter context from PRODUCT:VIEW policy
             var filterContext = _httpContextAccessor.HttpContext?.GetProductFilterContext();
@@ -38,6 +42,8 @@ namespace Generate.Application.Features.Product.Queries.GetProducts
 
         /// <summary>
         /// Apply policy-based filters to product query
+        /// NOTE: Current Product entity only has Name and Category.
+        /// Price, Department, Brand filters are examples for future enhancement.
         /// </summary>
         /// <param name="query">Product query</param>
         /// <param name="filterContext">Filter context from policy evaluation</param>
@@ -49,53 +55,49 @@ namespace Generate.Application.Features.Product.Queries.GetProducts
             // Admin/Manager can view all products - bypass all filters
             if (filterContext.CanViewAll)
             {
+                _logger?.LogDebug("User has CanViewAll privilege - bypassing all filters");
                 return query;
             }
 
-            // Apply price range filter from JWT claims
-            if (filterContext.MaxPrice.HasValue)
-            {
-                query = query.Where(p => p.Price <= filterContext.MaxPrice.Value);
-            }
-
-            if (filterContext.MinPrice.HasValue)
-            {
-                query = query.Where(p => p.Price >= filterContext.MinPrice.Value);
-            }
-
-            // Apply category restrictions
+            // Apply category restrictions based on permissions
             if (filterContext.AllowedCategories?.Any() == true)
             {
-                query = query.Where(p => filterContext.AllowedCategories.Contains(p.Category.Name));
+                _logger?.LogDebug("Applying category filter: {Categories}", 
+                    string.Join(", ", filterContext.AllowedCategories));
+                    
+                query = query.Where(p => p.Category != null && 
+                    filterContext.AllowedCategories.Contains(p.Category.Name));
             }
 
-            // Apply department filter
-            if (!string.IsNullOrEmpty(filterContext.DepartmentFilter) && !filterContext.CanViewCrossDepartment)
-            {
-                // Assuming products have a Department field, adjust as needed
-                // query = query.Where(p => p.Department == filterContext.DepartmentFilter);
-            }
+            // TODO: Price filter - requires adding Price property to Product entity
+            // if (filterContext.MaxPrice.HasValue)
+            // {
+            //     query = query.Where(p => p.Price <= filterContext.MaxPrice.Value);
+            // }
 
-            // Apply region filter
-            if (!string.IsNullOrEmpty(filterContext.RegionFilter))
-            {
-                // Assuming products have a Region field, adjust as needed
-                // query = query.Where(p => p.Region == filterContext.RegionFilter);
-            }
+            // TODO: Department filter - requires adding Department property to Product entity
+            // if (!string.IsNullOrEmpty(filterContext.DepartmentFilter) && !filterContext.CanViewCrossDepartment)
+            // {
+            //     query = query.Where(p => p.Department == filterContext.DepartmentFilter);
+            // }
 
-            // Apply brand restrictions
-            if (filterContext.AllowedBrands?.Any() == true)
-            {
-                // Assuming products have a Brand field, adjust as needed
-                // query = query.Where(p => filterContext.AllowedBrands.Contains(p.Brand));
-            }
+            // TODO: Brand filter - requires adding Brand property to Product entity
+            // if (filterContext.AllowedBrands?.Any() == true)
+            // {
+            //     query = query.Where(p => filterContext.AllowedBrands.Contains(p.Brand));
+            // }
 
-            // Filter discontinued products if not allowed
-            if (!filterContext.IncludeDiscontinued)
-            {
-                // Assuming products have an IsActive or Status field
-                // query = query.Where(p => p.IsActive == true);
-            }
+            // TODO: Region filter - requires adding Region property to Product entity
+            // if (!string.IsNullOrEmpty(filterContext.RegionFilter))
+            // {
+            //     query = query.Where(p => p.Region == filterContext.RegionFilter);
+            // }
+
+            // Log applied filters for debugging
+            _logger?.LogInformation(
+                "Applied product filters - CanViewAll: {CanViewAll}, CategoryCount: {CategoryCount}",
+                filterContext.CanViewAll,
+                filterContext.AllowedCategories?.Count ?? 0);
 
             return query;
         }
