@@ -142,6 +142,88 @@ public class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, List<Pr
 
 ---
 
+## Nâng cao: Sử dụng Context Data để kiểm tra Ownership
+
+Một trong những sức mạnh lớn nhất của PBAC là khả năng ra quyết định dựa trên dữ liệu theo ngữ cảnh (context data) được truyền vào lúc thực thi. Một ví dụ điển hình là kiểm tra quyền sở hữu: "User có được phép sửa tài nguyên này không? Họ có phải là người tạo ra nó không?"
+
+**Tình huống**: Chỉ cho phép người dùng sửa đơn hàng (`Order`) do chính họ tạo ra (trừ Admin).
+
+### Bước 1: Controller truyền ID của tài nguyên
+
+Sử dụng `RequirePolicy` attribute, chúng ta có thể truyền ID của đơn hàng từ route vào context của policy.
+
+```csharp
+[ApiController]
+[Route("api/orders")]
+public class OrdersController : ControllerBase
+{
+    [HttpPut("{id}")]
+    // Truyền "id" từ route vào policy context với key là "OrderId"
+    [RequirePolicy("ORDER:UPDATE", "OrderId", "{id}")] 
+    public async Task<IActionResult> UpdateOrder(int id, [FromBody] OrderUpdateDto dto)
+    {
+        // Logic cập nhật đơn hàng
+        // ...
+        return Ok();
+    }
+}
+```
+
+### Bước 2: Policy sử dụng Context Data
+
+Policy `ORDER:UPDATE` sẽ nhận được `OrderId` từ context, dùng nó để tải thông tin đơn hàng và kiểm tra quyền sở hữu.
+
+```csharp
+[Policy("ORDER:UPDATE", Description = "Update an order")]
+public class OrderUpdatePolicy : BasePolicy
+{
+    private readonly IOrderRepository _orderRepository;
+
+    // Inject repository để lấy thông tin order
+    public OrderUpdatePolicy(IOrderRepository orderRepository)
+    {
+        _orderRepository = orderRepository;
+    }
+
+    public override async Task<PolicyEvaluationResult> EvaluateAsync(
+        UserClaimsContext user,
+        Dictionary<string, object> context)
+    {
+        // Admin luôn có quyền
+        if (user.HasRole("Admin"))
+        {
+            return PolicyEvaluationResult.Allow("Admin has universal update rights.");
+        }
+
+        // Lấy OrderId từ context do controller truyền vào
+        var orderId = GetContextValue<int>(context, "OrderId");
+        if (orderId == 0)
+        {
+            return PolicyEvaluationResult.Deny("OrderId is missing from the context.");
+        }
+
+        // Tải thông tin đơn hàng từ database
+        var order = await _orderRepository.GetByIdAsync(orderId);
+        if (order == null)
+        {
+            return PolicyEvaluationResult.Deny($"Order with id {orderId} not found.");
+        }
+
+        // So sánh UserId của người dùng hiện tại với CreatedBy của đơn hàng
+        if (user.UserId == order.CreatedBy)
+        {
+            return PolicyEvaluationResult.Allow("User is the owner of the order.");
+        }
+
+        return PolicyEvaluationResult.Deny("User is not the owner of the order.");
+    }
+}
+```
+
+Với cách này, logic phân quyền của bạn trở nên cực kỳ linh hoạt và có thể xử lý các quy tắc nghiệp vụ phức tạp mà không cần tạo ra vô số vai trò khác nhau.
+
+---
+
 ## 📋 Copy/Paste Templates
 
 ### Template 1: Chỉ cần authenticated

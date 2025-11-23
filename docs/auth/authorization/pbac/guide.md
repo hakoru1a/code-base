@@ -181,6 +181,53 @@ public class OrderCancelPolicy : BasePolicy
 
 ---
 
+## 👍 Best Practices
+
+Để xây dựng một hệ thống PBAC mạnh mẽ, dễ bảo trì và an toàn, hãy tuân thủ các nguyên tắc sau:
+
+### 1. Giữ Policy tập trung (Keep Policies Focused)
+Mỗi policy chỉ nên chịu trách nhiệm cho một quyết định phân quyền cụ thể. Tránh tạo ra các "god policy" (policy toàn năng) xử lý quá nhiều logic khác nhau.
+
+**❌ KHÔNG NÊN:** Một policy `ManageOrderPolicy` kiểm tra cả việc xem, sửa, xóa, và duyệt đơn hàng.
+**✅ NÊN LÀM:** Tách thành các policy riêng biệt: `OrderViewPolicy`, `OrderUpdatePolicy`, `OrderDeletePolicy`, `OrderApprovePolicy`.
+
+### 2. Ưu tiên từ chối theo mặc định (Favor Deny by Default)
+Luồng logic trong policy của bạn nên được viết theo hướng "chặn tất cả, chỉ cho phép khi mọi điều kiện được thỏa mãn". Điều này giảm thiểu nguy cơ vô tình cấp quyền truy cập không mong muốn.
+
+```csharp
+public override Task<PolicyEvaluationResult> EvaluateAsync(...)
+{
+    // Admin thì luôn được
+    if (user.HasRole("Admin")) return Allow("Admin rights");
+
+    // Owner thì được
+    if (IsOwner(user, context)) return Allow("Owner rights");
+    
+    // Mọi trường hợp khác đều bị từ chối
+    return Deny("User is not admin or owner.");
+}
+```
+
+### 3. Tách biệt logic phân quyền và nghiệp vụ
+Nhiệm vụ của policy chỉ là trả lời câu hỏi "có" hoặc "không" (Allow/Deny). Logic nghiệp vụ (ví dụ: cập nhật database, gửi email) phải nằm ở các tầng service hoặc application handler, sau khi policy đã cho phép truy cập.
+
+### 4. Sử dụng `FilterContext` để lọc dữ liệu
+Khi một policy cần quyết định **dữ liệu nào** người dùng được thấy (thay vì họ **có được** thấy hay không), hãy sử dụng `FilterContext`. Điều này giúp tách biệt quyết định truy cập khỏi cơ chế lọc dữ liệu.
+
+**❌ KHÔNG NÊN:** Policy tải một danh sách sản phẩm, tự lọc chúng, và trả về danh sách đã lọc.
+**✅ NÊN LÀM:** Policy tạo một `ProductFilterContext` chứa các điều kiện lọc (e.g., `MaxPrice = 1000`), trả về `Allow(context)`. Repository/Handler sẽ sử dụng context này để xây dựng câu truy vấn.
+
+### 5. Viết Unit Test cho các Policy phức tạp
+Các policy, đặc biệt là những policy có logic phức tạp, nên được kiểm thử bằng unit test. Việc này đảm bảo policy hoạt động đúng như mong đợi với các loại user, roles, và context data khác nhau.
+
+### 6. Cung cấp thông điệp từ chối rõ ràng
+Thông điệp bạn đặt trong `PolicyEvaluationResult.Deny("...")` sẽ được trả về trong API response khi truy cập bị từ chối. Hãy viết các thông điệp có ý nghĩa để giúp frontend và các developer khác hiểu rõ lý do tại sao request thất bại.
+
+**❌ KHÔNG NÊN:** `return Deny("Error");`
+**✅ NÊN LÀM:** `return Deny("User must be in the 'Finance' department to access this report.");`
+
+---
+
 ## 📝 Convention đặt tên
 
 Việc tuân thủ convention giúp hệ thống dễ quản lý và dễ hiểu.
