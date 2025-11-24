@@ -8,7 +8,7 @@ namespace Contracts.Domain.Interface
 {
     public interface IUserTracking<T>
     {
-        T CreatedBy { get; set; }
+        T? CreatedBy { get; set; }
         T? LastModifiedBy { get; set; }
     }
 }

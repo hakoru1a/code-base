@@ -9,13 +9,13 @@ namespace Shared.SeedWork
     public class ApiResult<T>
     {
         [JsonConstructor]
-        public ApiResult(string message = null)
+        public ApiResult(string? message = null)
         {
             Message = message;
             Timestamp = DateTime.UtcNow;
         }
 
-        public ApiResult(T data, string message = null)
+        public ApiResult(T data, string? message = null)
         {
             Data = data;
             Message = message;
@@ -33,18 +33,18 @@ namespace Shared.SeedWork
         /// <summary>
         /// Response message
         /// </summary>
-        public string Message { get; set; }
+        public string? Message { get; set; }
 
         /// <summary>
         /// Response data
         /// </summary>
-        public T Data { get; set; }
+        public T? Data { get; set; }
 
         /// <summary>
         /// Additional metadata (pagination, etc.)
         /// </summary>
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public object Metadata { get; set; }
+        public object? Metadata { get; set; }
 
         /// <summary>
         /// Timestamp of the response

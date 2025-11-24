@@ -8,21 +8,24 @@ namespace Contracts.Exceptions
 {
     public class UnauthorizedException : ApplicationException
     {
-        public string ErrorCode { get; }
+        public string? ErrorCode { get; }
 
         public UnauthorizedException()
             : base("Unauthorized access.")
         {
+            ErrorCode = null;
         }
 
         public UnauthorizedException(string message)
             : base(message)
         {
+            ErrorCode = null;
         }
 
         public UnauthorizedException(string message, Exception innerException)
             : base(message, innerException)
         {
+            ErrorCode = null;
         }
 
         public UnauthorizedException(string errorCode, string message)

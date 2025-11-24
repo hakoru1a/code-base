@@ -6,7 +6,7 @@ namespace Contracts.Domain
         [BsonId]
         [BsonRepresentation(MongoDB.Bson.BsonType.ObjectId)]
         [BsonElement("_id")]
-        public virtual string Id { get; init; }
+        public virtual string? Id { get; init; }
         [BsonElement("createdDate")]
         public DateTime CreatedDate { get; set; }
         [BsonElement("lastModifiedDate")]

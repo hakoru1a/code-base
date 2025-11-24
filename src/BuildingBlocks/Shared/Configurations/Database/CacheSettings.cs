@@ -8,6 +8,6 @@ namespace Shared.Configurations.Database
 {
     public class CacheSettings
     {
-        public string ConnectionStrings { set; get; }
+        public string? ConnectionStrings { set; get; }
     }
 }

@@ -27,7 +27,7 @@ namespace Shared.SeedWork
         /// <summary>
         /// Creates a success result for paginated data
         /// </summary>
-        public static ApiSuccessResult<T> WithPagination(T data, object paginationMetadata, string message = null)
+        public static ApiSuccessResult<T> WithPagination(T data, object paginationMetadata, string? message = null)
         {
             return new ApiSuccessResult<T>(
                 data,

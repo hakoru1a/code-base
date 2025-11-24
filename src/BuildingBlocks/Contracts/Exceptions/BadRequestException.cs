@@ -8,24 +8,27 @@ namespace Contracts.Exceptions
 {
     public class BadRequestException : ApplicationException
     {
-        public string ErrorCode { get; }
+        public string? ErrorCode { get; }
         public IDictionary<string, string[]> ValidationErrors { get; }
 
         public BadRequestException()
             : base("Bad request.")
         {
+            ErrorCode = null;
             ValidationErrors = new Dictionary<string, string[]>();
         }
 
         public BadRequestException(string message)
             : base(message)
         {
+            ErrorCode = null;
             ValidationErrors = new Dictionary<string, string[]>();
         }
 
         public BadRequestException(string message, Exception innerException)
             : base(message, innerException)
         {
+            ErrorCode = null;
             ValidationErrors = new Dictionary<string, string[]>();
         }
 

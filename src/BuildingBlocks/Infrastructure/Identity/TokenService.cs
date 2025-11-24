@@ -44,7 +44,7 @@ namespace Infrastructure.Identity
 
         private SigningCredentials GetSigningCredential()
         {
-            byte[] secret = Encoding.UTF8.GetBytes(_jwtSettings.Key);
+            byte[] secret = Encoding.UTF8.GetBytes(_jwtSettings.Key ?? throw new InvalidOperationException("JWT Key is not configured"));
             return new SigningCredentials(new SymmetricSecurityKey(secret), SecurityAlgorithms.HmacSha256);
         }
 

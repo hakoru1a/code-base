@@ -118,7 +118,7 @@ public static class MapsterConfig
             .Map(dest => dest.Name, src => src.Name)
             .Map(dest => dest.CategoryId, src => src.CategoryId)
             .Ignore(dest => dest.Id)
-            .Ignore(dest => dest.Category);
+            .Ignore(dest => dest.Category!);
 
         // ProductUpdateDto -> Product
         TypeAdapterConfig<ProductUpdateDto, Product>
@@ -126,6 +126,6 @@ public static class MapsterConfig
             .Map(dest => dest.Id, src => src.Id)
             .Map(dest => dest.Name, src => src.Name)
             .Map(dest => dest.CategoryId, src => src.CategoryId)
-            .Ignore(dest => dest.Category);
+            .Ignore(dest => dest.Category!);
     }
 }
