@@ -126,7 +126,7 @@ KEYCLOAK_CLIENT_SECRET=your_client_secret_here
 KEYCLOAK_METADATA_ADDRESS=http://localhost:8080/realms/master/.well-known/openid-configuration
 
 # Elasticsearch Configuration
-ELASTIC_PASSWORD=elastic_password_123
+ELASTIC_PASSWORD=elastic123
 ELASTICSEARCH_PORT=9200
 ELASTICSEARCH_TRANSPORT_PORT=9300
 ELASTICSEARCH_URI=http://elasticsearch:9200
@@ -161,8 +161,8 @@ GENERATE_API_HTTPS_PORT=5005
 
 - **RabbitMQ Management**: http://localhost:15672 (user/password từ .env)
 - **Keycloak**: http://localhost:8080 (admin/admin_password từ .env)
-- **Kibana**: http://localhost:5601 (elastic/password từ .env)
-- **Elasticsearch**: http://localhost:9200 (elastic/password từ .env)
+- **Kibana**: http://localhost:5601 (elastic/elastic123)
+- **Elasticsearch**: http://localhost:9200 (elastic/elastic123)
 - **API Gateway**: http://localhost:5000
 
 ## Yêu cầu
