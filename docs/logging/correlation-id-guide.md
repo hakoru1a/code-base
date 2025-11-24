@@ -21,8 +21,17 @@ Middleware đã được thêm vào:
 
 ```csharp
 app.UseRouting();
-app.UseLoggingContext();           // ← Thêm correlation ID và username
-app.UseAuthentication();           // ← Phải có để LoggingContext lấy được username
+app.UseAuthentication();           // ← PHẢI ĐẶT TRƯỚC LoggingContext để set HttpContext.User
+app.UseLoggingContext();           // ← Thêm correlation ID và username (từ authenticated user)
+app.UseAuthorization();
+```
+
+**Lưu ý quan trọng cho ApiGateway:**
+```csharp
+app.UseRouting();
+app.UseSessionValidation();        // ← Set HttpContext.User từ JWT claims
+app.UseLoggingContext();           // ← Đặt sau UseSessionValidation để lấy được username
+app.UseAuthentication();
 app.UseAuthorization();
 ```
 
@@ -218,8 +227,10 @@ CorrelationId: "a1b2c3d4e5f6" AND (level: "Error" OR level: "Warning")
 **Nguyên nhân**: JWT claims không có username hoặc middleware đặt sai thứ tự
 
 **Giải pháp**:
-1. Kiểm tra JWT có chứa claims `name`, `preferred_username`, hoặc `username`
-2. Đảm bảo `app.UseLoggingContext()` đặt sau `app.UseAuthentication()`
+1. Kiểm tra JWT có chứa claims `name`, `preferred_username`, hoặc `username`  
+2. **Quan trọng**: Đảm bảo thứ tự middleware đúng:
+   - Services: `app.UseAuthentication()` → `app.UseLoggingContext()`
+   - ApiGateway: `app.UseSessionValidation()` → `app.UseLoggingContext()`
 
 ### Correlation ID không consistent qua services
 

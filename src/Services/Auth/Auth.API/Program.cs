@@ -6,7 +6,7 @@ using Serilog;
 try
 {
     var builder = WebApplication.CreateBuilder(args);
-    
+
     // Initialize Serilog bootstrap logger
     Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
     Log.Information("Starting Auth API");
@@ -14,78 +14,78 @@ try
     // Add Serilog Configuration
     builder.Host.UseSerilog(SeriLogger.Configure);
 
-#region Configuration Settings
+    #region Configuration Settings
 
-// Configure authentication and OAuth settings
-var (authSettings, oauthSettings) = builder.Services.ConfigureAuthSettings(builder.Configuration);
+    // Configure authentication and OAuth settings
+    var (authSettings, oauthSettings) = builder.Services.ConfigureAuthSettings(builder.Configuration);
 
-#endregion
+    #endregion
 
-#region Redis Configuration
+    #region Redis Configuration
 
-// Configure Redis connection using Infrastructure extension
-builder.Services.AddRedisInfrastructure(builder.Configuration);
+    // Configure Redis connection using Infrastructure extension
+    builder.Services.AddRedisInfrastructure(builder.Configuration);
 
-#endregion
+    #endregion
 
-#region Auth Services
+    #region Auth Services
 
-// Add authentication services with resilience policies
-builder.Services.AddAuthServices();
+    // Add authentication services with resilience policies
+    builder.Services.AddAuthServices();
 
-#endregion
+    #endregion
 
-#region Controllers & Swagger
+    #region Controllers & Swagger
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddControllers();
+    builder.Services.AddEndpointsApiExplorer();
 
-// Configure Swagger documentation
-builder.Services.AddAuthSwagger();
+    // Configure Swagger documentation
+    builder.Services.AddAuthSwagger();
 
-#endregion
+    #endregion
 
-#region CORS
+    #region CORS
 
-// Add CORS policy using Infrastructure extension
-builder.Services.AddCorsForDevelopment("AllowAll");
+    // Add CORS policy using Infrastructure extension
+    builder.Services.AddCorsForDevelopment("AllowAll");
 
-#endregion
+    #endregion
 
-#region Health Checks
+    #region Health Checks
 
-// Add health checks for Auth API using Infrastructure extension
-if (string.IsNullOrEmpty(authSettings.ConnectionStrings))
-    throw new InvalidOperationException("Redis connection string is not configured in Auth settings");
+    // Add health checks for Auth API using Infrastructure extension
+    if (string.IsNullOrEmpty(authSettings.ConnectionStrings))
+        throw new InvalidOperationException("Redis connection string is not configured in Auth settings");
 
-builder.Services.AddHealthCheckWithRedis(authSettings.ConnectionStrings, "redis")
-                .AddHealthCheckConfiguration();
+    builder.Services.AddHealthCheckWithRedis(authSettings.ConnectionStrings, "redis")
+                    .AddHealthCheckConfiguration();
 
-#endregion
+    #endregion
 
-var app = builder.Build();
+    var app = builder.Build();
 
-#region Middleware Pipeline
+    #region Middleware Pipeline
 
-// Apply CORS using Infrastructure extension
-app.UseCorsConfiguration("AllowAll");
+    // Apply CORS using Infrastructure extension
+    app.UseCorsConfiguration("AllowAll");
 
-// Configure Swagger UI for development
-app.UseAuthSwagger(app.Environment);
+    // Configure Swagger UI for development
+    app.UseAuthSwagger(app.Environment);
 
-// Routing
-app.UseRouting();
+    // Routing
+    app.UseRouting();
 
-// Logging Context Middleware - Thêm correlation ID và username vào logs
-app.UseLoggingContext();
+    // Logging Context Middleware - Thêm correlation ID và username vào logs
+    app.UseLoggingContext();
 
-// Map controllers
-app.MapControllers();
+    // Map controllers
+    app.MapControllers();
 
-// Map health check endpoint using Infrastructure extension
-app.UseHealthCheckConfiguration();
+    // Map health check endpoint using Infrastructure extension
+    app.UseHealthCheckConfiguration();
 
-#endregion
+    #endregion
 
     app.Run();
 }

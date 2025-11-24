@@ -124,19 +124,42 @@ public class SessionValidationMiddleware
     private void SetUserContextFromJwt(HttpContext context, string? accessToken)
     {
         if (string.IsNullOrEmpty(accessToken))
+        {
+            _logger.LogWarning("[DEBUG Claims] AccessToken is null or empty. Cannot set claims.");
             return;
+        }
 
         try
         {
             var jwtToken = _jwtHandler.ReadJwtToken(accessToken);
             var claims = jwtToken.Claims.ToList();
 
+            // DEBUG: Log tất cả claims từ JWT
+            var allClaims = claims.Select(c => $"{c.Type}={c.Value}").ToList();
+            _logger.LogInformation(
+                "[DEBUG Claims] JWT parsed successfully. Found {Count} claims: {Claims}",
+                claims.Count,
+                string.Join(" | ", allClaims));
+
+            // DEBUG: Log các claims quan trọng cho username
+            var preferredUsername = claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
+            var name = claims.FirstOrDefault(c => c.Type == "name")?.Value;
+            var sub = claims.FirstOrDefault(c => c.Type == "sub")?.Value;
+            _logger.LogInformation(
+                "[DEBUG Claims] Username-related claims - preferred_username: {PreferredUsername}, name: {Name}, sub: {Sub}",
+                preferredUsername ?? "NULL",
+                name ?? "NULL",
+                sub ?? "NULL");
+
             var identity = new ClaimsIdentity(claims, AuthenticationConstants.BearerScheme);
             var principal = new ClaimsPrincipal(identity);
 
             context.User = principal;
 
-            _logger.LogDebug("JWT parsed successfully, Claims count: {Count}", claims.Count);
+            _logger.LogInformation(
+                "[DEBUG Claims] HttpContext.User set successfully. IsAuthenticated: {IsAuthenticated}, Identity.Name: {IdentityName}",
+                principal.Identity?.IsAuthenticated ?? false,
+                principal.Identity?.Name ?? "NULL");
         }
         catch (Exception ex)
         {

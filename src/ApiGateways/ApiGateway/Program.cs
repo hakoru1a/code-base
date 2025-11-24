@@ -127,10 +127,6 @@ try
     // Routing
     app.UseRouting();
 
-    // Logging Context Middleware - Thêm correlation ID và username vào logs
-    // PHẢI đặt trước SessionValidation để correlation ID có sẵn cho tất cả middleware
-    app.UseLoggingContext();
-
     // Session Validation Middleware
     // Middleware này sẽ:
     // 1. Validate session cookie
@@ -139,6 +135,10 @@ try
     // 4. Set AccessToken vào HttpContext.Items
     // 5. Parse JWT và set HttpContext.User (for RBAC)
     app.UseSessionValidation();
+
+    // Logging Context Middleware - Thêm correlation ID và username vào logs
+    // PHẢI đặt SAU UseSessionValidation để có thể lấy được username từ HttpContext.User
+    app.UseLoggingContext();
 
     // Authentication & Authorization Middleware
     // QUAN TRỌNG: Phải đặt sau UseSessionValidation để có User context

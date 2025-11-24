@@ -17,14 +17,15 @@ namespace Generate.API.Extensions
             // Routing
             app.UseRouting();
 
-            // Logging Context Middleware - Thêm correlation ID và username vào logs
-            app.UseLoggingContext();
-
             // Authentication - must be before Authorization
             app.UseAuthentication();
 
             // Authorization
             app.UseAuthorization();
+        
+            // Logging Context Middleware - Thêm correlation ID và username vào logs
+            // PHẢI đặt SAU UseAuthentication() để HttpContext.User đã có claims từ JWT
+            app.UseLoggingContext();
 
             // Health Check
             app.UseHealthCheckConfiguration();

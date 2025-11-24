@@ -12,12 +12,14 @@ namespace Infrastructure.Extensions
         /// Thêm LoggingContextMiddleware vào pipeline
         /// Middleware này sẽ:
         /// - Tự động tạo correlation ID cho mỗi request
-        /// - Extract username từ JWT claims
+        /// - Extract username từ JWT claims (nếu có sau khi authentication middleware chạy)
         /// - Thêm các thông tin này vào Serilog LogContext
         /// - Log request start/end với correlation ID và username
         /// 
         /// CÁCH SỬ DỤNG:
-        /// app.UseLoggingContext(); // Đặt sau UseAuthentication() và trước UseAuthorization()
+        /// app.UseSessionValidation(); // hoặc UseAuthentication() - để set HttpContext.User
+        /// app.UseLoggingContext(); // Đặt sau authentication để có thể lấy được username
+        /// app.UseAuthorization();
         /// 
         /// KẾT QUẢ:
         /// - Mọi log trong request đều có CorrelationId và Username
