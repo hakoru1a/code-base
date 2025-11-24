@@ -46,6 +46,7 @@ namespace Infrastructure.Services
             //    emailMessage.To.Add(MailboxAddress.Parse(toAddress));
             //}
 
+            await Task.CompletedTask;
             _logger.Information("send mail success....");
         }
     }

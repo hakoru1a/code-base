@@ -62,6 +62,9 @@ app.UseAuthSwagger(app.Environment);
 // Routing
 app.UseRouting();
 
+// Logging Context Middleware - Thêm correlation ID và username vào logs
+app.UseLoggingContext();
+
 // Map controllers
 app.MapControllers();
 

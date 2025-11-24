@@ -5,7 +5,7 @@ using Mapster;
 
 namespace Generate.Application.Features.Category.Queries.GetCategoryById
 {
-    public class GetCategoryByIdQueryHandler : IRequestHandler<GetCategoryByIdQuery, CategoryResponseDto?>
+    public class GetCategoryByIdQueryHandler : IRequestHandler<GetCategoryByIdQuery, CategoryResponseDto>
     {
         private readonly ICategoryRepository _categoryRepository;
 
@@ -14,10 +14,10 @@ namespace Generate.Application.Features.Category.Queries.GetCategoryById
             _categoryRepository = categoryRepository;
         }
 
-        public async Task<CategoryResponseDto?> Handle(GetCategoryByIdQuery request, CancellationToken cancellationToken)
+        public async Task<CategoryResponseDto> Handle(GetCategoryByIdQuery request, CancellationToken cancellationToken)
         {
             var category = await _categoryRepository.GetByIdAsync(request.Id);
-            return category?.Adapt<CategoryResponseDto>();
+            return category?.Adapt<CategoryResponseDto>() ?? throw new KeyNotFoundException($"Category with ID {request.Id} not found");
         }
     }
 }
