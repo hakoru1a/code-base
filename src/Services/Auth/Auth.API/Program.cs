@@ -1,7 +1,18 @@
 using Auth.API.Extensions;
 using Infrastructure.Extensions;
+using Common.Logging;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
+    
+    // Initialize Serilog bootstrap logger
+    Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
+    Log.Information("Starting Auth API");
+
+    // Add Serilog Configuration
+    builder.Host.UseSerilog(SeriLogger.Configure);
 
 #region Configuration Settings
 
@@ -76,4 +87,19 @@ app.UseHealthCheckConfiguration();
 
 #endregion
 
-app.Run();
+    app.Run();
+}
+catch (HostAbortedException ex)
+{
+    // Handle HostAbortedException separately
+    Log.Warning("Host was aborted during startup: {Message}", ex.Message);
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Unhandled Exception");
+}
+finally
+{
+    Log.Information("Shut down Auth API complete");
+    Log.CloseAndFlush();
+}

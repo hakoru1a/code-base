@@ -17,8 +17,6 @@ namespace Common.Logging
               var elasicPassword = context.Configuration.GetValue<string>("ElasticConfiguration:Password");
 
               if (!string.IsNullOrEmpty(elasticUri))
-
-              if (!string.IsNullOrEmpty(elasticUri))
               {
                   configuration
                       .WriteTo.Debug()
