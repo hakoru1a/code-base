@@ -44,6 +44,9 @@ builder.Services.AddCorsForDevelopment("AllowAll");
 #region Health Checks
 
 // Add health checks for Auth API using Infrastructure extension
+if (string.IsNullOrEmpty(authSettings.ConnectionStrings))
+    throw new InvalidOperationException("Redis connection string is not configured in Auth settings");
+
 builder.Services.AddHealthCheckWithRedis(authSettings.ConnectionStrings, "redis")
                 .AddHealthCheckConfiguration();
 
@@ -61,6 +64,9 @@ app.UseAuthSwagger(app.Environment);
 
 // Routing
 app.UseRouting();
+
+// Logging Context Middleware - Thêm correlation ID và username vào logs
+app.UseLoggingContext();
 
 // Map controllers
 app.MapControllers();

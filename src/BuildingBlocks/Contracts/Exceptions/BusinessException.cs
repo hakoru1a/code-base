@@ -8,22 +8,28 @@ namespace Contracts.Exceptions
 {
     public class BusinessException : ApplicationException
     {
-        public string ErrorCode { get; }
-        public object Details { get; }
+        public string? ErrorCode { get; }
+        public object? Details { get; }
 
         public BusinessException()
             : base("A business rule violation occurred.")
         {
+            ErrorCode = null;
+            Details = null;
         }
 
         public BusinessException(string message)
             : base(message)
         {
+            ErrorCode = null;
+            Details = null;
         }
 
         public BusinessException(string message, Exception innerException)
             : base(message, innerException)
         {
+            ErrorCode = null;
+            Details = null;
         }
 
         public BusinessException(string errorCode, string message)

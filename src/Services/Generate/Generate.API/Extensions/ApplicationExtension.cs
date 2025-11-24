@@ -17,6 +17,9 @@ namespace Generate.API.Extensions
             // Routing
             app.UseRouting();
 
+            // Logging Context Middleware - Thêm correlation ID và username vào logs
+            app.UseLoggingContext();
+
             // Authentication - must be before Authorization
             app.UseAuthentication();
 
@@ -32,6 +35,7 @@ namespace Generate.API.Extensions
                 endpoints.MapControllers();
                 endpoints.MapGet("/", async context =>
                 {
+                    await Task.CompletedTask;
                     context.Response.Redirect("/swagger/index.html");
                 });
             });

@@ -17,7 +17,7 @@ public static class ApiControllerExtensions
     /// <param name="data">Response data</param>
     /// <param name="message">Success message</param>
     /// <returns>Ok result with standardized response</returns>
-    public static IActionResult CreateSuccessResponse<T>(this ControllerBase controller, T data, string message = null)
+    public static IActionResult CreateSuccessResponse<T>(this ControllerBase controller, T data, string? message = null)
     {
         var responseMessage = message ?? ResponseMessages.OperationSuccess;
         return controller.Ok(new ApiSuccessResult<T>(data, responseMessage));
@@ -32,7 +32,7 @@ public static class ApiControllerExtensions
     /// <param name="metadata">Metadata object</param>
     /// <param name="message">Success message</param>
     /// <returns>Ok result with standardized response and metadata</returns>
-    public static IActionResult CreateSuccessResponse<T>(this ControllerBase controller, T data, object metadata, string message = null)
+    public static IActionResult CreateSuccessResponse<T>(this ControllerBase controller, T data, object metadata, string? message = null)
     {
         var responseMessage = message ?? ResponseMessages.OperationSuccess;
         return controller.Ok(new ApiSuccessResult<T>(data, responseMessage, metadata));

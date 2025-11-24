@@ -1,6 +1,33 @@
-# 🔐 Hướng dẫn Setup Keycloak - Quick Start
+# Keycloak Complete Guide - Architecture, Setup & Configuration
 
-## 📋 Các bước Setup nhanh
+## 🏗️ Tổng quan Architecture
+
+### BFF Pattern Overview
+
+Trong kiến trúc BFF (Backend-for-Frontend), **API Gateway đóng vai trò routing đơn giản** giữa browser/frontend và các services. **Auth Service** chịu trách nhiệm xử lý OAuth 2.0 và quản lý session.
+
+```
+┌─────────────┐                    ┌─────────────┐                    ┌─────────────┐
+│   Browser   │◄──── Cookie ──────►│  Gateway    │◄── Session Val ───►│Auth Service │
+│  (Frontend) │   (session_id)     │  (Routing)  │                    │   (OAuth)   │
+│             │                    │             │                    │             │
+│  ❌ NO      │                    │  ✅ Simple  │                    │  ✅ Handles │
+│  Tokens     │                    │  - Routing  │                    │  - OAuth    │
+│             │                    │  - RBAC     │                    │  - PKCE     │
+│             │                    │  - Proxy    │                    │  - Tokens   │
+│             │                    │             │                    │  - Sessions │
+└─────────────┘                    └─────────────┘                    └──────┬──────┘
+                                          │                                   │
+                                          │ Bearer Token              OAuth 2.0 + PKCE
+                                          ▼                                   ▼
+                                   ┌─────────────┐                    ┌─────────────┐
+                                   │ Backend APIs│                    │  Keycloak   │
+                                   │  Services   │                    │    (IdP)    │
+                                   │   (PBAC)    │                    └─────────────┘
+                                   └─────────────┘
+```
+
+## 🚀 Hướng dẫn Setup nhanh
 
 ### Bước 1: Tạo file .env
 
@@ -298,14 +325,6 @@ docker restart codebase_keycloak
 ### Lỗi: "Invalid audience" khi validate JWT
 - Đảm bảo tất cả services dùng cùng ClientId: `auth-client`
 - Kiểm tra tokens được issue bởi client `auth-client`
-
----
-
-## 📚 Tài liệu tham khảo
-
-- [Keycloak Complete Guide](docs/auth/keycloak-complete-guide.md)
-- [JWT Claims Authorization](docs/auth/jwt-claims-authorization.md)
-- [BFF Architecture Flow](docs/auth/bff-architecture-flow.md)
 
 ---
 

@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Generate.Application.Features.Product.Queries.GetProductById
 {
-    public class GetProductByIdQuery : IRequest<ProductResponseDto?>
+    public class GetProductByIdQuery : IRequest<ProductResponseDto>
     {
         public long Id { get; set; }
     }

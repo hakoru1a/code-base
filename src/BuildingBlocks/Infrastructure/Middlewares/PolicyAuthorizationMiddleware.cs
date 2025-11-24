@@ -30,26 +30,66 @@ namespace Infrastructure.Middlewares
             if (context.Items.TryGetValue("RequiredPolicy", out var policyNameObj) && 
                 policyNameObj is string policyName)
             {
-                _logger.LogInformation(
-                    "Evaluating policy {PolicyName} for user {UserId} on endpoint {Path}",
-                    policyName,
-                    context.User?.Identity?.Name ?? "anonymous",
-                    context.Request.Path);
-
                 var userContext = context.User.ToUserClaimsContext();
                 var evaluationContext = ExtractEvaluationContext(context);
-                
+                var startTime = DateTime.UtcNow;
+
+                // Audit log: Policy evaluation started
+                _logger.LogInformation(
+                    "[AUDIT] Policy evaluation started - Policy: {PolicyName}, User: {UserId}, " +
+                    "Path: {Path}, Method: {Method}, IP: {RemoteIp}",
+                    policyName,
+                    userContext.UserId,
+                    context.Request.Path,
+                    context.Request.Method,
+                    context.Connection.RemoteIpAddress?.ToString() ?? "unknown");
+
                 var result = await policyEvaluator.EvaluateAsync(policyName, userContext, evaluationContext);
+                var duration = (DateTime.UtcNow - startTime).TotalMilliseconds;
 
                 if (!result.IsAllowed)
                 {
+                    // Audit log: Policy denied
+                    _logger.LogWarning(
+                        "[AUDIT] Policy DENIED - Policy: {PolicyName}, User: {UserId}, " +
+                        "Path: {Path}, Method: {Method}, Reason: {Reason}, Duration: {Duration}ms, " +
+                        "Roles: [{Roles}], Permissions: [{Permissions}]",
+                        policyName,
+                        userContext.UserId,
+                        context.Request.Path,
+                        context.Request.Method,
+                        result.Reason,
+                        duration,
+                        string.Join(", ", userContext.Roles),
+                        string.Join(", ", userContext.Permissions));
+
                     await HandlePolicyDenied(context, policyName, userContext.UserId, result.Reason);
                     return;
                 }
 
-                _logger.LogDebug(
-                    "Policy {PolicyName} granted access for user {UserId}. Reason: {Reason}",
-                    policyName, userContext.UserId, result.Reason);
+                // Store filter context in HttpContext for application layer to use
+                if (result.FilterContext != null)
+                {
+                    context.Items[$"PolicyFilterContext:{policyName}"] = result.FilterContext;
+                    context.Items["PolicyFilterContext"] = result.FilterContext; // For backward compatibility
+                    
+                    _logger.LogDebug(
+                        "[POLICY FILTER] Policy {PolicyName} returned filter context for user {UserId}: {FilterType}",
+                        policyName, userContext.UserId, result.FilterContext.GetType().Name);
+                }
+
+                // Audit log: Policy allowed
+                _logger.LogInformation(
+                    "[AUDIT] Policy ALLOWED - Policy: {PolicyName}, User: {UserId}, " +
+                    "Path: {Path}, Method: {Method}, Reason: {Reason}, Duration: {Duration}ms, " +
+                    "HasFilterContext: {HasFilterContext}",
+                    policyName,
+                    userContext.UserId,
+                    context.Request.Path,
+                    context.Request.Method,
+                    result.Reason,
+                    duration,
+                    result.FilterContext != null);
             }
 
             await _next(context);
@@ -94,10 +134,6 @@ namespace Infrastructure.Middlewares
             string userId, 
             string? reason)
         {
-            _logger.LogWarning(
-                "Policy {PolicyName} denied access for user {UserId} on {Path}. Reason: {Reason}",
-                policyName, userId, context.Request.Path, reason);
-
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             context.Response.ContentType = "application/json";
 
@@ -106,7 +142,9 @@ namespace Infrastructure.Middlewares
                 error = "Forbidden",
                 message = reason ?? "Access denied by policy",
                 policy = policyName,
-                timestamp = DateTime.UtcNow
+                timestamp = DateTime.UtcNow,
+                path = context.Request.Path.Value,
+                method = context.Request.Method
             };
 
             var options = new JsonSerializerOptions

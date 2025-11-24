@@ -1,19 +1,16 @@
 using Infrastructure.Authorization;
+using Shared.Attributes;
 using Shared.DTOs.Authorization;
 using Shared.Identity;
 
 namespace Generate.Application.Features.Order.Policies
 {
     /// <summary>
-    /// Policy for order deletion
-    /// Only admins and managers can delete orders
-    /// Naming Convention: {Resource}{Action}Policy
+    /// Policy for order deletion - only admins and managers allowed
     /// </summary>
+    [Policy("ORDER:DELETE", Description = "Delete orders")]
     public class OrderDeletePolicy : BasePolicy
     {
-        public const string POLICY_NAME = "ORDER:DELETE";
-        public override string PolicyName => POLICY_NAME;
-
         public override Task<PolicyEvaluationResult> EvaluateAsync(
             UserClaimsContext user,
             Dictionary<string, object> context)

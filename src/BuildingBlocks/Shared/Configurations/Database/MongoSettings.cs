@@ -8,6 +8,6 @@ namespace Shared.Configurations.Database
 {
     public class MongoSettings : DatabaseSettings
     {
-        public string DatabaseName { get; set; }
+        public string? DatabaseName { get; set; }
     }
 }

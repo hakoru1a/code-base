@@ -2,8 +2,8 @@ using Infrastructure.Authorization;
 using Infrastructure.Authorization.Interfaces;
 using Infrastructure.Middlewares;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Extensions
 {
@@ -13,35 +13,48 @@ namespace Infrastructure.Extensions
     public static class PolicyAuthorizationExtensions
     {
         /// <summary>
-        /// Add PBAC services to the service collection
-        /// Usage: services.AddPolicyBasedAuthorization(registry => {
-        ///     registry.AddPolicy&lt;ProductViewPolicy&gt;("PRODUCT:VIEW");
-        /// });
+        /// Add PBAC services with auto-discovery of policies from assemblies
         /// </summary>
+        /// <example>
+        /// services.AddPolicyBasedAuthorization(registry => {
+        ///     registry.ScanAssemblies(typeof(ProductViewPolicy).Assembly);
+        /// });
+        /// </example>
         public static IServiceCollection AddPolicyBasedAuthorization(
             this IServiceCollection services,
-            Action<PolicyRegistry>? configurePolicies = null)
+            Action<PolicyRegistry> configurePolicies)
         {
+            // Add required services
             services.AddHttpContextAccessor();
             services.AddScoped<IUserContextAccessor, UserContextAccessor>();
-            services.AddSingleton<IPolicyConfigurationService, PolicyConfigurationService>();
 
-            var policyRegistry = new PolicyRegistry(services);
-            configurePolicies?.Invoke(policyRegistry);
+            // Build policy registry (logger will be available at runtime)
+            var policyRegistry = new PolicyRegistry();
+            configurePolicies.Invoke(policyRegistry);
+            
+            var policies = policyRegistry.GetPolicies();
 
-            services.AddSingleton(sp =>
+            // Register all discovered policies
+            foreach (var (_, policyType) in policies)
             {
-                var evaluator = new PolicyEvaluator(sp);
+                services.AddScoped(policyType);
+            }
 
-                foreach (var (policyName, policyType) in policyRegistry.GetRegisteredPolicies())
-                {
-                    evaluator.RegisterPolicy(policyType, policyName);
-                }
-
+            // Register policy evaluator with registry
+            services.AddSingleton<IPolicyEvaluator>(sp => 
+            {
+                var logger = sp.GetService<ILogger<PolicyEvaluator>>();
+                var evaluator = new PolicyEvaluator(sp, policies, logger);
+                
+                // Log registered policies count at startup
+                var registryLogger = sp.GetService<ILogger<PolicyRegistry>>();
+                registryLogger?.LogInformation(
+                    "Policy-Based Authorization initialized with {Count} registered policies: {Policies}",
+                    policies.Count,
+                    string.Join(", ", policies.Keys));
+                
                 return evaluator;
             });
-
-            services.AddSingleton<IPolicyEvaluator>(sp => sp.GetRequiredService<PolicyEvaluator>());
 
             return services;
         }

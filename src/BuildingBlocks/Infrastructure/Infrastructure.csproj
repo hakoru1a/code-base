@@ -36,7 +36,7 @@
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0" />
 		<PackageReference Include="OpenAI" Version="2.1.0" />
-		<PackageReference Include="Oracle.EntityFrameworkCore" Version="9.0.0" />
+		<PackageReference Include="Oracle.EntityFrameworkCore" Version="9.23.60" />
 		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
 		<PackageReference Include="RabbitMQ.Client" Version="7.0.0" />
 		<PackageReference Include="StackExchange.Redis" Version="2.8.16" />

@@ -58,7 +58,7 @@ namespace Infrastructure.Extensions
         /// SỬ DỤNG: var user = await response.ReadContentAs<UserDto>();
         /// LƯU Ý: Tự động throw exception nếu response không success (4xx, 5xx)
         /// </summary>
-        public static async Task<T> ReadContentAs<T>(this HttpResponseMessage response)
+        public static async Task<T?> ReadContentAs<T>(this HttpResponseMessage response)
         {
             if (!response.IsSuccessStatusCode)
                 throw new ApplicationException($"Something went wrong calling the API: {response.ReasonPhrase}");

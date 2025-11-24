@@ -116,6 +116,10 @@ app.UseGatewaySwaggerUI(app.Environment, servicesOptions);
 // Routing
 app.UseRouting();
 
+// Logging Context Middleware - Thêm correlation ID và username vào logs
+// PHẢI đặt trước SessionValidation để correlation ID có sẵn cho tất cả middleware
+app.UseLoggingContext();
+
 // Session Validation Middleware
 // Middleware này sẽ:
 // 1. Validate session cookie

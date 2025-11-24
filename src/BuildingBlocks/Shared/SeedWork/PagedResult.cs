@@ -7,7 +7,7 @@ namespace Shared.SeedWork
     public class PagedResult<T>
     {
         public List<T> Items { get; set; } = new List<T>();
-        public PaginationMetadata Pagination { get; set; }
+        public PaginationMetadata? Pagination { get; set; }
 
         public PagedResult(List<T> items, int count, int pageNumber, int pageSize)
         {
@@ -31,11 +31,11 @@ namespace Shared.SeedWork
         /// <summary>
         /// Converts PagedResult to ApiSuccessResult with pagination metadata
         /// </summary>
-        public ApiSuccessResult<List<T>> ToApiResult(string message = null)
+        public ApiSuccessResult<List<T>> ToApiResult(string? message = null)
         {
             return ApiSuccessResult<List<T>>.WithPagination(
                 Items,
-                Pagination,
+                Pagination ?? new PaginationMetadata(),
                 message ?? ResponseMessages.RetrieveItemsSuccess
             );
         }

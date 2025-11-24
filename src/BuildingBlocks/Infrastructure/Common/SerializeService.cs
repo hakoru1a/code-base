@@ -1,5 +1,4 @@
 using Contracts.Common.Interface;
-using Contracts.Common.Interface;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -29,15 +28,15 @@ namespace Infrastructure.Common
         public T Deserialize<T>(string value)
         {
             if (string.IsNullOrEmpty(value))
-                return default;
+                return default(T)!;
 
-            return JsonConvert.DeserializeObject<T>(value, _defaultSettings);
+            return JsonConvert.DeserializeObject<T>(value, _defaultSettings)!;
         }
 
         public string Serialize<T>(T obj)
         {
             if (obj == null)
-                return null;
+                return string.Empty;
 
             return JsonConvert.SerializeObject(obj, _defaultSettings);
         }
@@ -45,7 +44,7 @@ namespace Infrastructure.Common
         public string Serialize<T>(T obj, Type type)
         {
             if (obj == null)
-                return null;
+                return string.Empty;
 
             return JsonConvert.SerializeObject(obj, type, _defaultSettings);
         }

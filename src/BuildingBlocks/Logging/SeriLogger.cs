@@ -16,24 +16,42 @@ namespace Common.Logging
               var elasicUsername = context.Configuration.GetValue<string>("ElasticConfiguration:Username");
               var elasicPassword = context.Configuration.GetValue<string>("ElasticConfiguration:Password");
 
+              if (!string.IsNullOrEmpty(elasticUri))
+
+              if (!string.IsNullOrEmpty(elasticUri))
+              {
+                  configuration
+                      .WriteTo.Debug()
+                      .WriteTo.Console(outputTemplate:
+                          "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:l}{NewLine}{Exception}{NewLine}")
+                      .WriteTo.File("logs/log-.txt",
+                          rollingInterval: RollingInterval.Day,
+                          outputTemplate:
+                          "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:l}{NewLine}{Exception}{NewLine}")
+                      .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(elasticUri))
+                      {
+                          IndexFormat = $"ch-logs-{applicationName}-{environmentName}-{DateTime.UtcNow:yyyy-MM}",
+                          AutoRegisterTemplate = true,
+                          AutoRegisterTemplateVersion = AutoRegisterTemplateVersion.ESv7,
+                          DetectElasticsearchVersion = true,
+                          NumberOfShards = 2,
+                          NumberOfReplicas = 1,
+                          ModifyConnectionSettings = x => x.BasicAuthentication(elasicUsername, elasicPassword),
+                      });
+              }
+              else
+              {
+                  configuration
+                      .WriteTo.Debug()
+                      .WriteTo.Console(outputTemplate:
+                          "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:l}{NewLine}{Exception}{NewLine}")
+                      .WriteTo.File("logs/log-.txt",
+                          rollingInterval: RollingInterval.Day,
+                          outputTemplate:
+                          "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:l}{NewLine}{Exception}{NewLine}");
+              }
+
               configuration
-                  .WriteTo.Debug()
-                  .WriteTo.Console(outputTemplate:
-                      "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:l}{NewLine}{Exception}{NewLine}")
-                  .WriteTo.File("logs/log-.txt",
-                      rollingInterval: RollingInterval.Day,
-                      outputTemplate:
-                      "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:l}{NewLine}{Exception}{NewLine}")
-                  .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(elasticUri))
-                  {
-                      IndexFormat = $"ch-logs-{applicationName}-{environmentName}-{DateTime.UtcNow:yyyy-MM}",
-                      AutoRegisterTemplate = true,
-                      AutoRegisterTemplateVersion = AutoRegisterTemplateVersion.ESv7,
-                      DetectElasticsearchVersion = true,
-                      NumberOfShards = 2,
-                      NumberOfReplicas = 1,
-                      ModifyConnectionSettings = x => x.BasicAuthentication(elasicUsername, elasicPassword),
-                  })
                   .Enrich.FromLogContext()
                   .Enrich.WithMachineName()
                   .Enrich.WithProperty("Environment", environmentName)

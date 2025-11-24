@@ -1,24 +1,21 @@
 using Infrastructure.Authorization;
+using Shared.Attributes;
 using Shared.DTOs.Authorization;
-using Shared.Identity;
 
 namespace Generate.Application.Features.Order.Policies
 {
     /// <summary>
-    /// Policy for order creation based on role
-    /// Naming Convention: {Resource}{Action}Policy
+    /// Policy for order creation - all authenticated users allowed
     /// </summary>
+    [Policy("ORDER:CREATE", Description = "Create orders")]
     public class OrderCreatePolicy : BasePolicy
     {
-        public const string POLICY_NAME = "ORDER:CREATE";
-        public override string PolicyName => POLICY_NAME;
-
         public override Task<PolicyEvaluationResult> EvaluateAsync(
             UserClaimsContext user,
             Dictionary<string, object> context)
         {
             // All authenticated users can create orders
-            if (user.IsAuthenticated)
+            if (IsAuthenticated(user))
             {
                 return Task.FromResult(PolicyEvaluationResult.Allow(
                     "Authenticated user can create orders"));
