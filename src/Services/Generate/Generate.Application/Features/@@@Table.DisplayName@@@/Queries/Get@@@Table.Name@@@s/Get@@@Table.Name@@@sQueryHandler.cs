@@ -3,29 +3,29 @@ using Generate.Application.Contracts.Persistence;
 using Generate.Domain.Entities;
 using Mapster;
 using MediatR;
-using Shared.DTOs.@@@Table.Name@@@;
+using Shared.DTOs.@@@Table.DisplayName@@@;
 using Shared.SeedWork;
 
-namespace Generate.Application.Features.@@@Table.Name@@@.Queries.Get@@@Table.Name@@@s
+namespace Generate.Application.Features.@@@Table.DisplayName@@@.Queries.Get @@@Table.DisplayName@@@s
 {
     /// <summary>
-    /// Handler for Get@@@Table.Name@@@sQuery
+    /// Handler for Get@@@Table.DisplayName@@@sQuery
     /// </summary>
-    public class Get@@@Table.Name@@@sQueryHandler : IRequestHandler<Get@@@Table.Name@@@sQuery, Result<List<@@@Table.Name@@@ResponseDto>>>
+    public class Get@@@Table.DisplayName @@@sQueryHandler : IRequestHandler<Get@@@Table.DisplayName@@@sQuery, Result<List<@@@Table.DisplayName@@@ResponseDto>>>
     {
-        private readonly I@@@Table.Name@@@Repository _repository;
+        private readonly I @@@Table.DisplayName@@@Repository _repository;
 
-        public Get@@@Table.Name@@@sQueryHandler(I@@@Table.Name@@@Repository repository)
-        {
-            _repository = repository;
-        }
+public Get @@@Table.DisplayName@@@sQueryHandler(I @@@Table.DisplayName @@@Repository repository)
+{
+    _repository = repository;
+}
 
-        public async Task<Result<List<@@@Table.Name@@@ResponseDto>>> Handle(Get@@@Table.Name@@@sQuery request, CancellationToken cancellationToken)
-        {
-            var entities = await _repository.GetAllAsync();
-            var dtos = entities.Adapt<List<@@@Table.Name@@@ResponseDto>>();
-            
-            return Result<List<@@@Table.Name@@@ResponseDto>>.Success(dtos);
-        }
-    }
+public async Task<Result<List<@@@Table.DisplayName@@@ResponseDto>>> Handle(Get @@@Table.DisplayName @@@sQuery request, CancellationToken cancellationToken)
+{
+    var entities = await _repository.GetAllAsync();
+    var dtos = entities.Adapt < List < @@@Table.DisplayName@@@ResponseDto >> ();
+
+    return Result < List < @@@Table.DisplayName@@@ResponseDto >>.Success(dtos);
+}
+}
 }

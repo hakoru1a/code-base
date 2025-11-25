@@ -5,26 +5,26 @@ using Mapster;
 using MediatR;
 using Shared.SeedWork;
 
-namespace Generate.Application.Features.@@@Table.Name@@@.Commands.Create@@@Table.Name@@@
+namespace Generate.Application.Features.@@@Table.DisplayName@@@.Commands.Create @@@Table.DisplayName@@@
 {
     /// <summary>
-    /// Handler for Create@@@Table.Name@@@Command
+    /// Handler for Create@@@Table.DisplayName@@@Command
     /// </summary>
-    public class Create@@@Table.Name@@@CommandHandler : IRequestHandler<Create@@@Table.Name@@@Command, Result<long>>
+    public class Create@@@Table.DisplayName @@@CommandHandler : IRequestHandler<Create@@@Table.DisplayName@@@Command, Result<long>>
     {
-        private readonly I@@@Table.Name@@@Repository _repository;
+        private readonly I @@@Table.DisplayName@@@Repository _repository;
 
-        public Create@@@Table.Name@@@CommandHandler(I@@@Table.Name@@@Repository repository)
-        {
-            _repository = repository;
-        }
+public Create @@@Table.DisplayName@@@CommandHandler(I @@@Table.DisplayName @@@Repository repository)
+{
+    _repository = repository;
+}
 
-        public async Task<Result<long>> Handle(Create@@@Table.Name@@@Command request, CancellationToken cancellationToken)
-        {
-            var entity = request.Adapt<@@@Table.Name@@@>();
-            var result = await _repository.AddAsync(entity);
-            
-            return Result<long>.Success(result.Id);
-        }
-    }
+public async Task<Result<long>> Handle(Create @@@Table.DisplayName @@@Command request, CancellationToken cancellationToken)
+{
+    var entity = request.Adapt < @@@Table.DisplayName@@@> ();
+    var result = await _repository.AddAsync(entity);
+
+    return Result<long>.Success(result.Id);
+}
+}
 }

@@ -4,9 +4,9 @@ using Generate.Domain;
 namespace Generate.Domain.Entities
 {
     /// <summary>
-    /// @@@Table.Name@@@ entity
+    /// @@@Table.DisplayName@@@ entity
     /// </summary>
-    public class @@@Table.Name@@@ : EntityAuditBase<long>
+    public class @@@Table.DisplayName@@@ : EntityAuditBase<long>
     {
 <FOREACH>
     <LOOP>TableGenerate.NotGenerateColumn1</LOOP>
@@ -31,7 +31,7 @@ namespace Generate.Domain.Entities
 
 
 <FOREACH>
-    <LOOP>TableGenerate.AllColumns</LOOP> 
+    <LOOP>TableGenerate.ForeignTableList</LOOP> 
     <CONTENT>###DisplayName###, </CONTENT>
 </FOREACH>
 

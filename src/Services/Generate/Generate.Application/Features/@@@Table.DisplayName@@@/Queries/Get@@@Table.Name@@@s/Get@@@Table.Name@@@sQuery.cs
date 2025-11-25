@@ -1,14 +1,14 @@
 @@@copyRight@@@
 using MediatR;
-using Shared.DTOs.@@@Table.Name@@@;
+using Shared.DTOs.@@@Table.DisplayName@@@;
 using Shared.SeedWork;
 
-namespace Generate.Application.Features.@@@Table.Name@@@.Queries.Get@@@Table.Name@@@s
+namespace Generate.Application.Features.@@@Table.DisplayName@@@.Queries.Get @@@Table.DisplayName@@@s
 {
     /// <summary>
-    /// Query to get all @@@Table.Name@@@s
+    /// Query to get all @@@Table.DisplayName@@@s
     /// </summary>
-    public class Get@@@Table.Name@@@sQuery : IRequest<Result<List<@@@Table.Name@@@ResponseDto>>>
+    public class Get@@@Table.DisplayName @@@sQuery : IRequest<Result<List<@@@Table.DisplayName@@@ResponseDto>>>
     {
     }
 }

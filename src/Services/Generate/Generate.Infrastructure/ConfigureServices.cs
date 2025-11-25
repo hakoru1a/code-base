@@ -15,10 +15,10 @@ namespace Generate.Infrastructure
             services.AddCommonInfrastructure<GenerateContext>(configuration);
 
             // Register service-specific repositories
-<FOREACH>
-    <LOOP>Tables</LOOP>
-    <CONTENT>            services.AddScoped<I@@@Table.Name@@@Repository, @@@Table.Name@@@Repository>();</CONTENT>
-</FOREACH>
+< FOREACH >
+    < LOOP > Tables </ LOOP >
+    < CONTENT > services.AddScoped < I@@@Table.DisplayName @@@Repository, @@@Table.DisplayName @@@Repository> ();</ CONTENT >
+</ FOREACH >
 
             // Configure MassTransit with RabbitMQ (optional - uncomment if needed)
             // services.AddMassTransit(x =>

@@ -4,7 +4,7 @@ using Generate.Domain.Entities;
 
 namespace Generate.Infrastructure.Interfaces
 {
-    public interface I@@@Table.Name@@@Repository : IRepositoryBaseAsync<@@@Table.Name@@@, long>
+    public interface I@@@Table.DisplayName @@@Repository : IRepositoryBaseAsync<@@@Table.DisplayName@@@, long>
     {
     }
 }

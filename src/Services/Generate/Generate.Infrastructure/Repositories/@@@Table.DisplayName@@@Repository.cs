@@ -7,10 +7,10 @@ using Infrastructure.Common.Repository;
 
 namespace Generate.Infrastructure.Repositories
 {
-    public class @@@Table.Name@@@Repository : RepositoryBaseAsync<@@@Table.Name@@@, long, GenerateContext>, I@@@Table.Name@@@Repository
+    public class @@@Table.DisplayName @@@Repository : RepositoryBaseAsync<@@@Table.DisplayName@@@, long, GenerateContext>, I @@@Table.DisplayName@@@Repository
     {
-        public @@@Table.Name@@@Repository(GenerateContext dbContext, IUnitOfWork<GenerateContext> unitOfWork) : base(dbContext, unitOfWork)
+        public @@@Table.DisplayName @@@Repository(GenerateContext dbContext, IUnitOfWork<GenerateContext> unitOfWork) : base(dbContext, unitOfWork)
         {
-        }
     }
+}
 }

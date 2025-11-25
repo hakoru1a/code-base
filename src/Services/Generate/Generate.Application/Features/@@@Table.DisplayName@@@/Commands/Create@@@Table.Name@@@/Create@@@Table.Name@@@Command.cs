@@ -2,12 +2,12 @@
 using MediatR;
 using Shared.SeedWork;
 
-namespace Generate.Application.Features.@@@Table.Name@@@.Commands.Create@@@Table.Name@@@
+namespace Generate.Application.Features.@@@Table.DisplayName@@@.Commands.Create @@@Table.DisplayName@@@
 {
     /// <summary>
-    /// Command to create a new @@@Table.Name@@@
+    /// Command to create a new @@@Table.DisplayName@@@
     /// </summary>
-    public class Create@@@Table.Name@@@Command : IRequest<Result<long>>
+    public class Create@@@Table.DisplayName @@@Command : IRequest<Result<long>>
     {
 <FOREACH>
     <LOOP>TableGenerate.ColumnsNotKey</LOOP>

@@ -24,7 +24,7 @@ namespace Generate.Infrastructure.Persistences
         // DbSets
 <FOREACH>
     <LOOP>Tables</LOOP>
-    <CONTENT>        public DbSet<@@@Table.Name@@@> @@@Table.Name@@@s { get; set; }</CONTENT>
+    <CONTENT>        public DbSet<@@@Table.DisplayName@@@> @@@Table.DisplayName@@@s { get; set; }</CONTENT>
 </FOREACH>
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

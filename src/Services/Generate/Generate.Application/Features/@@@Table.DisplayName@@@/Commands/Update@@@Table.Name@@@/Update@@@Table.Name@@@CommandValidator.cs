@@ -1,16 +1,16 @@
 @@@copyRight@@@
 using FluentValidation;
 
-namespace Generate.Application.Features.@@@Table.Name@@@.Commands.Update@@@Table.Name@@@
+namespace Generate.Application.Features.@@@Table.DisplayName@@@.Commands.Update @@@Table.DisplayName@@@
 {
     /// <summary>
-    /// Validator for Update@@@Table.Name@@@Command
+    /// Validator for Update@@@Table.DisplayName@@@Command
     /// </summary>
-    public class Update@@@Table.Name@@@CommandValidator : AbstractValidator<Update@@@Table.Name@@@Command>
+    public class Update@@@Table.DisplayName @@@CommandValidator : AbstractValidator<Update@@@Table.DisplayName@@@Command>
     {
-        public Update@@@Table.Name@@@CommandValidator()
+        public Update @@@Table.DisplayName@@@CommandValidator()
         {
-            // Add validation rules here
-        }
-    }
+    // Add validation rules here
+}
+}
 }

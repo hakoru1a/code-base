@@ -5,48 +5,48 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Generate.Infrastructure.Persistences.Configurations
 {
-    public class @@@Table.Name@@@Configuration : IEntityTypeConfiguration<@@@Table.Name@@@>
+    public class @@@Table.DisplayName @@@Configuration : IEntityTypeConfiguration<@@@Table.DisplayName@@@>
     {
-        public void Configure(EntityTypeBuilder<@@@Table.Name@@@> builder)
-        {
-            // Table name
-            builder.ToTable("@@@LoopTable.Name@@@");
+        public void Configure(EntityTypeBuilder<@@@Table.DisplayName@@@> builder)
+    {
+        // Table name
+        builder.ToTable("@@@LoopTable.Name@@@");
 
-            // Primary key
-            builder.HasKey(c => c.Id);
+        // Primary key
+        builder.HasKey(c => c.Id);
 
             // Properties
-<FOREACH>
-    <LOOP>TableGenerate.ColumnsNotKey</LOOP>
-    <CONTENT>            builder.Property(c => c.###ColumnName###)
+< FOREACH >
+    < LOOP > TableGenerate.ColumnsNotKey </ LOOP >
+    < CONTENT > builder.Property(c => c.###ColumnName###)
                 .IsRequired(###DbNotNull###)
                 .HasMaxLength(###DbLength###);</CONTENT>
-</FOREACH>
+</ FOREACH >
 
             // Relationships
-<FOREACH>
-    <LOOP>Tables.ForeignTable</LOOP>
-    <CONTENT>            builder.HasOne(c => c.@@@TableForeign.Name@@@)
-                .WithMany(p => p.@@@Table.Name@@@s)
+< FOREACH >
+    < LOOP > Tables.ForeignTable </ LOOP >
+    < CONTENT > builder.HasOne(c => c.@@@TableForeign.Name@@@)
+                .WithMany(p => p.@@@Table.DisplayName@@@s)
                 .HasForeignKey(p => p.@@@TableForeign.Name@@@Id)
-                .OnDelete(DeleteBehavior.SetNull);</CONTENT>
-</FOREACH>
+                .OnDelete(DeleteBehavior.SetNull);</ CONTENT >
+</ FOREACH >
 
-<FOREACH>
-    <LOOP>Tables.ForeignKeyBy</LOOP>
-    <CONTENT>            builder.HasMany(c => c.@@@TableForeignBy.Name@@@s)
-                .WithOne(p => p.@@@Table.Name@@@)
-                .HasForeignKey(p => p.@@@Table.Name@@@Id)
-                .OnDelete(DeleteBehavior.SetNull);</CONTENT>
-</FOREACH>
+< FOREACH >
+    < LOOP > Tables.ForeignKeyBy </ LOOP >
+    < CONTENT > builder.HasMany(c => c.@@@TableForeignBy.Name@@@s)
+                .WithOne(p => p.@@@Table.DisplayName@@@)
+                .HasForeignKey(p => p.@@@Table.DisplayName@@@Id)
+                .OnDelete(DeleteBehavior.SetNull);</ CONTENT >
+</ FOREACH >
 
             // Indexes
-<FOREACH>
-    <LOOP>TableGenerate.ColumnsNotKey</LOOP>
-    <CONTENT>            builder.HasIndex(c => c.###ColumnName###);</CONTENT>
-</FOREACH>
+< FOREACH >
+    < LOOP > TableGenerate.ColumnsNotKey </ LOOP >
+    < CONTENT > builder.HasIndex(c => c.###ColumnName###);</CONTENT>
+</ FOREACH >
 
             builder.MapAuditColumns();
-        }
     }
+}
 }

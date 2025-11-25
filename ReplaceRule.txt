@@ -20,7 +20,7 @@ Step sinh source
 1/ Duyệt qua tất cả các file trong thư mục template
      -> những file ko có tag TableName thì chỉ tạo 1 lần, những file có thì sẽ tạo nhiều lần
 
-@@@Table.Name@@@					← Tên tiếng Anh của table
+@@@Table.DisplayName@@@					← Tên tiếng Anh của table
 @@@Table.DisplayName@@@				← Tên tiếng Nhật của table
 @@@copyRight@@@						← Constants CopyRight (sẽ đưa ra config để thay đổi)
 @@@CurrentDate("yyyy.MM.dd")@@@		Today.ToString("yyyy.MM.dd")

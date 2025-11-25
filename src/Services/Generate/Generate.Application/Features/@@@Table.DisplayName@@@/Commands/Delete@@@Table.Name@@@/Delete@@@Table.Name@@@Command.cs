@@ -2,13 +2,13 @@
 using MediatR;
 using Shared.SeedWork;
 
-namespace Generate.Application.Features.@@@Table.Name@@@.Commands.Delete@@@Table.Name@@@
+namespace Generate.Application.Features.@@@Table.DisplayName@@@.Commands.Delete @@@Table.DisplayName@@@
 {
     /// <summary>
-    /// Command to delete a @@@Table.Name@@@
+    /// Command to delete a @@@Table.DisplayName@@@
     /// </summary>
-    public class Delete@@@Table.Name@@@Command : IRequest<Result<bool>>
+    public class Delete@@@Table.DisplayName @@@Command : IRequest<Result<bool>>
     {
         public long Id { get; set; }
-    }
+}
 }
