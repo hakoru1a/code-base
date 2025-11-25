@@ -152,11 +152,11 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
-    // Map endpoints (Auth Controller)
-    // QUAN TRỌNG: app.MapControllers() sẽ tự động gọi app.UseEndpoints()
-    // Controller routes sẽ được xử lý trước Ocelot middleware
     app.MapControllers();
+    app.UseEndpoints(endpoints =>
+    {
 
+    });
     // Map health check endpoint using Infrastructure extension
     app.UseHealthCheckConfiguration();
 

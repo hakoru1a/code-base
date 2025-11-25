@@ -80,6 +80,14 @@ public static class SwaggerExtensions
                 // API Gateway endpoint
                 c.SwaggerEndpoint(SwaggerOptions.ApiGatewayEndpoint, SwaggerOptions.ApiGatewayTitle);
 
+
+                if (servicesOptions.AuthAPI.IncludeInSwagger)
+                {
+                    c.SwaggerEndpoint(
+                        $"{servicesOptions.AuthAPI.Url}/swagger/v1/swagger.json",
+                        servicesOptions.AuthAPI.Name);
+                }
+
                 if (servicesOptions.GenerateAPI.IncludeInSwagger)
                 {
                     c.SwaggerEndpoint(
