@@ -1,26 +1,22 @@
 using Contracts.Common.Interface;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Infrastructure.Common
 {
     public class SerializeService : ISerializeService
     {
-        private readonly JsonSerializerSettings _defaultSettings;
+        private readonly JsonSerializerOptions _defaultOptions;
 
         public SerializeService()
         {
-            _defaultSettings = new JsonSerializerSettings
+            _defaultOptions = new JsonSerializerOptions
             {
-                ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                NullValueHandling = NullValueHandling.Ignore,
-                Converters = new List<JsonConverter>
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                Converters =
                 {
-                    new StringEnumConverter
-                    {
-                        NamingStrategy = new CamelCaseNamingStrategy()
-                    }
+                    new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)
                 }
             };
         }
@@ -30,7 +26,14 @@ namespace Infrastructure.Common
             if (string.IsNullOrEmpty(value))
                 return default(T)!;
 
-            return JsonConvert.DeserializeObject<T>(value, _defaultSettings)!;
+            try
+            {
+                return JsonSerializer.Deserialize<T>(value, _defaultOptions)!;
+            }
+            catch (JsonException ex)
+            {
+                throw new InvalidOperationException($"Failed to deserialize JSON: {ex.Message}", ex);
+            }
         }
 
         public string Serialize<T>(T obj)
@@ -38,7 +41,7 @@ namespace Infrastructure.Common
             if (obj == null)
                 return string.Empty;
 
-            return JsonConvert.SerializeObject(obj, _defaultSettings);
+            return JsonSerializer.Serialize(obj, _defaultOptions);
         }
 
         public string Serialize<T>(T obj, Type type)
@@ -46,7 +49,7 @@ namespace Infrastructure.Common
             if (obj == null)
                 return string.Empty;
 
-            return JsonConvert.SerializeObject(obj, type, _defaultSettings);
+            return JsonSerializer.Serialize(obj, type, _defaultOptions);
         }
     }
 }

@@ -7,9 +7,13 @@ using Infrastructure.Extensions;
 using ApiGateway.Extensions;
 using Common.Logging;
 using Serilog;
+using DotNetEnv;
 
 try
 {
+    // Load .env file before creating builder
+    Env.Load();
+
     var builder = WebApplication.CreateBuilder(args);
 
     // Initialize Serilog bootstrap logger
@@ -18,6 +22,9 @@ try
 
     // Add Serilog Configuration
     builder.Host.UseSerilog(SeriLogger.Configure);
+
+    // Substitute environment variables in configuration (${VARIABLE} syntax)
+    builder.Configuration.SubstituteEnvironmentVariables();
 
     // Add Ocelot configuration file FIRST - before any other configuration
     builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
@@ -155,14 +162,6 @@ try
 
     // Map development-only endpoints like _whoami
     app.MapDevelopmentEndpoints(app.Environment);
-
-    // Endpoint routing - PHẢI gọi để đảm bảo controller routes được map
-    // app.MapControllers() đã tự động gọi UseEndpoints(), nhưng gọi thêm để chắc chắn
-    app.UseEndpoints(endpoints =>
-    {
-        // Controllers đã được map ở app.MapControllers() ở trên
-        // Endpoints sẽ được xử lý bởi controller routing trước khi đến Ocelot
-    });
 
     // Ocelot Middleware - PHẢI đặt cuối cùng
     // Ocelot sẽ:

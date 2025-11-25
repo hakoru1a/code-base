@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Text.RegularExpressions;
 
 namespace Infrastructure.Extensions;
 
@@ -71,5 +72,142 @@ public static class ConfigurationExtensions
         section.Bind(options);
 
         return options;
+    }
+
+    /// <summary>
+    /// Validate configuration options using IValidateOptions pattern
+    /// Throws exception if validation fails, ensuring fail-fast behavior
+    /// 
+    /// CÁCH DÙNG:
+    /// builder.Services.ValidateConfiguration<DatabaseSettings>("DatabaseSettings");
+    /// 
+    /// LƯU Ý: Configuration sẽ được validate khi service provider được build
+    /// </summary>
+    public static IServiceCollection ValidateConfiguration<T>(
+        this IServiceCollection services,
+        string sectionName) where T : class
+    {
+        services.AddOptions<T>()
+            .BindConfiguration(sectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Thay thế các biến môi trường trong configuration values
+    /// Hỗ trợ cú pháp ${VARIABLE_NAME} trong appsettings.json
+    /// 
+    /// CÁCH DÙNG:
+    /// builder.Configuration.SubstituteEnvironmentVariables();
+    /// 
+    /// VÍ DỤ:
+    /// appsettings.json: "ConnectionString": "${DATABASE_CONNECTIONSTRING}"
+    /// .env: DATABASE_CONNECTIONSTRING=Server=localhost;...
+    /// Kết quả: "ConnectionString": "Server=localhost;..."
+    /// </summary>
+    public static IConfigurationBuilder SubstituteEnvironmentVariables(this IConfigurationBuilder builder)
+    {
+        // Add a custom configuration source that wraps existing sources
+        builder.Add(new EnvironmentVariableSubstitutionConfigurationSource());
+        return builder;
+    }
+
+    /// <summary>
+    /// Thay thế ${VARIABLE} trong một string value bằng giá trị từ environment variables
+    /// </summary>
+    private static string SubstituteEnvironmentVariables(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return value;
+
+        // Pattern to match ${VARIABLE_NAME}
+        var pattern = @"\$\{([^}]+)\}";
+        return Regex.Replace(value, pattern, match =>
+        {
+            var envVarName = match.Groups[1].Value;
+            var envValue = Environment.GetEnvironmentVariable(envVarName);
+            return envValue ?? match.Value; // Return original if env var not found
+        });
+    }
+}
+
+/// <summary>
+/// Custom configuration source để thay thế ${VARIABLE} trong configuration values
+/// </summary>
+internal class EnvironmentVariableSubstitutionConfigurationSource : IConfigurationSource
+{
+    public IConfigurationProvider Build(IConfigurationBuilder builder)
+    {
+        // Build configuration from all previous sources
+        var tempConfig = new ConfigurationBuilder();
+        foreach (var source in builder.Sources.Where(s => !(s is EnvironmentVariableSubstitutionConfigurationSource)))
+        {
+            tempConfig.Sources.Add(source);
+        }
+        var baseConfig = tempConfig.Build();
+
+        return new EnvironmentVariableSubstitutionConfigurationProvider(baseConfig);
+    }
+}
+
+/// <summary>
+/// Configuration provider để thay thế ${VARIABLE} trong configuration values
+/// </summary>
+internal class EnvironmentVariableSubstitutionConfigurationProvider : ConfigurationProvider
+{
+    private readonly IConfigurationRoot _baseConfiguration;
+
+    public EnvironmentVariableSubstitutionConfigurationProvider(IConfigurationRoot baseConfiguration)
+    {
+        _baseConfiguration = baseConfiguration;
+    }
+
+    public override void Load()
+    {
+        // Load all values from base configuration and substitute environment variables
+        var data = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+        LoadRecursive(_baseConfiguration, "", data);
+        Data = data;
+    }
+
+    private void LoadRecursive(IConfiguration config, string prefix, Dictionary<string, string?> data)
+    {
+        foreach (var child in config.GetChildren())
+        {
+            var key = string.IsNullOrEmpty(prefix) ? child.Key : $"{prefix}:{child.Key}";
+
+            if (child.GetChildren().Any())
+            {
+                // Recursively load nested sections
+                LoadRecursive(child, key, data);
+            }
+            else
+            {
+                // Get value and substitute environment variables
+                var value = child.Value;
+                if (!string.IsNullOrEmpty(value))
+                {
+                    value = SubstituteEnvironmentVariables(value);
+                }
+                data[key] = value;
+            }
+        }
+    }
+
+    private static string SubstituteEnvironmentVariables(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return value;
+
+        // Pattern to match ${VARIABLE_NAME}
+        var pattern = @"\$\{([^}]+)\}";
+        return Regex.Replace(value, pattern, match =>
+        {
+            var envVarName = match.Groups[1].Value;
+            var envValue = Environment.GetEnvironmentVariable(envVarName);
+            return envValue ?? match.Value; // Return original if env var not found
+        });
     }
 }

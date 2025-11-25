@@ -114,7 +114,9 @@ public class SessionValidationMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error validating session");
-            return null;
+            // Re-throw the exception to allow upstream error handling
+            // This ensures the root cause is not hidden
+            throw new InvalidOperationException("Failed to validate session", ex);
         }
     }
 

@@ -2,9 +2,13 @@ using Auth.API.Extensions;
 using Infrastructure.Extensions;
 using Common.Logging;
 using Serilog;
+using DotNetEnv;
 
 try
 {
+    // Load .env file before creating builder
+    Env.Load();
+
     var builder = WebApplication.CreateBuilder(args);
 
     // Initialize Serilog bootstrap logger
@@ -13,6 +17,9 @@ try
 
     // Add Serilog Configuration
     builder.Host.UseSerilog(SeriLogger.Configure);
+
+    // Substitute environment variables in configuration (${VARIABLE} syntax)
+    builder.Configuration.SubstituteEnvironmentVariables();
 
     #region Configuration Settings
 

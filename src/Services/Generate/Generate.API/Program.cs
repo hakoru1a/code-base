@@ -7,17 +7,24 @@ using Common.Logging;
 using Infrastructure.Extensions;
 using Serilog;
 using Shared.Identity;
+using DotNetEnv;
 
 
 
 try
 {
+    // Load .env file before creating builder
+    Env.Load();
+
     var builder = WebApplication.CreateBuilder(args);
     Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
     Log.Information("Starting Generate API");
 
     // Add Serilog Configuration
     builder.Host.UseSerilog(SeriLogger.Configure);
+
+    // Substitute environment variables in configuration (${VARIABLE} syntax)
+    builder.Configuration.SubstituteEnvironmentVariables();
 
     // Add services to the container
     builder.Services.AddInfrastructureServices(builder.Configuration);
