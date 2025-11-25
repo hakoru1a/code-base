@@ -22,11 +22,10 @@ namespace Generate.Infrastructure.Persistences
         }
 
         // DbSets
-        public DbSet<Category> Categories { get; set; }
-        public DbSet<Product> Products { get; set; }
-        public DbSet<ProductDetail> ProductDetails { get; set; }
-        public DbSet<Order> Orders { get; set; }
-        public DbSet<OrderItem> OrderItems { get; set; }
+<FOREACH>
+    <LOOP>Tables</LOOP>
+    <CONTENT>        public DbSet<@@@Table.Name@@@> @@@Table.Name@@@s { get; set; }</CONTENT>
+</FOREACH>
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

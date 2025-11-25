@@ -1,6 +1,6 @@
 ﻿using Generate.Infrastructure.Persistences;
 using Generate.Infrastructure.Repositories;
-using Generate.Infrastructure.Interfaces;
+using Generate.Application.Contracts.Persistence;
 using Infrastructure.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,9 +15,10 @@ namespace Generate.Infrastructure
             services.AddCommonInfrastructure<GenerateContext>(configuration);
 
             // Register service-specific repositories
-            services.AddScoped<ICategoryRepository, CategoryRepository>();
-            services.AddScoped<IProductRepository, ProductRepository>();
-            services.AddScoped<IOrderRepository, OrderRepository>();
+<FOREACH>
+    <LOOP>Tables</LOOP>
+    <CONTENT>            services.AddScoped<I@@@Table.Name@@@Repository, @@@Table.Name@@@Repository>();</CONTENT>
+</FOREACH>
 
             // Configure MassTransit with RabbitMQ (optional - uncomment if needed)
             // services.AddMassTransit(x =>
