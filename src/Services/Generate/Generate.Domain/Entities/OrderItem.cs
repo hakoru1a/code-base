@@ -1,5 +1,4 @@
 using Contracts.Domain;
-using Contracts.Domain.Interface;
 
 namespace Generate.Domain.Entities;
 
