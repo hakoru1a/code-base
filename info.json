@@ -1,0 +1,39 @@
+{
+  "id": 8,
+  "Name": "ATDS",
+  "CopyRight": "@VCL",
+  "ProjectNameSpace": "ATDS",
+  "Language": "3", //0: VBNET, 1: Java, 2: PHP, 3: CSHAPE
+  "Database": "2", //0: SQLServer, 1: Oracle, 2: MySQL, 3: Postgres, 4: SQLite
+  "OS": "Window",
+  //"TemplatePath": "D:\\_Project\\08.ATDS\\00.MyCompany\\05.Development\\01.git\\atds-library\\Templates\\4.diab-vue-portal",
+  //"TemplatePath": "F:\\ATDS\\smartwoord-fe",
+  "TemplatePath": "C:\\Users\\LENOVO\\Downloads\\smartwoord-api",
+  "Encoding": "Shift-JIS",
+  "SystemColumn": "ID,CREATED_DATE,LAST_MODIFIED_DATE,CREATED_BY,LAST_MODIFIED_BY",
+  "NotGenerateTable1": "",
+  "GenerateColumn1": "ID,CREATED_DATE,LAST_MODIFIED_DATE,CREATED_BY,LAST_MODIFIED_BY",
+  "NotGenerateColumn1": "ID,CREATED_DATE,LAST_MODIFIED_DATE,CREATED_BY,LAST_MODIFIED_BY",
+  "NotGenerateColumn2": "ID,CREATED_DATE,LAST_MODIFIED_DATE,CREATED_BY,LAST_MODIFIED_BY,STATUS,CODE",
+  "NotGenerateColumn3": "ID,CREATED_DATE,LAST_MODIFIED_DATE,CREATED_BY,LAST_MODIFIED_BY",
+  "NullCharacter1": "?",
+  "ImportantColumn1": "NAME,STATUS", //Use to set search column (only 1 or 2 column)
+  "TableDisallowGenerateFile1": "", // List table of this setting mean template name have [Disallow1] -> dont genereate template (Format: DisplayName1,DisplayName2
+  "TableDisallowGenerateFile2": "", // List table of this setting mean template name have [Disallow2] -> dont genereate template
+  "TableDisallowGenerateFile3": "", // List table of this setting mean template name have [Disallow3] -> dont genereate template
+  "TableAllowGenerateFile1": "", // List table of this setting mean template name have [Allow1] -> allow genereate template
+  "TableAllowGenerateFile2": "", // List table of this setting mean template name have [Allow2] -> dont genereate template
+  "TableAllowGenerateFile3": "", // List table of this setting mean template name have [llow3] -> dont genereate template
+  "TableDisallowFileContain1": "", // <LOOP>Tables.TableDisallowFileContain1</LOOP> will not genereate file contain in this list
+  "TableDisallowFileContain2": "", // <LOOP>Tables.TableDisallowFileContain2</LOOP> will not genereate file contain in this list
+  "TableDisallowFileContain3": "", // <LOOP>Tables.TableDisallowFileContain3</LOOP> will not genereate file contain in this list
+  "ForeignTableList": "", // <LOOP>Tables.ForeignTables</LOOP> Sample: "[{"SourceTable":"table1", "DesTable":"table2,table3"}]"
+  "ForeignTablePatten": "", // <LOOP>Tables.ForeignTablePatten</LOOP>   "value.Contains(\"eva\");" // like '%eva%'   "value.StartsWith(\"eva\");", // like 'eva%'  "value.EndsWith(\"eva\");" // like '%eva'
+  "ProcessFileExtensionList": ".cs,.csproj,.sln,.resx,.vb,.vbproj,.ts,.tsx",
+  "TablePrefix": "alliance-" //remove this Prefix for table name
+}
+
+//Template 3 Note:
+//1.  Database
+//1.1 PrivateKey: Phải là autoincreate
+//1.2 Nếu có table 2 khóa chính: thì key sẽ là autoincreate và 2 column key sẽ set không thể duplicate

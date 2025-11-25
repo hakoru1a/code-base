@@ -18,7 +18,7 @@ namespace Generate.Infrastructure.Persistences.Configurations
             // Properties
 <FOREACH>
     <LOOP>TableGenerate.ColumnsNotKey</LOOP>
-    <CONTENT>            builder.Property(c => c.###Name###)
+    <CONTENT>            builder.Property(c => c.###ColumnName###)
                 .IsRequired(###DbNotNull###)
                 .HasMaxLength(###DbLength###);</CONTENT>
 </FOREACH>
@@ -43,7 +43,7 @@ namespace Generate.Infrastructure.Persistences.Configurations
             // Indexes
 <FOREACH>
     <LOOP>TableGenerate.ColumnsNotKey</LOOP>
-    <CONTENT>            builder.HasIndex(c => c.###Name###);</CONTENT>
+    <CONTENT>            builder.HasIndex(c => c.###ColumnName###);</CONTENT>
 </FOREACH>
 
             builder.MapAuditColumns();

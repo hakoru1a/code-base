@@ -11,7 +11,7 @@ namespace Generate.Application.Features.@@@Table.Name@@@.Commands.Update@@@Table
     {
 <FOREACH>
     <LOOP>TableGenerate.Columns</LOOP>
-    <CONTENT>        public ###ConvertTypeDbToCode### ###Name### { get; set; }</CONTENT>
+    <CONTENT>        public ###SourceCodeType### ###ColumnName### { get; set; }</CONTENT>
 </FOREACH>
     }
 }

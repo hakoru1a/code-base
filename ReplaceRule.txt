@@ -1,0 +1,209 @@
+﻿
+Các step tạo project
+
+-----------------------------------------------------------------------
+Step chuẩn bị
+-----------------------------------------------------------------------
+1/ Tạo cấu trúc thư mục giống sample có sẵn
+   - Sửa file GenerateSourceSetting.exe.config
+      - TemplateFolder: nơi chứa file template
+	  - Nội dung CopyRight
+	  
+2/ Tên file cần thay đổi tùy theo table thì thêm tag: 
+    -> @@@TableName@@@
+	
+3/ Trong các file để các tag để tự động sinh source
+
+-----------------------------------------------------------------------
+Step sinh source
+-----------------------------------------------------------------------
+1/ Duyệt qua tất cả các file trong thư mục template
+     -> những file ko có tag TableName thì chỉ tạo 1 lần, những file có thì sẽ tạo nhiều lần
+
+@@@Table.Name@@@					← Tên tiếng Anh của table
+@@@Table.DisplayName@@@				← Tên tiếng Nhật của table
+@@@copyRight@@@						← Constants CopyRight (sẽ đưa ra config để thay đổi)
+@@@CurrentDate("yyyy.MM.dd")@@@		Today.ToString("yyyy.MM.dd")
+@@@CurrentDate("yyyy年MM月dd日")@@@  	Today.ToString("yyyy年MM月dd日")
+
+■Table
+@@@LoopTable.Name@@@						← M_CUSTOMER  
+@@@Table.SourceName@@@				    	← MCustomer
+
+
+■Column
+【DELETE】###ColumnDBName###									← tên tiếng anh của column
+###Name.Padding(x)### x=1->3 (*10)			← tên tiếng anh có thể dùng Padding, tham số chỉ là 1, 2, 3	(1=Padding 10 khoảng trắng)
+###DisplayName.Padding(x)### x=1->3 (*10)	← Tên tiếng Nhật của column có thể dùng Padding, tham số chỉ là 1, 2, 3	(1=Padding 10 khoảng trắng)
+###DbType###	                            ← Kiểu dữ liệu của column
+###IsSelect###
+###DbNotNull###
+###DbLength###
+###Description###
+###ColumnDBName###                            ←　DB Name
+
+■Column Function
+###ConvertTypeDbtoTypeCodeVb###				← Dùng hàm này để define kiểu dữ liệu SqlServer thành source VB.NET
+↓
+###ConvertTypeDbToCode###	
+###ConvertTypeDbOracletoTypeCodeVb###		← Dùng hàm này để ép kiểu data Oracle trong source VB.NET
+###ConvertSqlTypeDbtoOracleTypeDb###		← Chuyển qua kiểu dữ liệu của Oracle
+###IsLastColumn###							← Là column cuối cùng trong danh sách các column hay không 
+###IsKeyColumn###							← Column có phải là key hay không
+###IsLastKeyColumn###						← Column có phải là key cuối cùng hay không
+
+
+■Function
+@@@GetKeyParameterForFunction@@@　　			←　ByVal ObjectYear As StringByVal ObjectMonth As String, ByVal CompanyCode As String, ByVal FactoryClass As String, ByVal SlipClass As String
+@@@GetKeyParameterForCallFunction@@@　		← ObjectYear, ObjectMonth, CompanyCode, FactoryClass, SlipClass
+
+
+2/ Constants
+@@@CopyRight@@@
+
+3/ LOOP
+@@@LocalVariable@@@
+<FOREACHS>
+<LOOP>TableGenerate.Columns</LOOP>
+<REMOVELAST>,</REMOVELAST>
+<FOREIGNTABLE>Need</FOREIGNTABLE>
+<FOREIGNTABLEBY>Need</FOREIGNTABLEBY>
+<INCREASE>1,170,1,250</INCREASE>
+	<FOREACH></FOREACH>
+	<FOREACH></FOREACH>
+</FOREACHS>
+
+
+<FOREACH>
+　　　　<LOOP>TableGenerate.Columns</LOOP>
+       <REMOVELAST>,</REMOVELAST>
+       <FOREIGNTABLE>Need</FOREIGNTABLE>
+       <FOREIGNTABLEBY>Need</FOREIGNTABLEBY>
+	   <INCREASE>1,170,1,250</INCREASE>
+　　　　<CONDITIONS>
+		<CONDITION>
+			<CONDITIONNAME>###isSelect###</CONDITIONNAME>
+			<CONDITIONOPERATOR>=</CONDITIONOPERATOR>
+			<CONDITIONVALUE>True</CONDITIONVALUE>
+			<CONNECT>AND</CONNECT>
+			<CONDITIONNAME>###IsLastColumn###</CONDITIONNAME>
+			<CONDITIONOPERATOR>=</CONDITIONOPERATOR>
+			<CONDITIONVALUE>False</CONDITIONVALUE>
+			<CONTENT> Giá trị muốn xuất ra  </CONTENT>
+		</CONDITION>
+		<RELATIONSHIP>Else</RELATIONSHIP>
+		<CONDITION>
+			<CONDITIONNAME>###isSelect###</CONDITIONNAME>
+			<CONDITIONOPERATOR>=</CONDITIONOPERATOR>
+			<CONDITIONVALUE>True</CONDITIONVALUE>
+			<CONNECT>AND</CONNECT>
+			<CONDITIONNAME>###IsLastColumn###</CONDITIONNAME>
+			<CONDITIONOPERATOR>=</CONDITIONOPERATOR>
+			<CONDITIONVALUE>True</CONDITIONVALUE>
+			<CONTENT>  Giá trị muốn xuất ra  </CONTENT>
+		</CONDITION>
+	</CONDITIONS>
+</FOREACH>
+--------------------------------------------------------------------------
+<FOREACH>
+		<LOOP>TableGenerate.Columns</LOOP>
+		<CONDITIONS>
+		<CONDITION>
+			<CONDITIONNAME>###DbType###</CONDITIONNAME>
+			<CONDITIONOPERATOR>=</CONDITIONOPERATOR>
+			<CONDITIONVALUE>varchar</CONDITIONVALUE>
+			<CONTENT>  Giá trị muốn xuất ra </CONTENT>
+		</CONDITION>
+		<RELATIONSHIP>Else</RELATIONSHIP>
+		<CONDITION>
+			<CONDITIONNAME></CONDITIONNAME>
+			<CONDITIONOPERATOR></CONDITIONOPERATOR>
+			<CONDITIONVALUE></CONDITIONVALUE>
+			<CONTENT>   Giá trị muốn xuất ra  </CONTENT>
+		</CONDITION>
+	</CONDITIONS>
+</FOREACH>
+--------------------------------------------------------------------------
+<FOREACH>
+    <LOOP>Tables.ForeignTable</LOOP>    
+    <CONDITIONS>
+        <CONDITION>
+        <CONDITIONNAME>@@@TableForeign.DisplayName@@@</CONDITIONNAME>
+        <CONDITIONOPERATOR>Contain</CONDITIONOPERATOR>
+        <CONDITIONVALUE>Statistic</CONDITIONVALUE>`
+        <CONTENT>using VCL.Middle.Services.Interfaces.@@@TableForeign.DisplayName@@@;
+        </CONTENT>
+        </CONDITION>
+    </CONDITIONS>
+</FOREACH>
+--------------------------------------------------------------------------
+
+<FOREACH>
+      <LOOP>Tables</LOOP>
+	  <REMOVELAST>,</REMOVELAST>
+	  <INCREASE>1,170,1,250</INCREASE>
+	    <CONTENT> Giá trị muốn xuất ra  ###INCREASE###, ###INCREASE2### </CONTENT>
+</FOREACH>
+--------------------------------------------------------------------------
+<FOREACH>
+    <LOOP>Tables</LOOP>	
+    <CONDITIONS>
+        <CONDITION>
+            <CONDITIONNAME>@@@TABLE.ALLOW_GENERATE_FILE2@@@</CONDITIONNAME>
+            <CONDITIONOPERATOR>Exist</CONDITIONOPERATOR>
+            <CONDITIONVALUE>@@@Table.DisplayName@@@</CONDITIONVALUE>
+            <CONTENT>
+[DisplayName("bản ghi @@@Table.DisplayName@@@")]
+public Guid? @@@Table.DisplayName@@@Id { get; set; }
+            </CONTENT>
+        </CONDITION>
+    </CONDITIONS>
+</FOREACH>
+--------------------------------------------------------------------------
+■<LOOP>.*</LOOP>
+　・TableGenerate.AllColumns
+　・TableGenerate.Columns
+　・TableGenerate.ColumnsNotKey
+　・TableGenerate.Keys
+　・Tables
+　・Tables.ForeignTable
+  ・Tables.ForeignKeyBy
+　・Tables.ForeignTableList
+　・Tables.ForeignTablePatten <- Convert to CONDITION -> [Removed]
+　・UserDefineView  
+
+■<CONTENT>.*</CONTENT>.
+　・<IF> <CONDITION></CONDITION> </IF>
+　・
+　・
+　・
+　・
+■CONDITIONOPERATOR
+　・=, >, >=, <, <=, <>, Is Nothing, Contain, NotContain, Exist
+
+■CONDITIONNAME
+　・TABLE.DISALLOW_GENERATE_FILE1
+　・TABLE.DISALLOW_GENERATE_FILE2
+　・TABLE.DISALLOW_GENERATE_FILE3
+  ・TABLE.ALLOW_GENERATE_FILE1
+  ・TABLE.ALLOW_GENERATE_FILE2
+  ・TABLE.ALLOW_GENERATE_FILE3
+
+  ■Solution For Encoding
+   - Open file with notepad
+   - Copy content file from VSCode to notepad
+   - Save file to UTF-8 With BOM
+
+
+<CONDITIONS>
+    <CONDITION>
+        <CONDITIONNAME>@@@IsExistForeignKeyBy@@@</CONDITIONNAME>
+            <CONDITIONOPERATOR>=</CONDITIONOPERATOR>
+            <CONDITIONVALUE>True</CONDITIONVALUE>
+        <CONTENT>
+            
+        </CONTENT>
+        </CONDITION>
+    </CONDITIONS>
+</FOREACH>
+

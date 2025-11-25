@@ -87,7 +87,7 @@ namespace Generate.API.Controllers
             {
 <FOREACH>
     <LOOP>TableGenerate.ColumnsNotKey</LOOP>
-    <CONTENT>                ###Name### = dto.###Name###</CONTENT>
+    <CONTENT>                ###ColumnName### = dto.###ColumnName###</CONTENT>
     <REMOVELAST>,</REMOVELAST>
 </FOREACH>
             };
@@ -119,7 +119,7 @@ namespace Generate.API.Controllers
             {
 <FOREACH>
     <LOOP>TableGenerate.Columns</LOOP>
-    <CONTENT>                ###Name### = dto.###Name###</CONTENT>
+    <CONTENT>                ###ColumnName### = dto.###ColumnName###</CONTENT>
     <REMOVELAST>,</REMOVELAST>
 </FOREACH>
             };
