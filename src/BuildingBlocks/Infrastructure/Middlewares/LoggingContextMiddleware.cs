@@ -112,24 +112,8 @@ namespace Infrastructure.Middlewares
         /// </summary>
         private string? GetUsernameFromContext(HttpContext context)
         {
-            // DEBUG: Log thông tin về HttpContext.User
-            var userExists = context.User != null;
-            var identityExists = context.User?.Identity != null;
-            var isAuthenticated = context.User?.Identity?.IsAuthenticated ?? false;
-
-            _logger.LogInformation(
-                "[DEBUG Username] User exists: {UserExists}, Identity exists: {IdentityExists}, IsAuthenticated: {IsAuthenticated}",
-                userExists, identityExists, isAuthenticated);
-
             if (context.User?.Identity?.IsAuthenticated == true)
             {
-                // DEBUG: Log tất cả claims có trong JWT
-                var allClaims = context.User.Claims.Select(c => $"{c.Type}={c.Value}").ToList();
-                _logger.LogInformation(
-                    "[DEBUG Username] Found {ClaimCount} claims: {Claims}",
-                    allClaims.Count,
-                    string.Join(" | ", allClaims));
-
                 // Thử các claim types phổ biến cho username
                 var claimName = context.User.FindFirst(ClaimTypes.Name)?.Value;
                 var claimNameIdentifier = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -137,21 +121,6 @@ namespace Infrastructure.Middlewares
                 var claimUsername = context.User.FindFirst("username")?.Value;
                 var claimNameDirect = context.User.FindFirst("name")?.Value;
                 var claimSub = context.User.FindFirst("sub")?.Value;
-
-                // DEBUG: Log từng claim type
-                _logger.LogInformation(
-                    "[DEBUG Username] Claim values - ClaimTypes.Name: {ClaimName}, " +
-                    "ClaimTypes.NameIdentifier: {ClaimNameIdentifier}, " +
-                    "preferred_username: {PreferredUsername}, " +
-                    "username: {Username}, " +
-                    "name: {Name}, " +
-                    "sub: {Sub}",
-                    claimName ?? "NULL",
-                    claimNameIdentifier ?? "NULL",
-                    claimPreferredUsername ?? "NULL",
-                    claimUsername ?? "NULL",
-                    claimNameDirect ?? "NULL",
-                    claimSub ?? "NULL");
 
                 var username = claimName ??
                               claimNameIdentifier ??
@@ -161,22 +130,14 @@ namespace Infrastructure.Middlewares
 
                 if (!string.IsNullOrWhiteSpace(username))
                 {
-                    _logger.LogInformation("[DEBUG Username] Found username: {Username}", username);
                     return username;
                 }
 
                 // Nếu không tìm thấy username, lấy subject ID
                 if (!string.IsNullOrWhiteSpace(claimSub))
                 {
-                    _logger.LogInformation("[DEBUG Username] Using sub as username: {Sub}", claimSub);
                     return claimSub;
                 }
-
-                _logger.LogWarning("[DEBUG Username] No username found in any claims!");
-            }
-            else
-            {
-                _logger.LogInformation("[DEBUG Username] User is not authenticated. Returning null.");
             }
 
             return null;
