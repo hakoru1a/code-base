@@ -67,7 +67,7 @@ public static class SwaggerExtensions
     /// Configure Swagger UI with downstream services
     /// </summary>
     public static IApplicationBuilder UseGatewaySwaggerUI(
-        this IApplicationBuilder app, 
+        this IApplicationBuilder app,
         IWebHostEnvironment environment,
         ServicesOptions servicesOptions)
     {
@@ -79,15 +79,7 @@ public static class SwaggerExtensions
             {
                 // API Gateway endpoint
                 c.SwaggerEndpoint(SwaggerOptions.ApiGatewayEndpoint, SwaggerOptions.ApiGatewayTitle);
-                
-                // Downstream services endpoints (only if enabled)
-                if (servicesOptions.BaseAPI.IncludeInSwagger)
-                {
-                    c.SwaggerEndpoint(
-                        $"{servicesOptions.BaseAPI.Url}/swagger/v1/swagger.json",
-                        servicesOptions.BaseAPI.Name);
-                }
-                
+
                 if (servicesOptions.GenerateAPI.IncludeInSwagger)
                 {
                     c.SwaggerEndpoint(
@@ -101,7 +93,7 @@ public static class SwaggerExtensions
                         $"{servicesOptions.AuthAPI.Url}/swagger/v1/swagger.json",
                         servicesOptions.AuthAPI.Name);
                 }
-                
+
                 c.RoutePrefix = SwaggerOptions.RoutePrefix;
                 c.DisplayRequestDuration();
                 c.EnableDeepLinking();
