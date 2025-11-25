@@ -28,7 +28,7 @@ namespace Common.Logging
                           "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:l}{NewLine}{Exception}{NewLine}")
                       .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri(elasticUri))
                       {
-                          IndexFormat = $"ch-logs-{applicationName}-{environmentName}-{DateTime.UtcNow:yyyy-MM}",
+                          IndexFormat = $"ch-logs-{applicationName}-{environmentName}-{DateTime.UtcNow:yyyy-MM-dd}",
                           AutoRegisterTemplate = true,
                           AutoRegisterTemplateVersion = AutoRegisterTemplateVersion.ESv7,
                           DetectElasticsearchVersion = true,
