@@ -17,7 +17,6 @@
 		<PackageReference Include="AspNetCore.HealthChecks.RabbitMQ" Version="8.0.2" />
 		<PackageReference Include="Mapster" Version="7.4.0" />
 		<PackageReference Include="Mapster.DependencyInjection" Version="1.0.1" />
-		<PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
 		<PackageReference Include="AWSSDK.S3" Version="3.7.403" />
 		<PackageReference Include="Azure.Storage.Blobs" Version="12.22.2" />
 		<PackageReference Include="FirebaseAdmin" Version="3.0.1" />

@@ -24,14 +24,23 @@ namespace Infrastructure.DatabaseProviders
             where TContext : DbContext
         {
             services.AddDbContext<TContext>(options =>
+            {
                 options.UseOracle(
                     connectionString,
                     builder =>
                     {
                         if (!string.IsNullOrEmpty(migrationsAssembly))
                             builder.MigrationsAssembly(migrationsAssembly);
-                    })
-            );
+                    });
+
+                // Enable lazy loading proxies
+                options.UseLazyLoadingProxies();
+
+                // Performance optimizations
+                options.EnableSensitiveDataLogging(false);
+                options.EnableDetailedErrors(false);
+                options.UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll);
+            });
         }
     }
 }

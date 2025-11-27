@@ -85,7 +85,7 @@ public abstract class ApiControllerBase<T> : ControllerBase where T : class
         TQuery query,
         long id,
         string entityName)
-        where TQuery : IRequest<TResponse>
+        where TQuery : IRequest<TResponse?>
     {
         Logger.LogInformation("Getting {EntityName} with ID: {Id}", entityName, id);
         var result = await Mediator.Send(query);
