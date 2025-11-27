@@ -1,11 +1,7 @@
-@@@copyRight@@@
 using Generate.Domain;
 
 namespace Generate.Domain.Entities
 {
-    /// <summary>
-    /// @@@Table.DisplayName@@@ entity
-    /// </summary>
     public class @@@Table.DisplayName@@@ : EntityAuditBase<long>
     {
 <FOREACH>
@@ -14,32 +10,25 @@ namespace Generate.Domain.Entities
         <CONDITION>
             <CONDITIONNAME>###IsForeignKeyColumn###</CONDITIONNAME>
             <CONDITIONOPERATOR>=</CONDITIONOPERATOR>
-            <CONDITIONVALUE>False</CONDITIONVALUE>
-            <CONTENT>        
-        /// <summary>
-        /// ###Description###
-        /// </summary>
-        public ###SourceCodeType### ###ColumnName### { get; set; }</CONTENT>
+            <CONDITIONVALUE>True</CONDITIONVALUE>
+            <CONTENT>
+        public long ###ColumnName### { get; set; }</CONTENT>
         </CONDITION>
+        <RELATIONSHIP>Else</RELATIONSHIP>
+            <CONTENT>
+        public ###SourceCodeType### ###ColumnName### { get; set; }</CONTENT>
     </CONDITIONS>
 </FOREACH>
-
 <FOREACH>
-    <LOOP>Tables.ForeignTable</LOOP>       
-    <CONTENT>@@@TableForeign.displayName@@@;</CONTENT>
-</FOREACH>  
-
-
-<FOREACH>
-    <LOOP>TableGenerate.ForeignTableList</LOOP> 
-    <CONTENT>###DisplayName###, </CONTENT>
+    <LOOP>Tables.ForeignTable</LOOP> 
+    <CONTENT>
+        public virtual @@@Table.DisplayName@@@ @@@Table.DisplayName@@@ { get; set; }
+    </CONTENT>
 </FOREACH>
-
 <FOREACH>
     <LOOP>Tables.ForeignKeyBy</LOOP>
     <CONTENT>
-        public virtual ICollection<@@@TableForeign.DisplayName@@@> @@@TableForeign.DisplayName@@@s { get; set; } = new List<@@@TableForeign.DisplayName@@@>();</CONTENT>
+        public virtual ICollection<@@@Table.DisplayName@@@> @@@Table.DisplayName@@@s { get; set; } = new List<@@@Table.DisplayName@@@>();</CONTENT>
 </FOREACH>
-
     }
-}
+}       
