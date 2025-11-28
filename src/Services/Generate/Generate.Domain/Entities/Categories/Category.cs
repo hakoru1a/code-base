@@ -1,5 +1,7 @@
 using Contracts.Domain;
 using Generate.Domain.Entities.Products;
+using Generate.Domain.Entities.Categories.Rules;
+using Generate.Domain.Entities.Categories.Specifications;
 using Contracts.Exceptions;
 
 namespace Generate.Domain.Entities.Categories;
@@ -14,7 +16,7 @@ public class Category : EntityAuditBase<long>
 
     public Category(string name)
     {
-        ValidateName(name);
+        CategoryValidationRules.CategoryName.ValidateCategoryName(name);
         Name = name;
     }
 
@@ -25,48 +27,40 @@ public class Category : EntityAuditBase<long>
 
     public void UpdateName(string name)
     {
-        ValidateName(name);
+        CategoryValidationRules.CategoryName.ValidateCategoryName(name);
         Name = name;
     }
 
     public void AddProduct(Product product)
     {
-        if (product == null)
-            throw new BusinessException("Product cannot be null");
-
-        if (_products.Any(p => p.Id == product.Id))
-            throw new BusinessException("Product already exists in this category");
-
-        _products.Add(product);
+        CategoryBusinessRules.ProductManagement.AddProduct(_products, product);
     }
 
     public void RemoveProduct(Product product)
     {
-        if (product == null)
-            throw new BusinessException("Product cannot be null");
-
-        _products.Remove(product);
+        CategoryBusinessRules.ProductManagement.RemoveProduct(_products, product);
     }
 
-    private static void ValidateName(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-            throw new BusinessException("Category name cannot be empty");
 
-        if (name.Length > 100)
-            throw new BusinessException("Category name cannot exceed 100 characters");
-
-        if (name.Trim() != name)
-            throw new BusinessException("Category name cannot have leading or trailing spaces");
-    }
-
+    // Business rules and queries - sử dụng Business Rules và Specifications
     public bool CanBeDeleted()
     {
-        return !_products.Any();
+        return CategoryBusinessRules.Lifecycle.CanBeDeleted(_products);
     }
 
     public int GetProductCount()
     {
-        return _products.Count;
+        return CategoryBusinessRules.Analytics.CalculateProductCount(_products);
+    }
+
+    public bool HasProducts()
+    {
+        return CategoryBusinessRules.Lifecycle.HasProducts(_products);
+    }
+
+    // Sử dụng Specifications cho business queries phức tạp
+    public bool SatisfiesSpecification(CategorySpecifications.ICategorySpecification specification)
+    {
+        return specification.IsSatisfiedBy(this);
     }
 }

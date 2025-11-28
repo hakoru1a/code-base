@@ -1,6 +1,8 @@
 using Contracts.Domain;
 using Generate.Domain.Entities.Orders.ValueObject;
 using Generate.Domain.Entities.Products;
+using Generate.Domain.Entities.Orders.Rules;
+using Generate.Domain.Entities.Orders.Specifications;
 using Contracts.Exceptions;
 
 namespace Generate.Domain.Entities.Orders;
@@ -8,7 +10,7 @@ namespace Generate.Domain.Entities.Orders;
 public class Order : EntityAuditBase<long>
 {
     public string CustomerName { get; private set; } = string.Empty;
-    
+
     private readonly List<OrderItem> _orderItems = new();
     public virtual IReadOnlyList<OrderItem> OrderItems => _orderItems.AsReadOnly();
 
@@ -18,7 +20,7 @@ public class Order : EntityAuditBase<long>
     // Domain constructor
     public Order(string customerName)
     {
-        ValidateCustomerName(customerName);
+        OrderValidationRules.CustomerName.ValidateCustomerName(customerName);
         CustomerName = customerName;
     }
 
@@ -31,50 +33,23 @@ public class Order : EntityAuditBase<long>
     // Business methods
     public void UpdateCustomerName(string customerName)
     {
-        ValidateCustomerName(customerName);
+        OrderValidationRules.CustomerName.ValidateCustomerName(customerName);
         CustomerName = customerName;
     }
 
     public void AddOrderItem(Product product, int quantity)
     {
-        if (product == null)
-            throw ProductError.CategoryCannotBeNull();
-
-        // Check if product already exists in order - compare navigation properties
-        var existingItem = _orderItems.FirstOrDefault(oi => ReferenceEquals(oi.Product, product));
-        if (existingItem != null)
-        {
-            existingItem.IncreaseQuantity(quantity);
-        }
-        else
-        {
-            var orderItem = OrderItem.Create(this, product, quantity);
-            _orderItems.Add(orderItem);
-        }
+        OrderBusinessRules.ItemManagement.AddOrderItem(_orderItems, this, product, quantity);
     }
 
     public void RemoveOrderItem(Product product)
     {
-        if (product == null)
-            throw ProductError.CategoryCannotBeNull();
-            
-        var orderItem = _orderItems.FirstOrDefault(oi => ReferenceEquals(oi.Product, product));
-        if (orderItem == null)
-            throw new BusinessException($"Product not found in this order");
-
-        _orderItems.Remove(orderItem);
+        OrderBusinessRules.ItemManagement.RemoveOrderItem(_orderItems, product);
     }
 
     public void UpdateOrderItemQuantity(Product product, int newQuantity)
     {
-        if (product == null)
-            throw ProductError.CategoryCannotBeNull();
-            
-        var orderItem = _orderItems.FirstOrDefault(oi => ReferenceEquals(oi.Product, product));
-        if (orderItem == null)
-            throw new BusinessException($"Product not found in this order");
-
-        orderItem.UpdateQuantity(newQuantity);
+        OrderBusinessRules.ItemManagement.UpdateOrderItemQuantity(_orderItems, product, newQuantity);
     }
 
     public void ClearOrderItems()
@@ -82,66 +57,56 @@ public class Order : EntityAuditBase<long>
         _orderItems.Clear();
     }
 
-    // Domain validation
-    private static void ValidateCustomerName(string customerName)
-    {
-        if (string.IsNullOrWhiteSpace(customerName))
-            throw new BusinessException("Customer name cannot be empty");
 
-        if (customerName.Length > 100)
-            throw new BusinessException("Customer name cannot exceed 100 characters");
-
-        if (customerName.Trim() != customerName)
-            throw new BusinessException("Customer name cannot have leading or trailing spaces");
-    }
-
-    // Business rules and queries
+    // Business rules and queries - sử dụng Specifications và Business Rules
     public bool CanBeDeleted()
     {
-        return !_orderItems.Any();
+        return OrderBusinessRules.Lifecycle.CanBeDeleted(_orderItems);
     }
 
     public bool HasOrderItems()
     {
-        return _orderItems.Any();
+        return OrderBusinessRules.Lifecycle.HasOrderItems(_orderItems);
     }
 
     public int GetTotalItemsCount()
     {
-        return _orderItems.Sum(oi => oi.Quantity);
+        return OrderBusinessRules.Analytics.CalculateTotalItemsCount(_orderItems);
     }
 
     public int GetUniqueProductsCount()
     {
-        return _orderItems.Count;
+        return OrderBusinessRules.Analytics.CalculateUniqueProductsCount(_orderItems);
     }
 
     public bool ContainsProduct(Product product)
     {
-        if (product == null) return false;
-        return _orderItems.Any(oi => ReferenceEquals(oi.Product, product));
+        return OrderBusinessRules.Query.ContainsProduct(_orderItems, product);
     }
 
     public OrderItem? GetOrderItem(Product product)
     {
-        if (product == null) return null;
-        return _orderItems.FirstOrDefault(oi => ReferenceEquals(oi.Product, product));
+        return OrderBusinessRules.Query.GetOrderItem(_orderItems, product);
     }
 
     public IReadOnlyList<OrderItem> GetOrderItemsForProduct(Product product)
     {
-        if (product == null) return new List<OrderItem>().AsReadOnly();
-        return _orderItems.Where(oi => ReferenceEquals(oi.Product, product)).ToList().AsReadOnly();
+        return OrderBusinessRules.Query.GetOrderItemsForProduct(_orderItems, product);
     }
 
     public bool IsLargeOrder(int threshold = 50)
     {
-        return GetTotalItemsCount() >= threshold;
+        return OrderBusinessRules.Analytics.IsLargeOrder(_orderItems, threshold);
     }
 
     public decimal GetTotalOrderValue()
     {
-        // This would require product prices - for now return total quantity
-        return GetTotalItemsCount();
+        return OrderBusinessRules.Analytics.CalculateTotalOrderValue(_orderItems);
+    }
+
+    // Sử dụng Specifications cho business queries phức tạp
+    public bool SatisfiesSpecification(OrderSpecifications.IOrderSpecification specification)
+    {
+        return specification.IsSatisfiedBy(this);
     }
 }

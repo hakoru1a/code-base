@@ -43,22 +43,41 @@ Generate service là một implementation của **DDD + Clean Architecture**, tu
 
 ```
 Generate.Domain/
-├── Entities/                           # Domain Aggregates (DDD)
+├── Entities/                           # Domain Aggregates (DDD) + Business Logic Separation
 │   ├── Categories/
 │   │   ├── Category.cs                 # Category Aggregate Root
+│   │   ├── CategoryError.cs            # Business Exception Definitions
+│   │   ├── Rules/                      # Business Logic Separation
+│   │   │   ├── CategoryValidationRules.cs # Validation Logic
+│   │   │   └── CategoryBusinessRules.cs   # Complex Business Operations
+│   │   ├── Specifications/             # Specification Pattern
+│   │   │   └── CategorySpecifications.cs  # Business Queries & Conditions
 │   │   ├── Enums/                      # Category-specific enums
 │   │   └── ValueObject/                # Category Value Objects
 │   ├── Products/
 │   │   ├── Product.cs                  # Product Aggregate Root
-│   │   ├── ProductError.cs             # Business Exception Definitions
+│   │   ├── ProductError.cs             # Business Exception Definitions (existing)
+│   │   ├── Rules/                      # Business Logic Separation
+│   │   │   ├── ProductValidationRules.cs  # Validation Logic
+│   │   │   └── ProductBusinessRules.cs    # Complex Business Operations
+│   │   ├── Specifications/             # Specification Pattern
+│   │   │   └── ProductSpecifications.cs   # Business Queries & Conditions
 │   │   ├── Enums/                      # Product-specific enums
 │   │   └── ValueObject/
 │   │       └── ProductDetail.cs        # Product Detail Value Object
 │   └── Orders/
-│       ├── Order.cs                    # Order Aggregate Root
+│       ├── Order.cs                    # Order Aggregate Root (refactored)
+│       ├── OrderError.cs               # Business Exception Definitions
+│       ├── Rules/                      # Business Logic Separation
+│       │   ├── OrderValidationRules.cs    # Validation Logic
+│       │   └── OrderBusinessRules.cs      # Complex Business Operations
+│       ├── Specifications/             # Specification Pattern
+│       │   └── OrderSpecifications.cs     # Business Queries & Conditions
 │       ├── Enums/                      # Order-specific enums
 │       └── ValueObject/
 │           └── OrderItem.cs            # Order Item Entity
+├── Services/                           # Domain Services
+│   └── OrderDomainService.cs           # Cross-Aggregate Operations
 ├── Repositories/                       # Repository Contracts (Interfaces)
 │   ├── ICategoryRepository.cs          # Category Repository Contract
 │   ├── IProductRepository.cs           # Product Repository Contract
@@ -69,9 +88,14 @@ Generate.Domain/
 **🎯 Tại sao sắp xếp như này?**
 
 - **Aggregates theo Business Context**: Mỗi folder (Categories, Products, Orders) đại diện cho 1 **Bounded Context**
+- **Business Logic Separation**: Tách business logic ra khỏi entities để dễ maintain và test
 - **Repository Interfaces trong Domain**: Tuân thủ **Dependency Inversion Principle** - Domain định nghĩa contract, Infrastructure implement
-- **ProductError.cs**: Centralized business exceptions theo **Domain-Driven Design**
-- **Value Objects**: Encapsulate business concepts không có identity (ProductDetail)
+- **Error Classes**: Centralized business exceptions theo **Domain-Driven Design** (`CategoryError`, `ProductError`, `OrderError`)
+- **Validation Rules**: Business validation logic tách riêng (`*ValidationRules.cs`)
+- **Business Rules**: Complex business operations tách riêng (`*BusinessRules.cs`)
+- **Specifications**: Business queries và conditions sử dụng Specification Pattern (`*Specifications.cs`)
+- **Domain Services**: Cross-aggregate operations (`OrderDomainService.cs`)
+- **Value Objects**: Encapsulate business concepts không có identity (ProductDetail, OrderItem)
 - **Zero Infrastructure Dependencies**: Domain layer hoàn toàn pure, chỉ phụ thuộc Contracts
 
 ---
@@ -181,6 +205,239 @@ Generate.API/
 - **Cross-cutting Concerns**: Authentication, authorization, logging
 - **Configuration Management**: Environment-based settings
 - **OpenAPI/Swagger**: Automatic API documentation
+
+---
+
+## 🧩 **Business Logic Separation Pattern**
+
+### **📋 Tổng Quan Pattern**
+
+Để tránh **Fat Domain Models** và tuân thủ **Single Responsibility Principle**, Generate Domain áp dụng Business Logic Separation Pattern:
+
+```
+Entity (Core Data + Basic Operations)
+├── ErrorClass.cs        # Centralized business exceptions
+├── Rules/
+│   ├── ValidationRules.cs   # Input validation logic
+│   └── BusinessRules.cs     # Complex business operations  
+├── Specifications/
+│   └── Specifications.cs    # Business queries & conditions
+└── [Domain Services]        # Cross-aggregate operations
+```
+
+### **🎯 Pattern Benefits**
+
+#### **✅ Single Responsibility Principle**
+```csharp
+// BEFORE: Fat Entity (Order.cs - 148 lines)
+public class Order
+{
+    // Properties + Validation + Business Logic + Queries = Mixed Concerns ❌
+}
+
+// AFTER: Separated Concerns
+public class Order                      // 113 lines - focused on data + delegation ✅
+public class OrderValidationRules       // Validation logic only ✅  
+public class OrderBusinessRules         # Business operations only ✅
+public class OrderSpecifications        # Query logic only ✅
+```
+
+#### **✅ Maintainability & Testability**
+```csharp
+// Unit test specific business rule
+[Test]
+public void OrderValidationRules_Should_Throw_When_CustomerName_Empty()
+{
+    // Arrange & Act & Assert - focused test ✅
+    Assert.Throws<BusinessException>(() => 
+        OrderValidationRules.CustomerName.ValidateCustomerName(""));
+}
+
+// Unit test business operation
+[Test]  
+public void OrderBusinessRules_Should_Add_Item_When_Valid()
+{
+    // Test complex business logic in isolation ✅
+}
+```
+
+### **🏗️ Implementation Examples**
+
+#### **1. Error Classes - Centralized Exceptions**
+```csharp
+// OrderError.cs
+public static class OrderError
+{
+    public static BusinessException CustomerNameCannotBeEmpty() 
+        => new("Customer name cannot be empty");
+        
+    public static BusinessException ProductNotFoundInOrder()
+        => new("Product not found in this order");
+}
+
+// Usage: Consistent error messages
+throw OrderError.CustomerNameCannotBeEmpty();
+```
+
+#### **2. Validation Rules - Input Validation**
+```csharp
+// OrderValidationRules.cs
+public static class OrderValidationRules
+{
+    public static class CustomerName
+    {
+        public static void ValidateCustomerName(string customerName)
+        {
+            if (string.IsNullOrWhiteSpace(customerName))
+                throw OrderError.CustomerNameCannotBeEmpty();
+                
+            if (customerName.Length > 100)
+                throw OrderError.CustomerNameTooLong(100);
+        }
+    }
+}
+```
+
+#### **3. Business Rules - Complex Operations**
+```csharp
+// OrderBusinessRules.cs  
+public static class OrderBusinessRules
+{
+    public static class ItemManagement
+    {
+        public static void AddOrderItem(List<OrderItem> items, Order order, Product product, int quantity)
+        {
+            // 1. Validation
+            OrderValidationRules.OrderItem.ValidateProduct(product);
+            
+            // 2. Business Logic
+            var existingItem = items.FirstOrDefault(oi => ReferenceEquals(oi.Product, product));
+            if (existingItem != null)
+            {
+                existingItem.IncreaseQuantity(quantity);  // Merge logic
+            }
+            else
+            {
+                var orderItem = OrderItem.Create(order, product, quantity);
+                items.Add(orderItem);
+            }
+        }
+    }
+}
+```
+
+#### **4. Specifications - Business Queries**
+```csharp
+// OrderSpecifications.cs
+public class IsLargeOrderSpecification : IOrderSpecification
+{
+    private readonly int _threshold;
+    
+    public IsLargeOrderSpecification(int threshold = 50) => _threshold = threshold;
+    
+    public bool IsSatisfiedBy(Order order)
+    {
+        return order.OrderItems.Sum(oi => oi.Quantity) >= _threshold;
+    }
+}
+
+// Usage: Flexible business queries
+var largeOrderSpec = new IsLargeOrderSpecification(100);
+var vipSpec = new CustomerNamePatternSpecification("VIP");
+var qualifiedSpec = largeOrderSpec.And(vipSpec);
+
+bool isQualified = order.SatisfiesSpecification(qualifiedSpec);
+```
+
+### **🔄 Entity Refactoring Strategy**
+
+#### **Before: Monolithic Entity** 
+```csharp
+public class Order : EntityAuditBase<long>
+{
+    // ❌ Mixed concerns in 148 lines:
+    public void UpdateCustomerName(string name) 
+    { 
+        ValidateCustomerName(name);  // Validation mixed with logic
+        CustomerName = name; 
+    }
+    
+    private static void ValidateCustomerName(string name) { /* validation */ }
+    public void AddOrderItem(Product product, int quantity) { /* business logic */ }
+    public bool IsLargeOrder(int threshold = 50) { /* query logic */ }
+    public decimal GetTotalOrderValue() { /* calculation */ }
+}
+```
+
+#### **After: Separated Architecture**
+```csharp
+public class Order : EntityAuditBase<long>  // 113 lines - focused ✅
+{
+    // ✅ Delegate to specialized classes:
+    public void UpdateCustomerName(string customerName)
+    {
+        OrderValidationRules.CustomerName.ValidateCustomerName(customerName);  // ← Delegate
+        CustomerName = customerName;
+    }
+    
+    public void AddOrderItem(Product product, int quantity)
+    {
+        OrderBusinessRules.ItemManagement.AddOrderItem(_orderItems, this, product, quantity);  // ← Delegate
+    }
+    
+    public bool IsLargeOrder(int threshold = 50)
+    {
+        return OrderBusinessRules.Analytics.IsLargeOrder(_orderItems, threshold);  // ← Delegate
+    }
+    
+    // ✅ Specification support
+    public bool SatisfiesSpecification(OrderSpecifications.IOrderSpecification specification)
+    {
+        return specification.IsSatisfiedBy(this);
+    }
+}
+```
+
+### **📊 Comparison Metrics**
+
+| Aspect | Monolithic Entity | Separated Architecture | Improvement |
+|--------|------------------|----------------------|-------------|
+| **Lines of Code** | 148 lines | 113 lines | ✅ -24% |
+| **Responsibilities** | 5+ mixed | 1 focused | ✅ SRP compliant |
+| **Testability** | Integration tests | Unit tests | ✅ Isolated testing |
+| **Maintainability** | High coupling | Low coupling | ✅ Easy maintenance |
+| **Reusability** | Entity-bound | Standalone classes | ✅ Cross-layer reuse |
+
+### **🚀 Advanced Usage Patterns**
+
+#### **Composite Specifications**
+```csharp
+// Business rule: VIP customers with large orders get free shipping
+var vipLargeOrderSpec = new CustomerNamePatternSpecification("VIP")
+    .And(new IsLargeOrderSpecification(50))
+    .And(new HasItemsSpecification());
+
+bool qualifiesForFreeShipping = order.SatisfiesSpecification(vipLargeOrderSpec);
+```
+
+#### **Domain Service Integration**
+```csharp
+public class OrderDomainService
+{
+    public OrderStatistics CalculateOrderStatistics(Order order)
+    {
+        var largeOrderSpec = new IsLargeOrderSpecification();
+        var hasItemsSpec = new HasItemsSpecification();
+        
+        return new OrderStatistics
+        {
+            IsLargeOrder = order.SatisfiesSpecification(largeOrderSpec),
+            HasItems = order.SatisfiesSpecification(hasItemsSpec),
+            TotalItems = OrderBusinessRules.Analytics.CalculateTotalItemsCount(order.OrderItems)
+        };
+    }
+}
+```
 
 ---
 
@@ -482,28 +739,335 @@ public class ProductCreatedEventHandler : INotificationHandler<ProductCreated>
 }
 ```
 
-### **3. Specification Pattern**
+### **3. Specification Pattern - Business Queries & Conditions**
+
+#### **🎯 Specification Implementation**
 
 ```csharp
-// Domain Specifications (Extendable)
-public static class ProductSpecifications  
+// OrderSpecifications.cs - Modern Specification Pattern
+public class IsLargeOrderSpecification : IOrderSpecification
 {
-    public static Expression<Func<Product, bool>> ByCategory(long categoryId) =>
-        product => product.Category != null && product.Category.Id == categoryId;
-        
-    public static Expression<Func<Product, bool>> WithOrderItems() =>
-        product => product.OrderItems.Any();
-        
-    public static Expression<Func<Product, bool>> CanBeDeleted() =>
-        product => !product.OrderItems.Any();
+    private readonly int _threshold;
+    
+    public IsLargeOrderSpecification(int threshold = 50)
+    {
+        if (threshold <= 0)
+            throw OrderError.InvalidThreshold(threshold);
+        _threshold = threshold;
+    }
+    
+    public bool IsSatisfiedBy(Order order)
+    {
+        var totalItems = order.OrderItems.Sum(oi => oi.Quantity);
+        return totalItems >= _threshold;
+    }
 }
 
-// Usage in Repository
-public async Task<IEnumerable<Product>> GetDeletableProducts()
+// ProductSpecifications.cs
+public class IsPopularProductSpecification : IProductSpecification
 {
-    return await _dbContext.Products
-        .Where(ProductSpecifications.CanBeDeleted())
+    private readonly int _orderThreshold;
+    
+    public IsPopularProductSpecification(int orderThreshold = 10)
+    {
+        _orderThreshold = orderThreshold;
+    }
+    
+    public bool IsSatisfiedBy(Product product)
+    {
+        return product.OrderItems.Count >= _orderThreshold;
+    }
+}
+
+// CategorySpecifications.cs
+public class HasActiveProductsSpecification : ICategorySpecification
+{
+    public bool IsSatisfiedBy(Category category)
+    {
+        return category.Products.Any(p => p.OrderItems.Any());
+    }
+}
+```
+
+#### **🚀 Specification Usage Examples**
+
+##### **1. Single Specification Usage**
+```csharp
+// Check if order is large
+var largeOrderSpec = new IsLargeOrderSpecification(100);
+bool isLarge = order.SatisfiesSpecification(largeOrderSpec);
+
+// Check if product is popular
+var popularSpec = new IsPopularProductSpecification(20);
+bool isPopular = product.SatisfiesSpecification(popularSpec);
+
+// Check if category has active products
+var activeSpec = new HasActiveProductsSpecification();
+bool hasActive = category.SatisfiesSpecification(activeSpec);
+```
+
+##### **2. Composite Specifications - Business Rules**
+```csharp
+// Complex business rule: VIP customers with large orders
+var vipLargeOrderSpec = new CustomerNamePatternSpecification("VIP")
+    .And(new IsLargeOrderSpecification(50))
+    .And(new HasItemsSpecification());
+
+bool qualifiesForPremium = order.SatisfiesSpecification(vipLargeOrderSpec);
+
+// Product eligibility for promotion
+var promotionEligibleSpec = new IsPopularProductSpecification(15)
+    .And(new IsInCategorySpecification())
+    .And(new HasProductDetailSpecification());
+
+bool canBePromoted = product.SatisfiesSpecification(promotionEligibleSpec);
+```
+
+##### **3. Business Logic Integration**
+```csharp
+public class DiscountService
+{
+    public decimal CalculateDiscount(Order order)
+    {
+        // Business rule matrix using specifications
+        var largeOrderSpec = new IsLargeOrderSpecification(100);
+        var vipCustomerSpec = new CustomerNamePatternSpecification("VIP");
+        var hasItemsSpec = new HasItemsSpecification();
+        
+        // VIP + Large Order = 25% discount
+        if (order.SatisfiesSpecification(vipCustomerSpec.And(largeOrderSpec)))
+            return 0.25m;
+            
+        // Large Order = 15% discount
+        if (order.SatisfiesSpecification(largeOrderSpec))
+            return 0.15m;
+            
+        // VIP Customer = 10% discount
+        if (order.SatisfiesSpecification(vipCustomerSpec))
+            return 0.10m;
+            
+        // Has Items = 5% discount
+        if (order.SatisfiesSpecification(hasItemsSpec))
+            return 0.05m;
+            
+        return 0m; // No discount
+    }
+}
+```
+
+##### **4. Repository Pattern Integration**
+```csharp
+// Repository với Specification support
+public class OrderRepository : IOrderRepository
+{
+    public async Task<List<Order>> FindBySpecificationAsync(IOrderSpecification specification)
+    {
+        var orders = await _context.Orders
+            .Include(o => o.OrderItems)
+            .ToListAsync();
+            
+        return orders.Where(order => specification.IsSatisfiedBy(order)).ToList();
+    }
+    
+    // Specific business queries
+    public async Task<List<Order>> FindLargeOrdersAsync(int threshold = 50)
+    {
+        var spec = new IsLargeOrderSpecification(threshold);
+        return await FindBySpecificationAsync(spec);
+    }
+    
+    public async Task<List<Order>> FindVipLargeOrdersAsync()
+    {
+        var spec = new CustomerNamePatternSpecification("VIP")
+            .And(new IsLargeOrderSpecification(50));
+        return await FindBySpecificationAsync(spec);
+    }
+}
+```
+
+##### **5. Application Layer Usage**
+```csharp
+public class ProcessOrderHandler : IRequestHandler<ProcessOrderCommand>
+{
+    public async Task Handle(ProcessOrderCommand request)
+    {
+        var order = await _repository.GetByIdAsync(request.OrderId);
+        
+        // Business validation using specifications
+        var validationSpecs = new List<IOrderSpecification>
+        {
+            new HasItemsSpecification(),
+            new IsLargeOrderSpecification(1).Not(), // Not too large for auto-processing
+            new CustomerNamePatternSpecification("BLOCKED").Not() // Not blocked customer
+        };
+        
+        foreach (var spec in validationSpecs)
+        {
+            if (!order.SatisfiesSpecification(spec))
+            {
+                throw new BusinessException($"Order validation failed: {spec.GetType().Name}");
+            }
+        }
+        
+        // Business routing using specifications
+        var prioritySpec = new CustomerNamePatternSpecification("VIP")
+            .Or(new IsLargeOrderSpecification(100));
+            
+        if (order.SatisfiesSpecification(prioritySpec))
+        {
+            await _priorityQueue.EnqueueAsync(order);
+        }
+        else
+        {
+            await _standardQueue.EnqueueAsync(order);
+        }
+    }
+}
+```
+
+##### **6. Dynamic Filtering**
+```csharp
+public class OrderFilterService
+{
+    public List<Order> FilterOrders(List<Order> orders, OrderFilterCriteria criteria)
+    {
+        IOrderSpecification specification = new AlwaysTrueSpecification();
+        
+        // Dynamic specification building
+        if (criteria.MinItems.HasValue)
+        {
+            specification = specification.And(
+                new IsLargeOrderSpecification(criteria.MinItems.Value));
+        }
+        
+        if (!string.IsNullOrEmpty(criteria.CustomerPattern))
+        {
+            specification = specification.And(
+                new CustomerNamePatternSpecification(criteria.CustomerPattern));
+        }
+        
+        if (criteria.HasItems)
+        {
+            specification = specification.And(new HasItemsSpecification());
+        }
+        
+        return orders.Where(order => specification.IsSatisfiedBy(order)).ToList();
+    }
+}
+
+// Usage
+var criteria = new OrderFilterCriteria 
+{ 
+    MinItems = 50, 
+    CustomerPattern = "Premium",
+    HasItems = true 
+};
+var filteredOrders = filterService.FilterOrders(allOrders, criteria);
+```
+
+#### **📊 Specification Benefits in Practice**
+
+| Scenario | Traditional Approach | Specification Approach | Benefits |
+|----------|---------------------|----------------------|----------|
+| **Business Rules** | Hardcoded in methods | Composable specs | ✅ Flexible |
+| **Filtering** | Multiple if/else | Dynamic composition | ✅ Maintainable |
+| **Testing** | Integration tests | Unit test specs | ✅ Isolated |
+| **Reusability** | Copy-paste logic | Reuse specifications | ✅ DRY |
+
+#### **🔧 Advanced Specification Patterns**
+
+##### **Specification Factory**
+```csharp
+public static class OrderSpecificationFactory
+{
+    public static IOrderSpecification CreatePromotionEligible(PromotionType type)
+    {
+        return type switch
+        {
+            PromotionType.VipDiscount => 
+                new CustomerNamePatternSpecification("VIP")
+                    .And(new HasItemsSpecification()),
+                    
+            PromotionType.BulkDiscount => 
+                new IsLargeOrderSpecification(100),
+                
+            PromotionType.NewCustomer => 
+                new CustomerNamePatternSpecification("NEW")
+                    .And(new HasItemsSpecification()),
+                    
+            _ => throw new ArgumentException($"Unknown promotion type: {type}")
+        };
+    }
+}
+```
+
+##### **Specification Chain**
+```csharp
+public class OrderProcessingPipeline
+{
+    private readonly List<IOrderSpecification> _validationSpecs;
+    
+    public OrderProcessingPipeline()
+    {
+        _validationSpecs = new List<IOrderSpecification>
+        {
+            new HasItemsSpecification(),
+            new CustomerNamePatternSpecification("SUSPENDED").Not(),
+            new IsLargeOrderSpecification(1000).Not() // Max limit
+        };
+    }
+    
+    public bool CanProcess(Order order)
+    {
+        return _validationSpecs.All(spec => order.SatisfiesSpecification(spec));
+    }
+}
+```
+
+#### **🎯 Specification Best Practices**
+
+##### **When to Use Specifications**
+- ✅ **Complex business queries** với multiple conditions
+- ✅ **Reusable business rules** across different contexts  
+- ✅ **Dynamic filtering** requirements
+- ✅ **Composable business logic** cần flexibility
+- ✅ **Policy-based validation** và authorization
+
+##### **When NOT to Use Specifications**
+- ❌ **Simple property checks** (use direct properties)
+- ❌ **Database-specific queries** (use repository methods)
+- ❌ **One-time business rules** (use direct validation)
+- ❌ **Performance-critical paths** (consider caching)
+
+##### **Naming Conventions**
+```csharp
+// Good naming - descriptive business intent
+IsLargeOrderSpecification
+HasActiveProductsSpecification
+CustomerNamePatternSpecification
+
+// Bad naming - technical focus
+OrderItemCountSpecification
+ProductListCheckerSpecification
+StringContainsSpecification
+```
+
+##### **Performance Considerations**
+```csharp
+// ✅ Good: Repository-level filtering
+public async Task<List<Order>> FindLargeOrdersAsync()
+{
+    // Filter in database when possible
+    return await _context.Orders
+        .Where(o => o.OrderItems.Sum(oi => oi.Quantity) >= 50)
         .ToListAsync();
+}
+
+// ⚠️ Caution: In-memory filtering for complex logic
+public List<Order> FilterByComplexRules(List<Order> orders)
+{
+    var spec = new ComplexBusinessRuleSpecification();
+    return orders.Where(o => spec.IsSatisfiedBy(o)).ToList(); // Use for small datasets
 }
 ```
 
@@ -543,13 +1107,17 @@ public async Task<IEnumerable<Product>> GetDeletableProducts()
 | Pattern | Implementation Location | Purpose |
 |---------|------------------------|---------|
 | **Repository** | `Generate.Domain/Repositories/` | Data access abstraction |
-| **Factory Method** | `Category.Create()`, `Product.Create()` | Object creation |
-| **Specification** | `ProductError.cs`, Domain methods | Business rules |
+| **Factory Method** | `Category.Create()`, `Product.Create()`, `Order.Create()` | Object creation |
+| **Specification** | `*Specifications.cs` classes | Business queries & conditions |
+| **Business Rules** | `*BusinessRules.cs` classes | Complex business operations |
+| **Validation Rules** | `*ValidationRules.cs` classes | Input validation logic |
+| **Error Factory** | `*Error.cs` classes | Centralized exception handling |
 | **Command Pattern** | `Generate.Application/Features/*/Commands/` | Use case encapsulation |
 | **Query Object** | `Generate.Application/Features/*/Queries/` | Data retrieval |
 | **Mediator** | MediatR integration | Decoupling components |
 | **Strategy** | Policy classes | Algorithm encapsulation |
 | **Observer** | Domain Events + Event Handlers | Loose coupling |
+| **Domain Service** | `OrderDomainService.cs` | Cross-aggregate operations |
 
 ---
 
