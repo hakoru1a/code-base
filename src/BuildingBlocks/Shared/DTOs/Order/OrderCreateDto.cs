@@ -9,9 +9,12 @@ namespace Shared.DTOs.Order;
 public class OrderCreateDto : BaseCreateDto
 {
     [Required(ErrorMessage = "Customer name is required")]
-    [StringLength(200, MinimumLength = 2, ErrorMessage = "Customer name must be between 2 and 200 characters")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "Customer name must be between 2 and 100 characters")]
     public string CustomerName { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Initial order items (optional - can be added later)
+    /// </summary>
     public List<OrderItemCreateDto> OrderItems { get; set; } = new List<OrderItemCreateDto>();
 }
 

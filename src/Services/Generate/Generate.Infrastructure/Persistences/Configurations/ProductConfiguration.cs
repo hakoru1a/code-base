@@ -1,4 +1,5 @@
-using Generate.Domain.Entities;
+using Generate.Domain.Entities.Products;
+using Generate.Domain.Entities.Products.ValueObject;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -6,10 +7,13 @@ namespace Generate.Infrastructure.Persistences.Configurations
 {
     public class ProductConfiguration : IEntityTypeConfiguration<Product>
     {
+        private readonly string TableName = "PRODUCT";
+        private readonly string ProductIdColumn = "PRODUCT_ID";
+        private readonly string CategoryIdColumn = "CATEGORY_ID";
         public void Configure(EntityTypeBuilder<Product> builder)
         {
             // Table name
-            builder.ToTable("PRODUCT");
+            builder.ToTable(TableName);
 
             // Primary key
             builder.HasKey(p => p.Id);
@@ -19,31 +23,31 @@ namespace Generate.Infrastructure.Persistences.Configurations
                 .IsRequired()
                 .HasMaxLength(100);
 
-            builder.Property(p => p.CategoryId)
-                .IsRequired(false);
+            // Configure shadow property for CategoryId (not in domain model)
+            builder.Property<long?>(CategoryIdColumn).IsRequired(false);
 
             // Relationships
-            // One-to-Many with Category
+            // One-to-Many with Category using shadow property
             builder.HasOne(p => p.Category)
                 .WithMany(c => c.Products)
-                .HasForeignKey(p => p.CategoryId)
+                .HasForeignKey(CategoryIdColumn)
                 .OnDelete(DeleteBehavior.SetNull);
 
             // One-to-One with ProductDetail
             builder.HasOne(p => p.ProductDetail)
                 .WithOne(pd => pd.Product)
-                .HasForeignKey<ProductDetail>(pd => pd.ProductId)
+                .HasForeignKey<ProductDetail>(ProductIdColumn)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // One-to-Many with OrderItems
             builder.HasMany(p => p.OrderItems)
                 .WithOne(oi => oi.Product)
-                .HasForeignKey(oi => oi.ProductId)
+                .HasForeignKey(ProductIdColumn)
                 .OnDelete(DeleteBehavior.Restrict); // Prevent deletion if product is in orders
 
             // Indexes
             builder.HasIndex(p => p.Name);
-            builder.HasIndex(p => p.CategoryId);
+            builder.HasIndex(CategoryIdColumn);
 
             builder.MapAuditColumns();
         }

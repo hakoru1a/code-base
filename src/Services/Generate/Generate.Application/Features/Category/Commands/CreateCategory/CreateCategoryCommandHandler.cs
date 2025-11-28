@@ -1,4 +1,5 @@
-﻿using Generate.Infrastructure.Interfaces;
+﻿using Generate.Domain.Repositories;
+using Generate.Domain.Entities.Categories;
 using MediatR;
 
 namespace Generate.Application.Features.Category.Commands.CreateCategory
@@ -14,10 +15,8 @@ namespace Generate.Application.Features.Category.Commands.CreateCategory
 
         public async Task<long> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
         {
-            var category = new Domain.Entities.Category
-            {
-                Name = request.Name
-            };
+            // Use DDD factory method
+            var category = Domain.Entities.Categories.Category.Create(request.Name);
 
             var result = await _categoryRepository.CreateAsync(category);
             await _categoryRepository.SaveChangesAsync();

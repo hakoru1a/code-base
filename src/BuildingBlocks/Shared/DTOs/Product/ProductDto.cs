@@ -1,14 +1,31 @@
+using Shared.DTOs;
+
 namespace Shared.DTOs.Product;
 
-public class ProductDto
+/// <summary>
+/// DTO for Product response - follows DDD entity structure
+/// </summary>
+public class ProductDto : BaseResponseDto<long>
 {
-    public long Id { get; set; }
     public string Name { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public decimal Price { get; set; }
-    public int Stock { get; set; }
-    public string SKU { get; set; } = string.Empty;
-    public DateTimeOffset CreatedDate { get; set; }
-    public DateTimeOffset? LastModifiedDate { get; set; }
+    
+    /// <summary>
+    /// Category information
+    /// </summary>
+    public long? CategoryId { get; set; }
+    public string? CategoryName { get; set; }
+    
+    /// <summary>
+    /// Product detail information
+    /// </summary>
+    public ProductDetailDto? ProductDetail { get; set; }
+    
+    /// <summary>
+    /// Business properties
+    /// </summary>
+    public bool IsInCategory { get; set; }
+    public int OrderItemsCount { get; set; }
+    public decimal TotalOrderedQuantity { get; set; }
+    public bool CanBeDeleted { get; set; }
 }
 

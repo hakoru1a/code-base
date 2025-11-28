@@ -1,6 +1,6 @@
 using Mapster;
 using Shared.DTOs.Product;
-using Generate.Infrastructure.Interfaces;
+using Generate.Domain.Repositories;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
@@ -27,7 +27,7 @@ namespace Generate.Application.Features.Product.Queries.GetProducts
 
         public async Task<List<ProductResponseDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
         {
-            IQueryable<Generate.Domain.Entities.Product> query = _productRepository.FindAll().Include(p => p.Category);
+            IQueryable<Generate.Domain.Entities.Products.Product> query = _productRepository.FindAll().Include(p => p.Category);
 
             // Apply filter context from PRODUCT:VIEW policy
             var filterContext = _httpContextAccessor.HttpContext?.GetProductFilterContext();
@@ -48,8 +48,8 @@ namespace Generate.Application.Features.Product.Queries.GetProducts
         /// <param name="query">Product query</param>
         /// <param name="filterContext">Filter context from policy evaluation</param>
         /// <returns>Filtered query</returns>
-        private IQueryable<Generate.Domain.Entities.Product> ApplyPolicyFilters(
-            IQueryable<Generate.Domain.Entities.Product> query, 
+        private IQueryable<Generate.Domain.Entities.Products.Product> ApplyPolicyFilters(
+            IQueryable<Generate.Domain.Entities.Products.Product> query,
             ProductFilterContext filterContext)
         {
             // Admin/Manager can view all products - bypass all filters
@@ -62,10 +62,10 @@ namespace Generate.Application.Features.Product.Queries.GetProducts
             // Apply category restrictions based on permissions
             if (filterContext.AllowedCategories?.Any() == true)
             {
-                _logger?.LogDebug("Applying category filter: {Categories}", 
+                _logger?.LogDebug("Applying category filter: {Categories}",
                     string.Join(", ", filterContext.AllowedCategories));
-                    
-                query = query.Where(p => p.Category != null && 
+
+                query = query.Where(p => p.Category != null &&
                     filterContext.AllowedCategories.Contains(p.Category.Name));
             }
 

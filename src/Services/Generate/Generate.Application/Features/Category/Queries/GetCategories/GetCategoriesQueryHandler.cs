@@ -1,5 +1,5 @@
 using Shared.DTOs.Category;
-using Generate.Infrastructure.Interfaces;
+using Generate.Domain.Repositories;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Mapster;

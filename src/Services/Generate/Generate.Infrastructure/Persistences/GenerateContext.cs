@@ -1,7 +1,11 @@
 ﻿using Contracts.Common.Events;
 using Contracts.Common.Interface;
 using Contracts.Domain.Interface;
-using Generate.Domain.Entities;
+using Generate.Domain.Entities.Categories;
+using Generate.Domain.Entities.Products;
+using Generate.Domain.Entities.Products.ValueObject;
+using Generate.Domain.Entities.Orders;
+using Generate.Domain.Entities.Orders.ValueObject;
 using Infrastructure.Extensions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;

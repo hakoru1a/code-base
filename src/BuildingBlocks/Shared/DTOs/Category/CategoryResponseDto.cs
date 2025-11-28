@@ -9,7 +9,14 @@ public class CategoryResponseDto : BaseResponseDto<long>
 {
     public string Name { get; set; } = string.Empty;
 
-    // Add any additional properties specific to Category response
-    // public int ProductCount { get; set; }
+    /// <summary>
+    /// Number of products in this category
+    /// </summary>
+    public int ProductCount { get; set; }
+
+    /// <summary>
+    /// Indicates if this category can be deleted (no products)
+    /// </summary>
+    public bool CanBeDeleted { get; set; }
 }
 

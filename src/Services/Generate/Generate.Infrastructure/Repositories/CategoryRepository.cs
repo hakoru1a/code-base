@@ -1,20 +1,26 @@
 ﻿using Contracts.Common.Interface;
-using Generate.Domain.Entities;
-using Generate.Infrastructure.Interfaces;
+using Generate.Domain.Entities.Categories;
+using Generate.Domain.Repositories;
 using Generate.Infrastructure.Persistences;
 using Infrastructure.Common.Repository;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Generate.Infrastructure.Repositories
 {
+    /// <summary>
+    /// Infrastructure implementation of Category repository
+    /// Implements Domain contract while handling persistence concerns
+    /// </summary>
     public class CategoryRepository : RepositoryBaseAsync<Category, long, GenerateContext>, ICategoryRepository
     {
         public CategoryRepository(GenerateContext dbContext, IUnitOfWork<GenerateContext> unitOfWork) : base(dbContext, unitOfWork)
         {
         }
+
+        // Domain-specific methods can be implemented here
+        // For example:
+        // public async Task<IEnumerable<Category>> GetCategoriesWithProductsAsync()
+        // {
+        //     return await FindAll().Include(c => c.Products).ToListAsync();
+        // }
     }
 }

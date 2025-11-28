@@ -1,6 +1,6 @@
 ﻿using Generate.Infrastructure.Persistences;
 using Generate.Infrastructure.Repositories;
-using Generate.Infrastructure.Interfaces;
+using Generate.Domain.Repositories;
 using Infrastructure.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +14,7 @@ namespace Generate.Infrastructure
             // Add common infrastructure (Database + Redis)
             services.AddCommonInfrastructure<GenerateContext>(configuration);
 
-            // Register service-specific repositories
+            // Register service-specific repositories using Domain interfaces
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<IOrderRepository, OrderRepository>();

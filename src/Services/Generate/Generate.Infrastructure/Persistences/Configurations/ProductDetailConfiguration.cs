@@ -1,31 +1,38 @@
-using Generate.Domain.Entities;
+using Generate.Domain.Entities.Products.ValueObject;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Data;
 
 namespace Generate.Infrastructure.Persistences.Configurations
 {
     public class ProductDetailConfiguration : IEntityTypeConfiguration<ProductDetail>
     {
+        private readonly string TableName = "PRODUCT_DETAIL";
+        private readonly string ProductIdColumn = "PRODUCT_ID";
+        private readonly string DescriptionColumn = "DESCRIPTION";
         public void Configure(EntityTypeBuilder<ProductDetail> builder)
         {
             // Table name
-            builder.ToTable("PRODUCT_DETAIL");
+            builder.ToTable(TableName);
 
-            // Primary key - ProductId is the primary key (not a separate Id)
-            builder.HasKey(pd => pd.ProductId);
-
-            // Properties
-            builder.Property(pd => pd.ProductId)
+            // Configure shadow property for ProductId as primary key
+            builder.Property<long>(ProductIdColumn)
+                .HasColumnName(ProductIdColumn)
                 .IsRequired();
 
+            // Primary key is ProductId (shadow property)
+            builder.HasKey(ProductIdColumn);
+
+            // Properties
             builder.Property(pd => pd.Description)
-                .HasColumnType("TEXT");
+                .HasColumnName(DescriptionColumn)
+                .HasColumnType(SqlDbType.Text.ToString());
 
             // Relationships
-            // One-to-One with Product
+            // One-to-One with Product using ProductId shadow property
             builder.HasOne(pd => pd.Product)
                 .WithOne(p => p.ProductDetail)
-                .HasForeignKey<ProductDetail>(pd => pd.ProductId)
+                .HasForeignKey<ProductDetail>(ProductIdColumn)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.MapAuditColumns();

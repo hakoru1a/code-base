@@ -9,9 +9,17 @@ namespace Shared.DTOs.Product;
 public class ProductCreateDto : BaseCreateDto
 {
     [Required(ErrorMessage = "Product name is required")]
-    [StringLength(200, MinimumLength = 2, ErrorMessage = "Product name must be between 2 and 200 characters")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "Product name must be between 2 and 100 characters")]
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Optional category ID to assign product to
+    /// </summary>
     public long? CategoryId { get; set; }
+
+    /// <summary>
+    /// Optional product detail information
+    /// </summary>
+    public ProductDetailDto? ProductDetail { get; set; }
 }
 

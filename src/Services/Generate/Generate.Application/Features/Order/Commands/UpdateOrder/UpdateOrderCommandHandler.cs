@@ -1,5 +1,4 @@
-using Generate.Domain.Entities;
-using Generate.Infrastructure.Interfaces;
+using Generate.Domain.Repositories;
 using MediatR;
 
 namespace Generate.Application.Features.Order.Commands.UpdateOrder
@@ -7,10 +6,12 @@ namespace Generate.Application.Features.Order.Commands.UpdateOrder
     public class UpdateOrderCommandHandler : IRequestHandler<UpdateOrderCommand, bool>
     {
         private readonly IOrderRepository _orderRepository;
+        private readonly IProductRepository _productRepository;
 
-        public UpdateOrderCommandHandler(IOrderRepository orderRepository)
+        public UpdateOrderCommandHandler(IOrderRepository orderRepository, IProductRepository productRepository)
         {
             _orderRepository = orderRepository;
+            _productRepository = productRepository;
         }
 
         public async Task<bool> Handle(UpdateOrderCommand request, CancellationToken cancellationToken)
@@ -20,13 +21,24 @@ namespace Generate.Application.Features.Order.Commands.UpdateOrder
             if (order == null)
                 return false;
 
-            order.CustomerName = request.CustomerName;
-            order.OrderItems = request.OrderItems.Select(item => new OrderItem
+            // Use business method for customer name update
+            order.UpdateCustomerName(request.CustomerName);
+
+            // Handle order items using business methods
+            // Clear existing items and add new ones
+            order.ClearOrderItems();
+
+            if (request.OrderItems?.Any() == true)
             {
-                OrderId = order.Id,
-                ProductId = item.ProductId,
-                Quantity = item.Quantity
-            }).ToList();
+                foreach (var item in request.OrderItems)
+                {
+                    var product = await _productRepository.GetByIdAsync(item.ProductId);
+                    if (product != null)
+                    {
+                        order.AddOrderItem(product, item.Quantity);
+                    }
+                }
+            }
 
             await _orderRepository.UpdateAsync(order);
             await _orderRepository.SaveChangesAsync();
@@ -35,4 +47,3 @@ namespace Generate.Application.Features.Order.Commands.UpdateOrder
         }
     }
 }
-

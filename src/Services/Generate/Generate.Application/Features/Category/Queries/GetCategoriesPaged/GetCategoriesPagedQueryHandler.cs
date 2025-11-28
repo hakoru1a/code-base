@@ -1,6 +1,6 @@
 using Mapster;
 using Shared.DTOs.Category;
-using Generate.Infrastructure.Interfaces;
+using Generate.Domain.Repositories;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Shared.SeedWork;
@@ -64,8 +64,8 @@ namespace Generate.Application.Features.Category.Queries.GetCategoriesPaged
                 filter.PageSize);
         }
 
-        private IQueryable<Generate.Domain.Entities.Category> ApplySorting(
-            IQueryable<Generate.Domain.Entities.Category> query,
+        private IQueryable<Generate.Domain.Entities.Categories.Category> ApplySorting(
+            IQueryable<Generate.Domain.Entities.Categories.Category> query,
             string orderBy,
             string orderByDirection)
         {

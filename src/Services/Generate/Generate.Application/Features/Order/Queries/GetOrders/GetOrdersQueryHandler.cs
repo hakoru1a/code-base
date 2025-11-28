@@ -1,6 +1,6 @@
 using Mapster;
 using Shared.DTOs.Order;
-using Generate.Infrastructure.Interfaces;
+using Generate.Domain.Repositories;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 

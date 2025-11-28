@@ -1,4 +1,4 @@
-using Generate.Infrastructure.Interfaces;
+using Generate.Domain.Repositories;
 using MediatR;
 
 namespace Generate.Application.Features.Category.Commands.UpdateCategory
@@ -19,7 +19,7 @@ namespace Generate.Application.Features.Category.Commands.UpdateCategory
             if (category == null)
                 return false;
 
-            category.Name = request.Name;
+            category.UpdateName(request.Name);
 
             await _categoryRepository.UpdateAsync(category);
             await _categoryRepository.SaveChangesAsync();

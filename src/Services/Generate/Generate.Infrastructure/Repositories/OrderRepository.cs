@@ -1,20 +1,26 @@
 ﻿using Contracts.Common.Interface;
-using Generate.Domain.Entities;
-using Generate.Infrastructure.Interfaces;   
+using Generate.Domain.Entities.Orders;
+using Generate.Domain.Repositories;
 using Generate.Infrastructure.Persistences;
 using Infrastructure.Common.Repository;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Generate.Infrastructure.Repositories
 {
-    internal class OrderRepository : RepositoryBaseAsync<Order, long, GenerateContext>, IOrderRepository
+    /// <summary>
+    /// Infrastructure implementation of Order repository
+    /// Implements Domain contract while handling persistence concerns
+    /// </summary>
+    public class OrderRepository : RepositoryBaseAsync<Order, long, GenerateContext>, IOrderRepository
     {
         public OrderRepository(GenerateContext dbContext, IUnitOfWork<GenerateContext> unitOfWork) : base(dbContext, unitOfWork)
         {
         }
+
+        // Domain-specific methods can be implemented here
+        // For example:
+        // public async Task<IEnumerable<Order>> GetOrdersByCustomerAsync(string customerName)
+        // {
+        //     return await FindAll(o => o.CustomerName == customerName).ToListAsync();
+        // }
     }
 }
