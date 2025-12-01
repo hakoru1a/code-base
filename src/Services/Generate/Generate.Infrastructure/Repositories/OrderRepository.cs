@@ -1,6 +1,5 @@
 ﻿using Contracts.Common.Interface;
-using Generate.Domain.Entities.Orders;
-using Generate.Domain.Repositories;
+using Generate.Domain.Orders;
 using Generate.Infrastructure.Persistences;
 using Infrastructure.Common.Repository;
 

@@ -1,10 +1,10 @@
 using Asp.Versioning;
 using Shared.DTOs.Order;
-using Generate.Application.Features.Order.Commands.CreateOrder;
-using Generate.Application.Features.Order.Commands.DeleteOrder;
-using Generate.Application.Features.Order.Commands.UpdateOrder;
-using Generate.Application.Features.Order.Queries.GetOrderById;
-using Generate.Application.Features.Order.Queries.GetOrders;
+using Generate.Application.Features.Orders.Commands.CreateOrder;
+using Generate.Application.Features.Orders.Commands.DeleteOrder;
+using Generate.Application.Features.Orders.Commands.UpdateOrder;
+using Generate.Application.Features.Orders.Queries.GetOrderById;
+using Generate.Application.Features.Orders.Queries.GetOrders;
 using Infrastructure.Common;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;

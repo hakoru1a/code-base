@@ -1,0 +1,86 @@
+using Contracts.Domain;
+using Generate.Domain.Products;
+using Generate.Domain.Categories.Rules;
+using Generate.Domain.Categories.Specifications;
+using Contracts.Exceptions;
+using Contracts.Domain.Interface;
+
+namespace Generate.Domain.Categories;
+
+public class Category : EntityAuditBase<long>
+{
+    public string Name { get; private set; } = string.Empty;
+    private readonly List<Product> _products = new();
+    public virtual IReadOnlyList<Product> Products => _products.AsReadOnly();
+
+    private Category() { }
+
+    public Category(string name)
+    {
+        CheckRule(new CategoryNameRequiredRule(name));
+        CheckRule(new CategoryNameLengthRule(name));
+        CheckRule(new CategoryNameFormatRule(name));
+
+        Name = name;
+    }
+
+    public static Category Create(string name)
+    {
+        return new Category(name);
+    }
+
+    public void UpdateName(string name)
+    {
+        CheckRule(new CategoryNameRequiredRule(name));
+        CheckRule(new CategoryNameLengthRule(name));
+        CheckRule(new CategoryNameFormatRule(name));
+
+        Name = name;
+    }
+
+    public void AddProduct(Product product)
+    {
+        CheckRule(new CategoryProductRequiredRule(product));
+        CheckRule(new CategoryProductNotExistsRule(_products, product));
+        CheckRule(new CategoryMaxProductsLimitRule(_products));
+
+        _products.Add(product);
+    }
+
+    public void RemoveProduct(Product product)
+    {
+        CheckRule(new CategoryProductRequiredRule(product));
+        CheckRule(new CategoryProductExistsRule(_products, product));
+
+        var productToRemove = _products.FirstOrDefault(p => p.Id == product.Id);
+        if (productToRemove != null)
+        {
+            _products.Remove(productToRemove);
+        }
+    }
+
+
+    // Business rules and queries - sử dụng Business Rules và Specifications
+    public bool CanBeDeleted()
+    {
+        var rule = new CategoryCanBeDeletedRule(_products);
+        return !rule.IsBroken();
+    }
+
+    public int GetProductCount()
+    {
+        return _products.Count;
+    }
+
+    public bool HasProducts()
+    {
+        return _products.Any();
+    }
+
+    // Sử dụng Specifications cho business queries phức tạp
+    public bool SatisfiesSpecification(CategorySpecifications.ICategorySpecification specification)
+    {
+        return specification.IsSatisfiedBy(this);
+    }
+}
+

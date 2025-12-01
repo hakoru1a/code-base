@@ -1,10 +1,10 @@
 using Asp.Versioning;
 using Shared.DTOs.Product;
-using Generate.Application.Features.Product.Commands.CreateProduct;
-using Generate.Application.Features.Product.Commands.DeleteProduct;
-using Generate.Application.Features.Product.Commands.UpdateProduct;
-using Generate.Application.Features.Product.Queries.GetProductById;
-using Generate.Application.Features.Product.Queries.GetProducts;
+using Generate.Application.Features.Products.Commands.CreateProduct;
+using Generate.Application.Features.Products.Commands.DeleteProduct;
+using Generate.Application.Features.Products.Commands.UpdateProduct;
+using Generate.Application.Features.Products.Queries.GetProductById;
+using Generate.Application.Features.Products.Queries.GetProducts;
 using Infrastructure.Common;
 using Infrastructure.Extensions;
 using MediatR;
@@ -22,7 +22,7 @@ namespace Generate.API.Controllers
     {
         private const string EntityName = "Product";
 
-        public ProductController(IMediator mediator, ILogger<ProductController> logger) 
+        public ProductController(IMediator mediator, ILogger<ProductController> logger)
             : base(mediator, logger)
         {
         }
@@ -47,11 +47,11 @@ namespace Generate.API.Controllers
         public async Task<IActionResult> GetList()
         {
             var query = new GetProductsQuery();
-            
+
             // Policy filter context is automatically applied in the query handler
             // via HttpContext.GetProductFilterContext()
             var result = await HandleGetAllAsync<GetProductsQuery, ProductResponseDto>(query, EntityName);
-            
+
             // Log applied filters for debugging (optional)
             var filterContext = HttpContext.GetProductFilterContext();
             if (filterContext != null)
@@ -59,12 +59,12 @@ namespace Generate.API.Controllers
                 Logger.LogInformation(
                     "Applied product filters for user - MaxPrice: {MaxPrice}, CanViewAll: {CanViewAll}, " +
                     "Department: {Department}, AllowedCategories: [{Categories}]",
-                    filterContext.MaxPrice, 
+                    filterContext.MaxPrice,
                     filterContext.CanViewAll,
                     filterContext.DepartmentFilter,
                     string.Join(", ", filterContext.AllowedCategories ?? new List<string>()));
             }
-            
+
             return result;
         }
 

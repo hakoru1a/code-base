@@ -1,5 +1,4 @@
-using Generate.Domain.Entities.Products;
-using Generate.Domain.Entities.Products.ValueObject;
+using Generate.Domain.Products;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -69,6 +69,90 @@ This project heavily utilizes modern design patterns to ensure it is robust and 
 5.  **Domain-Driven Design (DDD)**: Uses entities and domain events.
 6.  **Event-Driven Architecture**: For both internal and external communication.
 7.  **Factory & Strategy Patterns**: For creating database providers and other services.
+8.  **Business Rules Pattern**: Encapsulates domain validation logic in dedicated rule classes.
+
+---
+
+## 📐 Domain Layer Structure
+
+The Domain layer follows a clean, maintainable structure with clear separation of concerns:
+
+### Domain Entity Structure
+
+```
+Generate.Domain/
+├── {Entity}/
+│   ├── {Entity}.cs              # Main entity class
+│   ├── I{Entity}Repository.cs    # Repository interface
+│   ├── {Entity}Error.cs          # Error factory (optional)
+│   ├── Rules/                     # Business validation rules
+│   │   ├── {Entity}{Property}RequiredRule.cs
+│   │   ├── {Entity}{Property}LengthRule.cs
+│   │   └── ...
+│   ├── Specifications/            # Complex business queries
+│   │   └── {Entity}Specifications.cs
+│   └── Events/                    # Domain events
+│       └── {Entity}{Action}Event.cs
+```
+
+### Business Rules Pattern
+
+The project uses a **Business Rules Pattern** where each validation rule is a separate class implementing `IBusinessRule`:
+
+```csharp
+public interface IBusinessRule
+{
+    bool IsBroken();
+    string Message { get; }
+    string Code { get; }
+}
+```
+
+**Example Rule:**
+```csharp
+public class ProductNameRequiredRule : IBusinessRule
+{
+    private readonly string _name;
+
+    public ProductNameRequiredRule(string name)
+    {
+        _name = name;
+    }
+
+    public bool IsBroken() => string.IsNullOrWhiteSpace(_name);
+    public string Message => "Product name is required.";
+    public string Code => "Product.NameRequired";
+}
+```
+
+**Usage in Entity:**
+```csharp
+public class Product : EntityAuditBase<long>
+{
+    public Product(string name)
+    {
+        CheckRule(new ProductNameRequiredRule(name));
+        CheckRule(new ProductNameLengthRule(name));
+        CheckRule(new ProductNameFormatRule(name));
+        
+        Name = name;
+    }
+}
+```
+
+### Key Features
+
+- **`CheckRule()` Method**: Available in all entities via `EntityBase<T>`, automatically throws `BusinessRuleValidationException` when rules are broken.
+- **Encapsulated Rules**: Each business rule is a separate, testable class.
+- **Error Codes**: Each rule provides a unique error code for programmatic handling (e.g., `"Product.NameRequired"`).
+- **Composable**: Rules can be easily combined and reused.
+- **Clean Entities**: Domain entities focus on business logic, not validation implementation.
+
+### Example Domain Entities
+
+- **Product**: Manages products with name validation, category assignment, and order item tracking.
+- **Order**: Handles customer orders with item management and business constraints.
+- **Category**: Organizes products with validation and product management.
 
 ---
 
@@ -82,6 +166,8 @@ This project heavily utilizes modern design patterns to ensure it is robust and 
 - [x] Redis Caching & MongoDB Support
 - [x] Structured Logging (Serilog + Elasticsearch)
 - [x] Event-Driven core with MediatR & MassTransit
+- [x] Business Rules Pattern with IBusinessRule interface
+- [x] Domain-Driven Design with encapsulated validation rules
 
 ### 📋 Planned
 - [ ] **Health Checks**: Integrated monitoring for all services.

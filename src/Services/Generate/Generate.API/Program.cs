@@ -1,7 +1,7 @@
 using Generate.API.Extensions;
-using Generate.Application.Features.Category.Policies;
-using Generate.Application.Features.Product.Policies;
-using Generate.Application.Features.Order.Policies;
+using Generate.Application.Features.Categories.Policies;
+using Generate.Application.Features.Products.Policies;
+using Generate.Application.Features.Orders.Policies;
 using Generate.Infrastructure;
 using Common.Logging;
 using Infrastructure.Extensions;
@@ -34,7 +34,7 @@ try
 
     // Add Authentication and Authorization
     builder.Services.AddAuthenticationConfiguration(builder.Configuration);
-    
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline

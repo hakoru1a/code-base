@@ -1,11 +1,11 @@
 using Asp.Versioning;
 using Shared.DTOs.Category;
-using Generate.Application.Features.Category.Commands.CreateCategory;
-using Generate.Application.Features.Category.Commands.DeleteCategory;
-using Generate.Application.Features.Category.Commands.UpdateCategory;
-using Generate.Application.Features.Category.Queries.GetCategories;
-using Generate.Application.Features.Category.Queries.GetCategoriesPaged;
-using Generate.Application.Features.Category.Queries.GetCategoryById;
+using Generate.Application.Features.Categories.Commands.CreateCategory;
+using Generate.Application.Features.Categories.Commands.DeleteCategory;
+using Generate.Application.Features.Categories.Commands.UpdateCategory;
+using Generate.Application.Features.Categories.Queries.GetCategories;
+using Generate.Application.Features.Categories.Queries.GetCategoriesPaged;
+using Generate.Application.Features.Categories.Queries.GetCategoryById;
 using Infrastructure.Common;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -23,7 +23,7 @@ namespace Generate.API.Controllers
     {
         private const string EntityName = "Category";
 
-        public CategoryController(IMediator mediator, ILogger<CategoryController> logger) 
+        public CategoryController(IMediator mediator, ILogger<CategoryController> logger)
             : base(mediator, logger)
         {
         }

@@ -1,4 +1,4 @@
-﻿using Generate.Application.Features.Product.Policies;
+﻿using Generate.Application.Features.Products.Policies;
 using Infrastructure.Extensions;
 
 namespace Generate.API.Extensions

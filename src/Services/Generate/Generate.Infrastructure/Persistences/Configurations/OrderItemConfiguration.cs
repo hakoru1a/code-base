@@ -1,4 +1,4 @@
-using Generate.Domain.Entities.Orders.ValueObject;
+using Generate.Domain.Orders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

@@ -2,11 +2,9 @@ using Mapster;
 using Shared.DTOs.Category;
 using Shared.DTOs.Order;
 using Shared.DTOs.Product;
-using Generate.Domain.Entities.Categories;
-using Generate.Domain.Entities.Orders;
-using Generate.Domain.Entities.Orders.ValueObject;
-using Generate.Domain.Entities.Products;
-using Generate.Domain.Entities.Products.ValueObject;
+using Generate.Domain.Categories;
+using Generate.Domain.Orders;
+using Generate.Domain.Products;
 
 namespace Generate.Application.Common.Mappings;
 

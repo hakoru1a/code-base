@@ -1,5 +1,5 @@
 
-using Generate.Domain.Entities.Categories;
+using Generate.Domain.Categories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
