@@ -210,3 +210,4 @@ public static class CategorySpecificationExtensions
         return new CategorySpecifications.Composite.NotSpecification(specification);
     }
 }
+

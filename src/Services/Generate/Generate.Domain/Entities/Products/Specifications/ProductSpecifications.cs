@@ -246,3 +246,4 @@ public static class ProductSpecificationExtensions
         return new ProductSpecifications.Composite.NotSpecification(specification);
     }
 }
+

@@ -41,3 +41,4 @@ public static class CategoryError
     public static BusinessException CircularReferenceDetected()
         => new("Category cannot be its own parent or create circular reference");
 }
+
