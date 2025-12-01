@@ -25,5 +25,22 @@ namespace Contracts.Domain
                 throw new BusinessRuleValidationException(rule);
             }
         }
+
+        /// <summary>
+        /// Checks if this entity satisfies the given specification.
+        /// This method is available to all entities that inherit from EntityBase.
+        /// </summary>
+        /// <typeparam name="TEntity">The concrete entity type (must be the same as or derived from this entity)</typeparam>
+        /// <param name="specification">The specification to check</param>
+        /// <returns>True if the specification is satisfied, false otherwise</returns>
+        public bool SatisfiesSpecification<TEntity>(ISpecification<TEntity> specification) where TEntity : EntityBase<T>
+        {
+            if (this is TEntity entity)
+            {
+                return specification.IsSatisfiedBy(entity);
+            }
+            return false;
+        }
+
     }
 }

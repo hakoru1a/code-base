@@ -18,8 +18,8 @@ Generate service là một implementation của **DDD + Clean Architecture**, tu
 │  ┌─────────────┐    ┌──────────────────┐    ┌────────────────┐  │
 │  │     API     │ ──▶│   Application    │ ──▶│     Domain    │  │
 │  │             │    │                  │    │                │  │
-│  │ Controllers │    │ Commands/Queries │    │ Entities/VOs   │  │
-│  │ Extensions  │    │ Handlers/Policies│    │ Business Logic │  │
+│  │ Controllers │    │ Commands/Queries │    │ Aggregates/    │  │
+│  │ Extensions  │    │ Handlers/Policies│    │ Rules/Specs    │  │
 │  └─────────────┘    └──────────────────┘    └────────────────┘  │
 │         │                     │                       ▲         │
 │         │                     │                       │         │
@@ -43,58 +43,84 @@ Generate service là một implementation của **DDD + Clean Architecture**, tu
 
 ```
 Generate.Domain/
-├── Entities/                           # Domain Aggregates (DDD) + Business Logic Separation
-│   ├── Categories/
-│   │   ├── Category.cs                 # Category Aggregate Root
-│   │   ├── CategoryError.cs            # Business Exception Definitions
-│   │   ├── Rules/                      # Business Logic Separation
-│   │   │   ├── CategoryValidationRules.cs # Validation Logic
-│   │   │   └── CategoryBusinessRules.cs   # Complex Business Operations
-│   │   ├── Specifications/             # Specification Pattern
-│   │   │   └── CategorySpecifications.cs  # Business Queries & Conditions
-│   │   ├── Enums/                      # Category-specific enums
-│   │   └── ValueObject/                # Category Value Objects
-│   ├── Products/
-│   │   ├── Product.cs                  # Product Aggregate Root
-│   │   ├── ProductError.cs             # Business Exception Definitions (existing)
-│   │   ├── Rules/                      # Business Logic Separation
-│   │   │   ├── ProductValidationRules.cs  # Validation Logic
-│   │   │   └── ProductBusinessRules.cs    # Complex Business Operations
-│   │   ├── Specifications/             # Specification Pattern
-│   │   │   └── ProductSpecifications.cs   # Business Queries & Conditions
-│   │   ├── Enums/                      # Product-specific enums
-│   │   └── ValueObject/
-│   │       └── ProductDetail.cs        # Product Detail Value Object
-│   └── Orders/
-│       ├── Order.cs                    # Order Aggregate Root (refactored)
-│       ├── OrderError.cs               # Business Exception Definitions
-│       ├── Rules/                      # Business Logic Separation
-│       │   ├── OrderValidationRules.cs    # Validation Logic
-│       │   └── OrderBusinessRules.cs      # Complex Business Operations
-│       ├── Specifications/             # Specification Pattern
-│       │   └── OrderSpecifications.cs     # Business Queries & Conditions
-│       ├── Enums/                      # Order-specific enums
-│       └── ValueObject/
-│           └── OrderItem.cs            # Order Item Entity
-├── Services/                           # Domain Services
-│   └── OrderDomainService.cs           # Cross-Aggregate Operations
-├── Repositories/                       # Repository Contracts (Interfaces)
-│   ├── ICategoryRepository.cs          # Category Repository Contract
-│   ├── IProductRepository.cs           # Product Repository Contract
-│   └── IOrderRepository.cs             # Order Repository Contract
-└── Generate.Domain.csproj              # Dependencies: ONLY Contracts
+├── Categories/                         # Category Aggregate (Bounded Context)
+│   ├── Category.cs                     # Category Aggregate Root
+│   ├── CategoryError.cs                # Business Exception Definitions
+│   ├── ICategoryRepository.cs          # Repository Contract (Dependency Inversion)
+│   ├── Rules/                          # Business Rules Pattern (IBusinessRule)
+│   │   ├── CategoryCanBeDeletedRule.cs
+│   │   ├── CategoryMaxProductsLimitRule.cs
+│   │   ├── CategoryNotEmptyRule.cs
+│   │   ├── CategoryProductExistsRule.cs
+│   │   ├── CategoryProductNotExistsRule.cs
+│   │   └── CategoryProductRequiredRule.cs
+│   ├── Specifications/                 # Specification Pattern
+│   │   ├── CanBeDeletedSpecification.cs
+│   │   ├── CategoryNamePatternSpecification.cs
+│   │   ├── ContainsProductSpecification.cs
+│   │   ├── HasActiveProductsSpecification.cs
+│   │   ├── HasProductsSpecification.cs
+│   │   ├── IsLargeCategorySpecification.cs
+│   │   └── IsPopularCategorySpecification.cs
+│   └── Events/                         # Domain Events
+├── Products/                           # Product Aggregate (Bounded Context)
+│   ├── Product.cs                      # Product Aggregate Root
+│   ├── ProductError.cs                 # Business Exception Definitions
+│   ├── ProductDetail.cs                # Product Detail Value Object
+│   ├── IProductRepository.cs           # Repository Contract
+│   ├── Rules/                          # Business Rules Pattern
+│   │   ├── ProductCanBeDeletedRule.cs
+│   │   ├── ProductCategoryRequiredRule.cs
+│   │   ├── ProductDetailNotExistsRule.cs
+│   │   ├── ProductOrderItemExistsRule.cs
+│   │   ├── ProductOrderItemNotExistsRule.cs
+│   │   ├── ProductOrderItemRequiredRule.cs
+│   │   └── ProductPriceMustBePositiveRule.cs
+│   ├── Specifications/                 # Specification Pattern
+│   │   ├── BelongsToCategorySpecification.cs
+│   │   ├── CanBeDeletedSpecification.cs
+│   │   ├── HasOrderItemsSpecification.cs
+│   │   ├── HasOrdersInDateRangeSpecification.cs
+│   │   ├── HasProductDetailSpecification.cs
+│   │   ├── IsHighVolumeProductSpecification.cs
+│   │   ├── IsInCategorySpecification.cs
+│   │   ├── IsPopularProductSpecification.cs
+│   │   └── ProductNamePatternSpecification.cs
+│   └── Events/                         # Domain Events
+└── Orders/                             # Order Aggregate (Bounded Context)
+    ├── Order.cs                        # Order Aggregate Root
+    ├── OrderError.cs                   # Business Exception Definitions
+    ├── OrderErrors.cs                  # Additional Error Definitions
+    ├── OrderItem.cs                    # Order Item Entity
+    ├── IOrderRepository.cs             # Repository Contract
+    ├── Rules/                          # Business Rules Pattern
+    │   ├── OrderCanBeDeletedRule.cs
+    │   ├── OrderMaxItemsLimitRule.cs
+    │   ├── OrderNotEmptyRule.cs
+    │   ├── OrderProductExistsRule.cs
+    │   ├── OrderProductNotExistsRule.cs
+    │   ├── OrderProductRequiredRule.cs
+    │   ├── OrderQuantityValidRule.cs
+    │   └── OrderThresholdValidRule.cs
+    ├── Specifications/                 # Specification Pattern
+    │   ├── CanBeDeletedSpecification.cs
+    │   ├── ContainsProductSpecification.cs
+    │   ├── CustomerNamePatternSpecification.cs
+    │   ├── HasItemsSpecification.cs
+    │   ├── IsLargeOrderSpecification.cs
+    │   └── OrderValueRangeSpecification.cs
+    └── Events/                         # Domain Events
+└── Generate.Domain.csproj             # Dependencies: ONLY Contracts
 ```
 
 **🎯 Tại sao sắp xếp như này?**
 
-- **Aggregates theo Business Context**: Mỗi folder (Categories, Products, Orders) đại diện cho 1 **Bounded Context**
-- **Business Logic Separation**: Tách business logic ra khỏi entities để dễ maintain và test
-- **Repository Interfaces trong Domain**: Tuân thủ **Dependency Inversion Principle** - Domain định nghĩa contract, Infrastructure implement
+- **Aggregates theo Business Context**: Mỗi folder (Categories, Products, Orders) đại diện cho 1 **Bounded Context** - đặt trực tiếp dưới Domain root
+- **Business Rules Pattern**: Sử dụng **IBusinessRule** interface - mỗi rule là một class riêng biệt với `IsBroken()`, `Message`, và `Code` properties
+- **Repository Interfaces trong Aggregate**: Repository contracts đặt trong cùng folder với aggregate (tuân thủ **Dependency Inversion Principle**)
 - **Error Classes**: Centralized business exceptions theo **Domain-Driven Design** (`CategoryError`, `ProductError`, `OrderError`)
-- **Validation Rules**: Business validation logic tách riêng (`*ValidationRules.cs`)
-- **Business Rules**: Complex business operations tách riêng (`*BusinessRules.cs`)
-- **Specifications**: Business queries và conditions sử dụng Specification Pattern (`*Specifications.cs`)
-- **Domain Services**: Cross-aggregate operations (`OrderDomainService.cs`)
+- **Individual Rule Classes**: Mỗi business rule là một class riêng, dễ test và maintain (ví dụ: `CategoryCanBeDeletedRule`, `OrderQuantityValidRule`)
+- **Specifications**: Business queries và conditions sử dụng Specification Pattern (mỗi specification là một class riêng)
 - **Value Objects**: Encapsulate business concepts không có identity (ProductDetail, OrderItem)
 - **Zero Infrastructure Dependencies**: Domain layer hoàn toàn pure, chỉ phụ thuộc Contracts
 
@@ -139,7 +165,7 @@ Generate.Application/
 │   └── Mappings/
 │       └── MapsterConfig.cs            # Object-to-Object Mapping Configuration
 ├── Features/                           # Feature-based Organization (Vertical Slices)
-│   ├── Category/
+│   ├── Categories/                     # Category Feature (Plural naming)
 │   │   ├── Commands/
 │   │   │   ├── CreateCategory/         # Create Category Use Case
 │   │   │   │   ├── CreateCategoryCommand.cs      # Command DTO
@@ -153,12 +179,12 @@ Generate.Application/
 │   │   │   └── GetCategoryById/        # Get Single Category
 │   │   ├── EventHandlers/              # Domain Event Handlers
 │   │   └── Policies/                   # Authorization Policies
-│   ├── Product/                        # Product Feature
+│   ├── Products/                       # Product Feature (Plural naming)
 │   │   ├── Commands/                   # CRUD Commands
 │   │   ├── Queries/                    # Data Queries
 │   │   ├── EventHandlers/              # Event Processing
 │   │   └── Policies/                   # Access Control
-│   └── Order/                          # Order Feature
+│   └── Orders/                         # Order Feature (Plural naming)
 │       ├── Commands/                   # Order Management
 │       ├── Queries/                    # Order Retrieval
 │       ├── EventHandlers/              # Order Events
@@ -212,17 +238,20 @@ Generate.API/
 
 ### **📋 Tổng Quan Pattern**
 
-Để tránh **Fat Domain Models** và tuân thủ **Single Responsibility Principle**, Generate Domain áp dụng Business Logic Separation Pattern:
+Để tránh **Fat Domain Models** và tuân thủ **Single Responsibility Principle**, Generate Domain áp dụng **Business Rules Pattern** (DDD) với **IBusinessRule** interface:
 
 ```
 Entity (Core Data + Basic Operations)
-├── ErrorClass.cs        # Centralized business exceptions
-├── Rules/
-│   ├── ValidationRules.cs   # Input validation logic
-│   └── BusinessRules.cs     # Complex business operations  
-├── Specifications/
-│   └── Specifications.cs    # Business queries & conditions
-└── [Domain Services]        # Cross-aggregate operations
+├── ErrorClass.cs              # Centralized business exceptions
+├── IRepository.cs             # Repository contract (in same folder)
+├── Rules/                     # Business Rules Pattern (IBusinessRule)
+│   ├── EntityCanBeDeletedRule.cs
+│   ├── EntityValidationRule.cs
+│   └── EntityBusinessRule.cs  # Individual rule classes
+├── Specifications/            # Specification Pattern
+│   ├── IsValidSpecification.cs
+│   └── HasPropertySpecification.cs
+└── Events/                    # Domain Events
 ```
 
 ### **🎯 Pattern Benefits**
@@ -235,29 +264,41 @@ public class Order
     // Properties + Validation + Business Logic + Queries = Mixed Concerns ❌
 }
 
-// AFTER: Separated Concerns
-public class Order                      // 113 lines - focused on data + delegation ✅
-public class OrderValidationRules       // Validation logic only ✅  
-public class OrderBusinessRules         # Business operations only ✅
-public class OrderSpecifications        # Query logic only ✅
+// AFTER: Separated Concerns with Business Rules Pattern
+public class Order                      // Focused on data + rule delegation ✅
+public class OrderCanBeDeletedRule     // Single responsibility rule ✅  
+public class OrderQuantityValidRule    // Single responsibility rule ✅
+public class OrderMaxItemsLimitRule    // Single responsibility rule ✅
+public class IsLargeOrderSpecification // Query logic only ✅
 ```
 
 #### **✅ Maintainability & Testability**
 ```csharp
 // Unit test specific business rule
 [Test]
-public void OrderValidationRules_Should_Throw_When_CustomerName_Empty()
+public void OrderQuantityValidRule_Should_BeBroken_When_Quantity_Zero()
 {
-    // Arrange & Act & Assert - focused test ✅
-    Assert.Throws<BusinessException>(() => 
-        OrderValidationRules.CustomerName.ValidateCustomerName(""));
+    // Arrange
+    var rule = new OrderQuantityValidRule(0);
+    
+    // Act & Assert - focused test ✅
+    Assert.True(rule.IsBroken());
+    Assert.Equal("Order.QuantityMustBePositive", rule.Code);
 }
 
 // Unit test business operation
 [Test]  
-public void OrderBusinessRules_Should_Add_Item_When_Valid()
+public void Order_AddOrderItem_Should_CheckRules()
 {
-    // Test complex business logic in isolation ✅
+    // Arrange
+    var order = Order.Create("Customer");
+    var product = Product.Create("Product");
+    
+    // Act - Rules are checked automatically ✅
+    order.AddOrderItem(product, 5);
+    
+    // Assert
+    Assert.Single(order.OrderItems);
 }
 ```
 
@@ -279,50 +320,79 @@ public static class OrderError
 throw OrderError.CustomerNameCannotBeEmpty();
 ```
 
-#### **2. Validation Rules - Input Validation**
+#### **2. Business Rules Pattern - IBusinessRule Interface**
 ```csharp
-// OrderValidationRules.cs
-public static class OrderValidationRules
+// OrderQuantityValidRule.cs
+public class OrderQuantityValidRule : IBusinessRule
 {
-    public static class CustomerName
+    private readonly int _quantity;
+
+    public OrderQuantityValidRule(int quantity)
     {
-        public static void ValidateCustomerName(string customerName)
-        {
-            if (string.IsNullOrWhiteSpace(customerName))
-                throw OrderError.CustomerNameCannotBeEmpty();
-                
-            if (customerName.Length > 100)
-                throw OrderError.CustomerNameTooLong(100);
-        }
+        _quantity = quantity;
     }
+
+    public bool IsBroken() => _quantity <= 0;
+
+    public string Message => "Order quantity must be greater than zero.";
+
+    public string Code => "Order.QuantityMustBePositive";
+}
+
+// OrderCanBeDeletedRule.cs
+public class OrderCanBeDeletedRule : IBusinessRule
+{
+    private readonly List<OrderItem> _orderItems;
+
+    public OrderCanBeDeletedRule(List<OrderItem> orderItems)
+    {
+        _orderItems = orderItems;
+    }
+
+    public bool IsBroken() => _orderItems.Any();
+
+    public string Message => "Cannot delete order that contains items.";
+
+    public string Code => "Order.CannotDeleteWithItems";
+}
+
+// Usage in Entity
+public void AddOrderItem(Product product, int quantity)
+{
+    CheckRule(new OrderProductRequiredRule(product));
+    CheckRule(new OrderQuantityValidRule(quantity));
+    CheckRule(new OrderProductNotExistsRule(_orderItems, product));
+    CheckRule(new OrderMaxItemsLimitRule(_orderItems));
+
+    var orderItem = new OrderItem(this, product, quantity);
+    _orderItems.Add(orderItem);
 }
 ```
 
-#### **3. Business Rules - Complex Operations**
+#### **3. Category Rules Example**
 ```csharp
-// OrderBusinessRules.cs  
-public static class OrderBusinessRules
+// CategoryCanBeDeletedRule.cs
+public class CategoryCanBeDeletedRule : IBusinessRule
 {
-    public static class ItemManagement
+    private readonly List<Product> _products;
+
+    public CategoryCanBeDeletedRule(List<Product> products)
     {
-        public static void AddOrderItem(List<OrderItem> items, Order order, Product product, int quantity)
-        {
-            // 1. Validation
-            OrderValidationRules.OrderItem.ValidateProduct(product);
-            
-            // 2. Business Logic
-            var existingItem = items.FirstOrDefault(oi => ReferenceEquals(oi.Product, product));
-            if (existingItem != null)
-            {
-                existingItem.IncreaseQuantity(quantity);  // Merge logic
-            }
-            else
-            {
-                var orderItem = OrderItem.Create(order, product, quantity);
-                items.Add(orderItem);
-            }
-        }
+        _products = products;
     }
+
+    public bool IsBroken() => _products.Any();
+
+    public string Message => "Cannot delete category that contains products.";
+
+    public string Code => "Category.CannotDeleteWithProducts";
+}
+
+// Usage in Entity
+public void Delete()
+{
+    CheckRule(new CategoryCanBeDeletedRule(_products));
+    // Delete logic...
 }
 ```
 
@@ -369,29 +439,30 @@ public class Order : EntityAuditBase<long>
 }
 ```
 
-#### **After: Separated Architecture**
+#### **After: Business Rules Pattern Architecture**
 ```csharp
-public class Order : EntityAuditBase<long>  // 113 lines - focused ✅
+public class Order : EntityAuditBase<long>  // Focused ✅
 {
-    // ✅ Delegate to specialized classes:
-    public void UpdateCustomerName(string customerName)
-    {
-        OrderValidationRules.CustomerName.ValidateCustomerName(customerName);  // ← Delegate
-        CustomerName = customerName;
-    }
-    
+    // ✅ Use Business Rules Pattern:
     public void AddOrderItem(Product product, int quantity)
     {
-        OrderBusinessRules.ItemManagement.AddOrderItem(_orderItems, this, product, quantity);  // ← Delegate
+        CheckRule(new OrderProductRequiredRule(product));      // ← Rule 1
+        CheckRule(new OrderQuantityValidRule(quantity));        // ← Rule 2
+        CheckRule(new OrderProductNotExistsRule(_orderItems, product));  // ← Rule 3
+        CheckRule(new OrderMaxItemsLimitRule(_orderItems));    // ← Rule 4
+
+        var orderItem = new OrderItem(this, product, quantity);
+        _orderItems.Add(orderItem);
     }
     
-    public bool IsLargeOrder(int threshold = 50)
+    public void Delete()
     {
-        return OrderBusinessRules.Analytics.IsLargeOrder(_orderItems, threshold);  // ← Delegate
+        CheckRule(new OrderCanBeDeletedRule(_orderItems));     // ← Rule check
+        // Delete logic...
     }
     
     // ✅ Specification support
-    public bool SatisfiesSpecification(OrderSpecifications.IOrderSpecification specification)
+    public bool SatisfiesSpecification(IOrderSpecification specification)
     {
         return specification.IsSatisfiedBy(this);
     }
@@ -400,13 +471,14 @@ public class Order : EntityAuditBase<long>  // 113 lines - focused ✅
 
 ### **📊 Comparison Metrics**
 
-| Aspect | Monolithic Entity | Separated Architecture | Improvement |
+| Aspect | Monolithic Entity | Business Rules Pattern | Improvement |
 |--------|------------------|----------------------|-------------|
-| **Lines of Code** | 148 lines | 113 lines | ✅ -24% |
+| **Lines of Code** | 148 lines | ~80 lines | ✅ -46% |
 | **Responsibilities** | 5+ mixed | 1 focused | ✅ SRP compliant |
-| **Testability** | Integration tests | Unit tests | ✅ Isolated testing |
+| **Testability** | Integration tests | Unit test individual rules | ✅ Isolated testing |
 | **Maintainability** | High coupling | Low coupling | ✅ Easy maintenance |
-| **Reusability** | Entity-bound | Standalone classes | ✅ Cross-layer reuse |
+| **Reusability** | Entity-bound | Standalone rule classes | ✅ Cross-layer reuse |
+| **Rule Composition** | Hardcoded | Composable rules | ✅ Flexible |
 
 ### **🚀 Advanced Usage Patterns**
 
@@ -420,21 +492,25 @@ var vipLargeOrderSpec = new CustomerNamePatternSpecification("VIP")
 bool qualifiesForFreeShipping = order.SatisfiesSpecification(vipLargeOrderSpec);
 ```
 
-#### **Domain Service Integration**
+#### **Rule Integration in Application Layer**
 ```csharp
-public class OrderDomainService
+public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, long>
 {
-    public OrderStatistics CalculateOrderStatistics(Order order)
+    public async Task<long> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
-        var largeOrderSpec = new IsLargeOrderSpecification();
-        var hasItemsSpec = new HasItemsSpecification();
+        var order = Order.Create(request.CustomerName);
         
-        return new OrderStatistics
+        foreach (var item in request.Items)
         {
-            IsLargeOrder = order.SatisfiesSpecification(largeOrderSpec),
-            HasItems = order.SatisfiesSpecification(hasItemsSpec),
-            TotalItems = OrderBusinessRules.Analytics.CalculateTotalItemsCount(order.OrderItems)
-        };
+            var product = await _productRepository.GetByIdAsync(item.ProductId);
+            // Rules are automatically checked in AddOrderItem method
+            order.AddOrderItem(product, item.Quantity);
+        }
+        
+        // Additional rule check before saving
+        order.CheckRule(new OrderNotEmptyRule(order.OrderItems));
+        
+        return await _orderRepository.CreateAsync(order);
     }
 }
 ```
@@ -511,10 +587,10 @@ public class ProductDetail : AuditableBase<long>
 }
 ```
 
-### **3. Domain Services & Specifications**
+### **3. Business Rules Pattern & Error Classes**
 
 ```csharp
-// ProductError - Domain Service for Business Rules
+// ProductError - Centralized Business Exceptions
 public static class ProductError
 {
     public static BusinessException NameCannotBeEmpty() 
@@ -522,6 +598,23 @@ public static class ProductError
         
     public static BusinessException CannotDeleteProductWithOrders() 
         => new("Cannot delete product that has existing orders");
+}
+
+// ProductCanBeDeletedRule - Business Rule Implementation
+public class ProductCanBeDeletedRule : IBusinessRule
+{
+    private readonly List<OrderItem> _orderItems;
+
+    public ProductCanBeDeletedRule(List<OrderItem> orderItems)
+    {
+        _orderItems = orderItems;
+    }
+
+    public bool IsBroken() => _orderItems.Any();
+
+    public string Message => "Cannot delete product that has existing orders.";
+
+    public string Code => "Product.CannotDeleteWithOrders";
 }
 ```
 
@@ -1106,18 +1199,16 @@ public List<Order> FilterByComplexRules(List<Order> orders)
 
 | Pattern | Implementation Location | Purpose |
 |---------|------------------------|---------|
-| **Repository** | `Generate.Domain/Repositories/` | Data access abstraction |
+| **Repository** | `Generate.Domain/*/IRepository.cs` | Data access abstraction (in aggregate folder) |
 | **Factory Method** | `Category.Create()`, `Product.Create()`, `Order.Create()` | Object creation |
-| **Specification** | `*Specifications.cs` classes | Business queries & conditions |
-| **Business Rules** | `*BusinessRules.cs` classes | Complex business operations |
-| **Validation Rules** | `*ValidationRules.cs` classes | Input validation logic |
+| **Specification** | `*Specifications/*.cs` classes | Business queries & conditions |
+| **Business Rules** | `Rules/*Rule.cs` classes (IBusinessRule) | Individual business rule validation |
 | **Error Factory** | `*Error.cs` classes | Centralized exception handling |
 | **Command Pattern** | `Generate.Application/Features/*/Commands/` | Use case encapsulation |
 | **Query Object** | `Generate.Application/Features/*/Queries/` | Data retrieval |
 | **Mediator** | MediatR integration | Decoupling components |
 | **Strategy** | Policy classes | Algorithm encapsulation |
 | **Observer** | Domain Events + Event Handlers | Loose coupling |
-| **Domain Service** | `OrderDomainService.cs` | Cross-aggregate operations |
 
 ---
 
@@ -1264,20 +1355,24 @@ public class Patient  // Chỉ có properties
 
 ```
 Generate.Domain/
-├── Entities/
-│   ├── Categories/
-│   │   ├── Category.cs          # Rich domain model + business logic
-│   │   └── ValueObject/         # Encapsulated concepts
-│   ├── Products/  
-│   │   ├── Product.cs           # Aggregate root với behavior
-│   │   ├── ProductError.cs      # Business rules centralized
-│   │   └── ValueObject/
-│   │       └── ProductDetail.cs # Value object với methods
+├── Categories/
+│   ├── Category.cs              # Rich domain model + business logic
+│   ├── CategoryError.cs         # Business exceptions centralized
+│   ├── ICategoryRepository.cs   # Repository contract
+│   ├── Rules/                   # Business Rules Pattern
+│   └── Specifications/          # Specification Pattern
+├── Products/  
+│   ├── Product.cs               # Aggregate root với behavior
+│   ├── ProductError.cs          # Business rules centralized
+│   ├── IProductRepository.cs    # Repository contract
+│   ├── ProductDetail.cs         # Value object với methods
+│   ├── Rules/                   # Business Rules Pattern
+│   └── Specifications/         # Specification Pattern
 ```
 
 **Lợi ích cụ thể**:
 
-#### **1. Rich Domain Models**:
+#### **1. Rich Domain Models với Business Rules Pattern**:
 ```csharp
 public class Product : EntityAuditBase<long>
 {
@@ -1291,12 +1386,16 @@ public class Product : EntityAuditBase<long>
         return new Product(name);
     }
     
-    // Business logic encapsulated
-    public bool CanBeDeleted() => !_orderItems.Any();
+    // Business logic encapsulated với Rules
+    public void Delete()
+    {
+        CheckRule(new ProductCanBeDeletedRule(_orderItems));
+        // Delete logic...
+    }
+    
     public void AddOrderItem(OrderItem item) 
     { 
-        if (_orderItems.Any(x => x.Order.Id == item.Order.Id))
-            throw ProductError.OrderItemAlreadyExists();
+        CheckRule(new ProductOrderItemNotExistsRule(_orderItems, item));
         _orderItems.Add(item);
     }
 }
@@ -1340,6 +1439,13 @@ public void AddReview() { }    // Risk breaking existing functionality
 Timeline: 1 week
 Files changed: New files only
 Risk: Zero (isolated bounded context)
+
+Generate.Domain/Reviews/              # New aggregate
+├── Review.cs
+├── ReviewError.cs
+├── IReviewRepository.cs
+├── Rules/
+└── Specifications/
 
 Generate.Application/Features/Reviews/  # New feature, zero impact
 ├── Commands/CreateReview/
@@ -1446,4 +1552,4 @@ public class ProductResolver
 
 **📖 Last Updated**: November 2024  
 **👥 Architecture Team**: Generate Service Development Team  
-**📄 Version**: 1.0 - Initial Documentation  
+**📄 Version**: 2.0 - Updated Structure (Business Rules Pattern, Flat Domain Structure)  

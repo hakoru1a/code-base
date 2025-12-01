@@ -123,11 +123,5 @@ public class Order : EntityAuditBase<long>
     {
         return _orderItems.Sum(oi => oi.Quantity * oi.Product.ProductDetail?.Price ?? 0);
     }
-
-    // Sử dụng Specifications cho business queries phức tạp
-    public bool SatisfiesSpecification(Contracts.Domain.Interface.ISpecification<Order> specification)
-    {
-        return specification.IsSatisfiedBy(this);
-    }
 }
 

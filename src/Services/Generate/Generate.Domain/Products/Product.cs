@@ -95,11 +95,5 @@ public class Product : EntityAuditBase<long>
     {
         return _orderItems.Any();
     }
-
-    // Sử dụng Specifications cho business queries phức tạp
-    public bool SatisfiesSpecification(Contracts.Domain.Interface.ISpecification<Product> specification)
-    {
-        return specification.IsSatisfiedBy(this);
-    }
 }
 

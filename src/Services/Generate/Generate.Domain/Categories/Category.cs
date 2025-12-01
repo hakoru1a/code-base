@@ -67,11 +67,5 @@ public class Category : EntityAuditBase<long>
     {
         return _products.Any();
     }
-
-    // Sử dụng Specifications cho business queries phức tạp
-    public bool SatisfiesSpecification(Contracts.Domain.Interface.ISpecification<Category> specification)
-    {
-        return specification.IsSatisfiedBy(this);
-    }
 }
 
