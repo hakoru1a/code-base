@@ -2,7 +2,6 @@ using Contracts.Domain;
 using Generate.Domain.Categories;
 using Generate.Domain.Orders;
 using Generate.Domain.Products.Rules;
-using Generate.Domain.Products.Specifications;
 using Contracts.Exceptions;
 using Contracts.Domain.Interface;
 
@@ -21,10 +20,6 @@ public class Product : EntityAuditBase<long>
     // Domain constructor
     public Product(string name, Category? category = null, ProductDetail? productDetail = null)
     {
-        CheckRule(new ProductNameRequiredRule(name));
-        CheckRule(new ProductNameLengthRule(name));
-        CheckRule(new ProductNameFormatRule(name));
-
         Name = name;
         Category = category;
         ProductDetail = productDetail;
@@ -39,10 +34,6 @@ public class Product : EntityAuditBase<long>
     // Business methods
     public void UpdateName(string name)
     {
-        CheckRule(new ProductNameRequiredRule(name));
-        CheckRule(new ProductNameLengthRule(name));
-        CheckRule(new ProductNameFormatRule(name));
-
         Name = name;
     }
 
@@ -106,7 +97,7 @@ public class Product : EntityAuditBase<long>
     }
 
     // Sử dụng Specifications cho business queries phức tạp
-    public bool SatisfiesSpecification(ProductSpecifications.IProductSpecification specification)
+    public bool SatisfiesSpecification(Contracts.Domain.Interface.ISpecification<Product> specification)
     {
         return specification.IsSatisfiedBy(this);
     }

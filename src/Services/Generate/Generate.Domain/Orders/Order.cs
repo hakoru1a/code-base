@@ -1,7 +1,6 @@
 using Contracts.Domain;
 using Generate.Domain.Products;
 using Generate.Domain.Orders.Rules;
-using Generate.Domain.Orders.Specifications;
 using Contracts.Exceptions;
 using Contracts.Domain.Interface;
 
@@ -20,10 +19,6 @@ public class Order : EntityAuditBase<long>
     // Domain constructor
     public Order(string customerName)
     {
-        CheckRule(new OrderCustomerNameRequiredRule(customerName));
-        CheckRule(new OrderCustomerNameLengthRule(customerName));
-        CheckRule(new OrderCustomerNameFormatRule(customerName));
-
         CustomerName = customerName;
     }
 
@@ -36,10 +31,6 @@ public class Order : EntityAuditBase<long>
     // Business methods
     public void UpdateCustomerName(string customerName)
     {
-        CheckRule(new OrderCustomerNameRequiredRule(customerName));
-        CheckRule(new OrderCustomerNameLengthRule(customerName));
-        CheckRule(new OrderCustomerNameFormatRule(customerName));
-
         CustomerName = customerName;
     }
 
@@ -134,7 +125,7 @@ public class Order : EntityAuditBase<long>
     }
 
     // Sử dụng Specifications cho business queries phức tạp
-    public bool SatisfiesSpecification(OrderSpecifications.IOrderSpecification specification)
+    public bool SatisfiesSpecification(Contracts.Domain.Interface.ISpecification<Order> specification)
     {
         return specification.IsSatisfiedBy(this);
     }
