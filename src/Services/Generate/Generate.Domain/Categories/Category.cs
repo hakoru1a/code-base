@@ -3,6 +3,7 @@ using Generate.Domain.Products;
 using Generate.Domain.Categories.Rules;
 using Contracts.Exceptions;
 using Contracts.Domain.Interface;
+using Contracts.Domain.Rules;
 
 namespace Generate.Domain.Categories;
 
@@ -31,17 +32,17 @@ public class Category : EntityAuditBase<long>
 
     public void AddProduct(Product product)
     {
-        CheckRule(new CategoryProductRequiredRule(product));
-        CheckRule(new CategoryProductNotExistsRule(_products, product));
-        CheckRule(new CategoryMaxProductsLimitRule(_products));
+        CheckRule(new CategoryProductRequiredRule(product)
+            .And(new CategoryProductNotExistsRule(_products, product))
+            .And(new CategoryMaxProductsLimitRule(_products)));
 
         _products.Add(product);
     }
 
     public void RemoveProduct(Product product)
     {
-        CheckRule(new CategoryProductRequiredRule(product));
-        CheckRule(new CategoryProductExistsRule(_products, product));
+        CheckRule(new CategoryProductRequiredRule(product)
+            .And(new CategoryProductExistsRule(_products, product)));
 
         var productToRemove = _products.FirstOrDefault(p => p.Id == product.Id);
         if (productToRemove != null)

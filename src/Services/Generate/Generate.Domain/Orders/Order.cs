@@ -3,6 +3,7 @@ using Generate.Domain.Products;
 using Generate.Domain.Orders.Rules;
 using Contracts.Exceptions;
 using Contracts.Domain.Interface;
+using Contracts.Domain.Rules;
 
 namespace Generate.Domain.Orders;
 
@@ -36,38 +37,29 @@ public class Order : EntityAuditBase<long>
 
     public void AddOrderItem(Product product, int quantity)
     {
-        CheckRule(new OrderProductRequiredRule(product));
-        CheckRule(new OrderQuantityValidRule(quantity));
-        CheckRule(new OrderProductNotExistsRule(_orderItems, product));
-        CheckRule(new OrderMaxItemsLimitRule(_orderItems));
+        CheckRule(new OrderProductRequiredRule(product)
+            .And(new OrderQuantityValidRule(quantity))
+            .And(new OrderProductNotExistsRule(_orderItems, product))
+            .And(new OrderMaxItemsLimitRule(_orderItems)));
 
-        var orderItem = new OrderItem(this, product, quantity);
-        _orderItems.Add(orderItem);
+        _orderItems.Add(new OrderItem(this, product, quantity));
     }
 
     public void RemoveOrderItem(Product product)
     {
-        CheckRule(new OrderProductRequiredRule(product));
-        CheckRule(new OrderProductExistsRule(_orderItems, product));
+        CheckRule(new OrderProductRequiredRule(product)
+            .And(new OrderProductExistsRule(_orderItems, product)));
 
-        var orderItem = _orderItems.FirstOrDefault(oi => ReferenceEquals(oi.Product, product));
-        if (orderItem != null)
-        {
-            _orderItems.Remove(orderItem);
-        }
+        _orderItems.Remove(_orderItems.First(oi => ReferenceEquals(oi.Product, product)));
     }
 
     public void UpdateOrderItemQuantity(Product product, int newQuantity)
     {
-        CheckRule(new OrderProductRequiredRule(product));
-        CheckRule(new OrderQuantityValidRule(newQuantity));
-        CheckRule(new OrderProductExistsRule(_orderItems, product));
+        CheckRule(new OrderProductRequiredRule(product)
+            .And(new OrderQuantityValidRule(newQuantity))
+            .And(new OrderProductExistsRule(_orderItems, product)));
 
-        var orderItem = _orderItems.FirstOrDefault(oi => ReferenceEquals(oi.Product, product));
-        if (orderItem != null)
-        {
-            orderItem.UpdateQuantity(newQuantity);
-        }
+        _orderItems.First(oi => ReferenceEquals(oi.Product, product)).UpdateQuantity(newQuantity);
     }
 
     public void ClearOrderItems()

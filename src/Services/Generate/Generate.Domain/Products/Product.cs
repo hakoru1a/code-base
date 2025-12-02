@@ -4,6 +4,7 @@ using Generate.Domain.Products.Rules;
 using Contracts.Exceptions;
 using Contracts.Domain.Interface;
 using Generate.Domain.Orders;
+using Contracts.Domain.Rules;
 
 namespace Generate.Domain.Products;
 
@@ -56,8 +57,9 @@ public class Product : EntityAuditBase<long>
 
     public void AddOrderItem(OrderItem orderItem)
     {
-        CheckRule(new ProductOrderItemRequiredRule(orderItem));
-        CheckRule(new ProductOrderItemNotExistsRule(_orderItems, orderItem));
+        CheckRule(new ProductOrderItemRequiredRule(orderItem)
+            .And(new ProductOrderItemNotExistsRule(_orderItems, orderItem))
+            .And(new ProductOrderItemExistsRule(_orderItems, orderItem)));
         _orderItems.Add(orderItem);
     }
 
