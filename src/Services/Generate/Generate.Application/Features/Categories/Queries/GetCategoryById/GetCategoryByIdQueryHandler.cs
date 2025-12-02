@@ -1,7 +1,7 @@
 using Shared.DTOs.Category;
-using Generate.Domain.Categories;
 using MediatR;
 using Mapster;
+using Generate.Domain.Categories.Interfaces;
 
 namespace Generate.Application.Features.Categories.Queries.GetCategoryById
 {

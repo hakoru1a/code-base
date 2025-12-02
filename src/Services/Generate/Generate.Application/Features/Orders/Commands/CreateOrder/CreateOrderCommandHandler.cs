@@ -1,5 +1,5 @@
-using Generate.Domain.Orders;
-using Generate.Domain.Products;
+using Generate.Domain.Orders.Interfaces;
+using Generate.Domain.Products.Interfaces;
 using MediatR;
 using OrderEntity = Generate.Domain.Orders.Order;
 

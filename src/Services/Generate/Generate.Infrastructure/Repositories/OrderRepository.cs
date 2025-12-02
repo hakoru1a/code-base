@@ -1,5 +1,6 @@
 ﻿using Contracts.Common.Interface;
 using Generate.Domain.Orders;
+using Generate.Domain.Orders.Interfaces;
 using Generate.Infrastructure.Persistences;
 using Infrastructure.Common.Repository;
 

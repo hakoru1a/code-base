@@ -1,5 +1,4 @@
 using Contracts.Domain;
-using Generate.Domain.Orders;
 using Generate.Domain.Products;
 
 namespace Generate.Domain.Orders;

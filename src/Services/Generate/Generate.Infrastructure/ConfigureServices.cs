@@ -1,11 +1,11 @@
 ﻿using Generate.Infrastructure.Persistences;
 using Generate.Infrastructure.Repositories;
-using Generate.Domain.Categories;
-using Generate.Domain.Products;
-using Generate.Domain.Orders;
 using Infrastructure.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Generate.Domain.Categories.Interfaces;
+using Generate.Domain.Products.Interfaces;
+using Generate.Domain.Orders.Interfaces;
 
 namespace Generate.Infrastructure
 {

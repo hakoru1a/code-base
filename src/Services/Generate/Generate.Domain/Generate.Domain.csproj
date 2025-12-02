@@ -10,4 +10,10 @@
     <ProjectReference Include="..\..\..\BuildingBlocks\Contracts\Contracts.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Categories\ValueObjects\" />
+    <Folder Include="Orders\ValueObjects\" />
+    <Folder Include="Products\ValueObjects\" />
+  </ItemGroup>
+
 </Project>

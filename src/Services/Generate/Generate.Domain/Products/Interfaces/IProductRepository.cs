@@ -1,7 +1,6 @@
 using Contracts.Common.Interface;
-using Generate.Domain.Products;
 
-namespace Generate.Domain.Products;
+namespace Generate.Domain.Products.Interfaces;
 
 /// <summary>
 /// Repository contract for Product aggregate  

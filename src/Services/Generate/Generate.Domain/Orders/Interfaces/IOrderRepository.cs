@@ -1,7 +1,6 @@
 using Contracts.Common.Interface;
-using Generate.Domain.Orders;
 
-namespace Generate.Domain.Orders;
+namespace Generate.Domain.Orders.Interfaces;
 
 /// <summary>
 /// Repository contract for Order aggregate

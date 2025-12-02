@@ -1,8 +1,8 @@
 using Mapster;
 using Shared.DTOs.Order;
-using Generate.Domain.Orders;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Generate.Domain.Orders.Interfaces;
 
 namespace Generate.Application.Features.Orders.Queries.GetOrders
 {

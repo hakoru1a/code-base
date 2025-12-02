@@ -1,4 +1,5 @@
 ﻿using Generate.Domain.Categories;
+using Generate.Domain.Categories.Interfaces;
 using MediatR;
 namespace Generate.Application.Features.Categories.Commands.CreateCategory
 {

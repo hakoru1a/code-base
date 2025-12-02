@@ -1,11 +1,11 @@
 using Mapster;
 using Shared.DTOs.Product;
-using Generate.Domain.Products;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Http;
 using Infrastructure.Extensions;
 using Microsoft.Extensions.Logging;
+using Generate.Domain.Products.Interfaces;
 
 namespace Generate.Application.Features.Products.Queries.GetProducts
 {

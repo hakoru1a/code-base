@@ -2,6 +2,8 @@ using Generate.Domain.Products;
 using Generate.Domain.Categories;
 
 using MediatR;
+using Generate.Domain.Categories.Interfaces;
+using Generate.Domain.Products.Interfaces;
 
 namespace Generate.Application.Features.Products.Commands.CreateProduct
 {

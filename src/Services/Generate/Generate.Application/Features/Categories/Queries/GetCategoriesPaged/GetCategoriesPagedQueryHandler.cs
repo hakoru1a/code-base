@@ -1,9 +1,9 @@
 using Mapster;
 using Shared.DTOs.Category;
-using Generate.Domain.Categories;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Shared.SeedWork;
+using Generate.Domain.Categories.Interfaces;
 
 namespace Generate.Application.Features.Categories.Queries.GetCategoriesPaged
 {

@@ -1,9 +1,9 @@
 using Contracts.Domain;
 using Generate.Domain.Categories;
-using Generate.Domain.Orders;
 using Generate.Domain.Products.Rules;
 using Contracts.Exceptions;
 using Contracts.Domain.Interface;
+using Generate.Domain.Orders;
 
 namespace Generate.Domain.Products;
 

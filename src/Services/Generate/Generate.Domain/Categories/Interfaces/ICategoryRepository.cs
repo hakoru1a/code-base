@@ -1,7 +1,6 @@
 using Contracts.Common.Interface;
-using Generate.Domain.Categories;
 
-namespace Generate.Domain.Categories;
+namespace Generate.Domain.Categories.Interfaces;
 
 /// <summary>
 /// Repository contract for Category aggregate

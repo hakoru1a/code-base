@@ -1,5 +1,4 @@
 using Contracts.Domain;
-using Generate.Domain.Products;
 
 namespace Generate.Domain.Products;
 

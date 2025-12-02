@@ -1,4 +1,4 @@
-using Generate.Domain.Products;
+using Generate.Domain.Products.Interfaces;
 using MediatR;
 
 namespace Generate.Application.Features.Products.Commands.DeleteProduct

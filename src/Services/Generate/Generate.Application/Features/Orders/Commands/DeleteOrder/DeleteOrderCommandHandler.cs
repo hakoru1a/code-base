@@ -1,4 +1,4 @@
-using Generate.Domain.Orders;
+using Generate.Domain.Orders.Interfaces;
 using MediatR;
 
 namespace Generate.Application.Features.Orders.Commands.DeleteOrder

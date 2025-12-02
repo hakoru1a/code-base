@@ -1,5 +1,5 @@
-using Generate.Domain.Orders;
-using Generate.Domain.Products;
+using Generate.Domain.Orders.Interfaces;
+using Generate.Domain.Products.Interfaces;
 using MediatR;
 
 namespace Generate.Application.Features.Orders.Commands.UpdateOrder
