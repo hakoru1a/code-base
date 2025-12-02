@@ -7,6 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Common\Behaviours\**" />
+    <Compile Remove="Common\Exceptions\**" />
+    <EmbeddedResource Remove="Common\Behaviours\**" />
+    <EmbeddedResource Remove="Common\Exceptions\**" />
+    <None Remove="Common\Behaviours\**" />
+    <None Remove="Common\Exceptions\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Mapster" Version="7.4.0" />
     <PackageReference Include="Mapster.DependencyInjection" Version="1.0.1" />
     <PackageReference Include="FluentValidation" Version="11.11.0" />
@@ -19,11 +28,6 @@
     <ProjectReference Include="..\..\..\BuildingBlocks\Contracts\Contracts.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Shared\Shared.csproj" />
     <ProjectReference Include="..\..\..\BuildingBlocks\Infrastructure\Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Common\Exceptions\" />
-    <Folder Include="Common\Behaviours\" />
   </ItemGroup>
 
 </Project>
