@@ -65,8 +65,7 @@ public class Product : EntityAuditBase<long>
 
     public void RemoveOrderItem(OrderItem orderItem)
     {
-        CheckRule(new ProductOrderItemRequiredRule(orderItem));
-        CheckRule(new ProductOrderItemExistsRule(_orderItems, orderItem));
+        CheckRule(new ProductOrderItemRequiredRule(orderItem).And(new ProductOrderItemExistsRule(_orderItems, orderItem)));
         _orderItems.Remove(orderItem);
     }
 
