@@ -1,4 +1,4 @@
-namespace Auth.Domain.Models;
+namespace ApiGateway.Models;
 
 /// <summary>
 /// Represents user session được lưu trong Redis

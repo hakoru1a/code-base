@@ -1,34 +1,41 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using ApiGateway.Configurations;
+using ApiGateway.Services;
+using ApiGateway.Models;
 
 namespace ApiGateway.Controllers;
 
 /// <summary>
-/// Authentication Controller - Proxy tới Auth Service
-/// Gateway chỉ làm nhiệm vụ routing, không xử lý logic OAuth
+/// Authentication Controller - Xử lý OAuth flow trực tiếp tại Gateway
 /// </summary>
 [ApiController]
 [Route("auth")]
 public class AuthController : ControllerBase
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ServicesOptions _servicesOptions;
+    private readonly IPkceService _pkceService;
+    private readonly ISessionManager _sessionManager;
+    private readonly IOAuthClient _oauthClient;
+    private readonly OAuthOptions _oauthOptions;
     private readonly ILogger<AuthController> _logger;
 
     public AuthController(
-        IHttpClientFactory httpClientFactory,
-        IOptions<ServicesOptions> servicesOptions,
+        IPkceService pkceService,
+        ISessionManager sessionManager,
+        IOAuthClient oauthClient,
+        IOptions<OAuthOptions> oauthOptions,
         ILogger<AuthController> logger)
     {
-        _httpClientFactory = httpClientFactory;
-        _servicesOptions = servicesOptions.Value;
+        _pkceService = pkceService;
+        _sessionManager = sessionManager;
+        _oauthClient = oauthClient;
+        _oauthOptions = oauthOptions.Value;
         _logger = logger;
     }
 
     /// <summary>
     /// GET /auth/login
-    /// Khởi tạo OAuth login flow thông qua Auth service
+    /// Khởi tạo OAuth login flow
     /// </summary>
     [HttpGet("login")]
     public async Task<IActionResult> Login([FromQuery] string? returnUrl = null)
@@ -37,27 +44,19 @@ public class AuthController : ControllerBase
         {
             _logger.LogInformation("Login initiated, returnUrl: {ReturnUrl}", returnUrl);
 
-            var client = _httpClientFactory.CreateClient("AuthService");
+            var redirectUri = string.IsNullOrEmpty(returnUrl)
+                ? _oauthOptions.WebAppUrl
+                : returnUrl;
 
-            var response = await client.PostAsJsonAsync(
-                "/api/auth/login/initiate",
-                new { returnUrl });
+            var pkceData = await _pkceService.GeneratePkceAsync(redirectUri);
 
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Auth service error: {Error}", error);
-                return StatusCode((int)response.StatusCode, error);
-            }
+            // Callback URI là URL của gateway
+            var callbackUri = $"{Request.Scheme}://{Request.Host}{_oauthOptions.RedirectUri}";
+            var authUrl = _oauthClient.BuildAuthorizationUrl(pkceData, callbackUri);
 
-            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+            _logger.LogInformation("Authorization URL generated, state: {State}", pkceData.State);
 
-            if (result == null || string.IsNullOrEmpty(result.AuthorizationUrl))
-            {
-                return StatusCode(500, new { error = "invalid_response" });
-            }
-
-            return Redirect(result.AuthorizationUrl);
+            return Redirect(authUrl);
         }
         catch (Exception ex)
         {
@@ -79,33 +78,51 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var client = _httpClientFactory.CreateClient("AuthService");
+            if (!string.IsNullOrEmpty(error))
+            {
+                _logger.LogError("OAuth error: {Error}, Description: {Description}",
+                    error, errorDescription);
 
-            var response = await client.PostAsJsonAsync(
-                "/api/auth/login/callback",
-                new
+                return BadRequest(new
                 {
-                    code,
-                    state,
                     error,
-                    errorDescription
+                    message = errorDescription ?? "Authentication failed"
                 });
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Auth service callback error: {Error}", errorContent);
-                return StatusCode((int)response.StatusCode, errorContent);
             }
 
-            var result = await response.Content.ReadFromJsonAsync<SignInCallbackResponse>();
-
-            if (result == null || string.IsNullOrEmpty(result.SessionId))
+            if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
             {
-                return StatusCode(500, new { error = "invalid_response" });
+                _logger.LogError("Missing code or state parameter");
+                return BadRequest(new
+                {
+                    error = "invalid_callback",
+                    message = "Missing required parameters"
+                });
             }
 
-            Response.Cookies.Append(CookieConstants.SessionIdCookieName, result.SessionId, new CookieOptions
+            _logger.LogInformation("Processing callback, state: {State}", state);
+
+            var pkceData = await _pkceService.GetAndRemovePkceAsync(state);
+
+            if (pkceData == null)
+            {
+                _logger.LogError("PKCE data not found or expired for state: {State}", state);
+                return BadRequest(new
+                {
+                    error = "invalid_state",
+                    message = "Invalid or expired state parameter"
+                });
+            }
+
+            var callbackUri = $"{Request.Scheme}://{Request.Host}{_oauthOptions.RedirectUri}";
+            var tokenResponse = await _oauthClient.ExchangeCodeForTokensAsync(
+                code,
+                pkceData.CodeVerifier,
+                callbackUri);
+
+            var sessionId = await _sessionManager.CreateSessionAsync(tokenResponse);
+
+            Response.Cookies.Append(CookieConstants.SessionIdCookieName, sessionId, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = Request.IsHttps,
@@ -114,14 +131,13 @@ public class AuthController : ControllerBase
                 Path = CookieConstants.CookiePath
             });
 
-            _logger.LogInformation("User logged in successfully, redirecting to: {RedirectUri}",
-                result.RedirectUri);
+            _logger.LogInformation("User logged in successfully, session: {SessionId}", sessionId);
 
-            return Redirect(result.RedirectUri);
+            return Redirect(pkceData.RedirectUri);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing sign-in callback");
+            _logger.LogError(ex, "Error processing callback");
             return StatusCode(500, new { error = "callback_failed", message = ex.Message });
         }
     }
@@ -141,11 +157,22 @@ public class AuthController : ControllerBase
                 return Ok(new { message = "No active session" });
             }
 
-            var client = _httpClientFactory.CreateClient("AuthService");
+            var session = await _sessionManager.GetSessionAsync(sessionId);
 
-            await client.PostAsJsonAsync(
-                "/api/auth/logout",
-                new { sessionId });
+            if (session != null)
+            {
+                try
+                {
+                    await _oauthClient.RevokeTokenAsync(session.RefreshToken);
+                    _logger.LogInformation("Tokens revoked for user: {Username}", session.Username);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to revoke tokens, continuing logout");
+                }
+            }
+
+            await _sessionManager.RemoveSessionAsync(sessionId);
 
             Response.Cookies.Delete(CookieConstants.SessionIdCookieName, new CookieOptions
             {
@@ -178,18 +205,21 @@ public class AuthController : ControllerBase
                 return Unauthorized(new { error = "no_session", message = "Not logged in" });
             }
 
-            var client = _httpClientFactory.CreateClient("AuthService");
+            var session = await _sessionManager.GetSessionAsync(sessionId);
 
-            var response = await client.GetAsync($"/api/auth/user/{sessionId}");
-
-            if (!response.IsSuccessStatusCode)
+            if (session == null)
             {
                 return Unauthorized(new { error = "session_expired", message = "Session expired" });
             }
 
-            var userInfo = await response.Content.ReadFromJsonAsync<UserInfoResponse>();
-
-            return Ok(userInfo);
+            return Ok(new UserInfoResponse
+            {
+                UserId = session.UserId,
+                Username = session.Username,
+                Email = session.Email,
+                Roles = session.Roles,
+                Claims = session.Claims
+            });
         }
         catch (Exception ex)
         {
@@ -209,17 +239,6 @@ public class AuthController : ControllerBase
     }
 
     #region DTOs
-
-    private class LoginResponse
-    {
-        public string AuthorizationUrl { get; set; } = string.Empty;
-    }
-
-    private class SignInCallbackResponse
-    {
-        public string SessionId { get; set; } = string.Empty;
-        public string RedirectUri { get; set; } = string.Empty;
-    }
 
     private class UserInfoResponse
     {

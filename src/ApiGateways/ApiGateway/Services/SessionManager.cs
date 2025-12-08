@@ -1,13 +1,12 @@
-using Auth.Application.Interfaces;
-using Auth.Domain.Configurations;
-using Auth.Domain.Models;
+using ApiGateway.Configurations;
+using ApiGateway.Models;
 using Contracts.Common.Interface;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text.Json;
 
-namespace Auth.Infrastructure.Services;
+namespace ApiGateway.Services;
 
 /// <summary>
 /// Implementation của Session Manager
@@ -15,8 +14,7 @@ namespace Auth.Infrastructure.Services;
 public class SessionManager : ISessionManager
 {
     private readonly IRedisRepository _redisRepo;
-    private readonly AuthSettings _authSettings;
-    private readonly OAuthSettings _oauthSettings;
+    private readonly OAuthOptions _oauthOptions;
     private readonly ILogger<SessionManager> _logger;
 
     private const string SessionKeyPrefix = "session:";
@@ -24,13 +22,11 @@ public class SessionManager : ISessionManager
 
     public SessionManager(
         IRedisRepository redisRepo,
-        AuthSettings authSettings,
-        OAuthSettings oauthSettings,
+        IOptions<OAuthOptions> oauthOptions,
         ILogger<SessionManager> logger)
     {
         _redisRepo = redisRepo;
-        _authSettings = authSettings;
-        _oauthSettings = oauthSettings;
+        _oauthOptions = oauthOptions.Value;
         _logger = logger;
     }
 
@@ -92,7 +88,7 @@ public class SessionManager : ISessionManager
     {
         try
         {
-            var cacheKey = $"{_authSettings.InstanceName}{SessionKeyPrefix}{sessionId}";
+            var cacheKey = $"{_oauthOptions.InstanceName}{SessionKeyPrefix}{sessionId}";
             var session = await _redisRepo.GetAsync<UserSession>(cacheKey);
 
             if (session == null)
@@ -146,7 +142,7 @@ public class SessionManager : ISessionManager
     {
         try
         {
-            var cacheKey = $"{_authSettings.InstanceName}{SessionKeyPrefix}{sessionId}";
+            var cacheKey = $"{_oauthOptions.InstanceName}{SessionKeyPrefix}{sessionId}";
             await _redisRepo.DeleteAsync(cacheKey);
 
             _logger.LogInformation("Session removed: {SessionId}", sessionId);
@@ -178,7 +174,7 @@ public class SessionManager : ISessionManager
     {
         try
         {
-            var cacheKey = $"{_authSettings.InstanceName}{SessionKeyPrefix}{sessionId}";
+            var cacheKey = $"{_oauthOptions.InstanceName}{SessionKeyPrefix}{sessionId}";
             return await _redisRepo.ExistsAsync(cacheKey);
         }
         catch (Exception ex)
@@ -226,11 +222,11 @@ public class SessionManager : ISessionManager
             await SaveSessionToRedisAsync(newSession);
 
             // Đưa session_id cũ vào will_remove list với TTL 24h
-            var willRemoveKey = $"{_authSettings.InstanceName}{WillRemoveKeyPrefix}{oldSessionId}";
+            var willRemoveKey = $"{_oauthOptions.InstanceName}{WillRemoveKeyPrefix}{oldSessionId}";
             await _redisRepo.SetAsync(willRemoveKey, newSessionId, TimeSpan.FromHours(24));
 
             // Xóa session cũ khỏi Redis
-            var oldCacheKey = $"{_authSettings.InstanceName}{SessionKeyPrefix}{oldSessionId}";
+            var oldCacheKey = $"{_oauthOptions.InstanceName}{SessionKeyPrefix}{oldSessionId}";
             await _redisRepo.DeleteAsync(oldCacheKey);
 
             _logger.LogInformation(
@@ -252,8 +248,8 @@ public class SessionManager : ISessionManager
 
     private async Task SaveSessionToRedisAsync(UserSession session)
     {
-        var cacheKey = $"{_authSettings.InstanceName}{SessionKeyPrefix}{session.SessionId}";
-        var expiry = TimeSpan.FromMinutes(_authSettings.SessionAbsoluteExpirationMinutes);
+        var cacheKey = $"{_oauthOptions.InstanceName}{SessionKeyPrefix}{session.SessionId}";
+        var expiry = TimeSpan.FromMinutes(_oauthOptions.SessionAbsoluteExpirationMinutes);
         await _redisRepo.SetAsync(cacheKey, session, expiry);
     }
 
@@ -261,7 +257,7 @@ public class SessionManager : ISessionManager
     {
         try
         {
-            var cacheKey = $"{_authSettings.InstanceName}{SessionKeyPrefix}{sessionId}";
+            var cacheKey = $"{_oauthOptions.InstanceName}{SessionKeyPrefix}{sessionId}";
             return await _redisRepo.GetAsync<UserSession>(cacheKey);
         }
         catch
@@ -274,7 +270,7 @@ public class SessionManager : ISessionManager
     {
         try
         {
-            var willRemoveKey = $"{_authSettings.InstanceName}{WillRemoveKeyPrefix}{oldSessionId}";
+            var willRemoveKey = $"{_oauthOptions.InstanceName}{WillRemoveKeyPrefix}{oldSessionId}";
             return await _redisRepo.GetAsync<string>(willRemoveKey);
         }
         catch

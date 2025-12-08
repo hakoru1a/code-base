@@ -1,11 +1,10 @@
-using Auth.Application.Interfaces;
-using Auth.Domain.Configurations;
-using Auth.Domain.Models;
+using ApiGateway.Configurations;
+using ApiGateway.Models;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
 
-namespace Auth.Infrastructure.Services;
+namespace ApiGateway.Services;
 
 /// <summary>
 /// Implementation của OAuth Client
@@ -13,16 +12,16 @@ namespace Auth.Infrastructure.Services;
 public class OAuthClient : IOAuthClient
 {
     private readonly HttpClient _httpClient;
-    private readonly OAuthSettings _oauthSettings;
+    private readonly OAuthOptions _oauthOptions;
     private readonly ILogger<OAuthClient> _logger;
 
     public OAuthClient(
         HttpClient httpClient,
-        OAuthSettings oauthSettings,
+        IOptions<OAuthOptions> oauthOptions,
         ILogger<OAuthClient> logger)
     {
         _httpClient = httpClient;
-        _oauthSettings = oauthSettings;
+        _oauthOptions = oauthOptions.Value;
         _logger = logger;
     }
 
@@ -39,14 +38,14 @@ public class OAuthClient : IOAuthClient
             {
                 ["grant_type"] = "authorization_code",
                 ["code"] = code,
-                ["client_id"] = _oauthSettings.ClientId,
-                ["client_secret"] = _oauthSettings.ClientSecret,
+                ["client_id"] = _oauthOptions.ClientId,
+                ["client_secret"] = _oauthOptions.ClientSecret,
                 ["redirect_uri"] = redirectUri,
                 ["code_verifier"] = codeVerifier
             };
 
             var response = await _httpClient.PostAsync(
-                _oauthSettings.TokenEndpoint,
+                _oauthOptions.TokenEndpoint,
                 new FormUrlEncodedContent(requestBody));
 
             var content = await response.Content.ReadAsStringAsync();
@@ -90,12 +89,12 @@ public class OAuthClient : IOAuthClient
             {
                 ["grant_type"] = "refresh_token",
                 ["refresh_token"] = refreshToken,
-                ["client_id"] = _oauthSettings.ClientId,
-                ["client_secret"] = _oauthSettings.ClientSecret
+                ["client_id"] = _oauthOptions.ClientId,
+                ["client_secret"] = _oauthOptions.ClientSecret
             };
 
             var response = await _httpClient.PostAsync(
-                _oauthSettings.TokenEndpoint,
+                _oauthOptions.TokenEndpoint,
                 new FormUrlEncodedContent(requestBody));
 
             var content = await response.Content.ReadAsStringAsync();
@@ -135,14 +134,14 @@ public class OAuthClient : IOAuthClient
         {
             _logger.LogInformation("Revoking refresh token");
 
-            var revokeEndpoint = _oauthSettings.TokenEndpoint.Replace("/token", "/revoke");
+            var revokeEndpoint = _oauthOptions.TokenEndpoint.Replace("/token", "/revoke");
 
             var requestBody = new Dictionary<string, string>
             {
                 ["token"] = refreshToken,
                 ["token_type_hint"] = "refresh_token",
-                ["client_id"] = _oauthSettings.ClientId,
-                ["client_secret"] = _oauthSettings.ClientSecret
+                ["client_id"] = _oauthOptions.ClientId,
+                ["client_secret"] = _oauthOptions.ClientSecret
             };
 
             var response = await _httpClient.PostAsync(
@@ -172,15 +171,15 @@ public class OAuthClient : IOAuthClient
     {
         var queryParams = new Dictionary<string, string?>
         {
-            ["response_type"] = _oauthSettings.ResponseType,
-            ["client_id"] = _oauthSettings.ClientId,
+            ["response_type"] = _oauthOptions.ResponseType,
+            ["client_id"] = _oauthOptions.ClientId,
             ["redirect_uri"] = redirectUri,
-            ["scope"] = string.Join(" ", _oauthSettings.Scopes),
+            ["scope"] = string.Join(" ", _oauthOptions.Scopes),
             ["state"] = pkceData.State,
             ["code_challenge"] = pkceData.CodeChallenge,
             ["code_challenge_method"] = pkceData.CodeChallengeMethod
         };
 
-        return QueryHelpers.AddQueryString(_oauthSettings.AuthorizationEndpoint, queryParams);
+        return QueryHelpers.AddQueryString(_oauthOptions.AuthorizationEndpoint, queryParams);
     }
 }

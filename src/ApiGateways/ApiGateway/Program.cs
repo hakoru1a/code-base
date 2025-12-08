@@ -53,11 +53,28 @@ try
     // Configure named HttpClients with logging and resilience policies using Infrastructure extension
     var httpClients = new Dictionary<string, string>
 {
-    { "AuthService", servicesOptions.AuthAPI.Url },
     { "BaseAPI", servicesOptions.BaseAPI.Url },
     { "GenerateAPI", servicesOptions.GenerateAPI.Url }
 };
     builder.Services.AddMultipleHttpClientsWithResilience(httpClients, timeoutSeconds: 30, retryCount: 3, circuitBreakerEvents: 5, circuitBreakerDuration: 30);
+
+    // Add HttpClient for Keycloak OAuth
+    builder.Services.AddHttpClient<ApiGateway.Services.IOAuthClient, ApiGateway.Services.OAuthClient>();
+
+    #endregion
+
+    #region Redis Configuration
+
+    // Configure Redis connection for session storage
+    builder.Services.AddRedisInfrastructure(builder.Configuration);
+
+    #endregion
+
+    #region Auth Services
+
+    // Register authentication services
+    builder.Services.AddScoped<ApiGateway.Services.IPkceService, ApiGateway.Services.PkceService>();
+    builder.Services.AddScoped<ApiGateway.Services.ISessionManager, ApiGateway.Services.SessionManager>();
 
     #endregion
 

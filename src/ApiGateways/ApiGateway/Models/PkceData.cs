@@ -1,4 +1,4 @@
-namespace Auth.Domain.Models;
+namespace ApiGateway.Models;
 
 /// <summary>
 /// PKCE (Proof Key for Code Exchange) data

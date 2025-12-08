@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace Auth.Domain.Models;
+namespace ApiGateway.Models;
 
 /// <summary>
 /// Response từ Keycloak Token Endpoint

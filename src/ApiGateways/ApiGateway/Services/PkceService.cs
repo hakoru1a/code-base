@@ -1,12 +1,11 @@
-using Auth.Application.Interfaces;
-using Auth.Domain.Configurations;
-using Auth.Domain.Models;
+using ApiGateway.Configurations;
+using ApiGateway.Models;
 using Contracts.Common.Interface;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Auth.Infrastructure.Services;
+namespace ApiGateway.Services;
 
 /// <summary>
 /// Implementation của PKCE service
@@ -14,18 +13,18 @@ namespace Auth.Infrastructure.Services;
 public class PkceService : IPkceService
 {
     private readonly IRedisRepository _redisRepo;
-    private readonly AuthSettings _authSettings;
+    private readonly OAuthOptions _oauthOptions;
     private readonly ILogger<PkceService> _logger;
 
     private const string PkceKeyPrefix = "pkce:";
 
     public PkceService(
         IRedisRepository redisRepo,
-        AuthSettings authSettings,
+        IOptions<OAuthOptions> oauthOptions,
         ILogger<PkceService> logger)
     {
         _redisRepo = redisRepo;
-        _authSettings = authSettings;
+        _oauthOptions = oauthOptions.Value;
         _logger = logger;
     }
 
@@ -45,11 +44,11 @@ public class PkceService : IPkceService
                 State = state,
                 RedirectUri = redirectUri,
                 CreatedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(_authSettings.PkceExpirationMinutes)
+                ExpiresAt = DateTime.UtcNow.AddMinutes(_oauthOptions.PkceExpirationMinutes)
             };
 
-            var cacheKey = $"{_authSettings.InstanceName}{PkceKeyPrefix}{state}";
-            var expiry = TimeSpan.FromMinutes(_authSettings.PkceExpirationMinutes);
+            var cacheKey = $"{_oauthOptions.InstanceName}{PkceKeyPrefix}{state}";
+            var expiry = TimeSpan.FromMinutes(_oauthOptions.PkceExpirationMinutes);
 
             await _redisRepo.SetAsync(cacheKey, pkceData, expiry);
 
@@ -71,7 +70,7 @@ public class PkceService : IPkceService
     {
         try
         {
-            var cacheKey = $"{_authSettings.InstanceName}{PkceKeyPrefix}{state}";
+            var cacheKey = $"{_oauthOptions.InstanceName}{PkceKeyPrefix}{state}";
 
             var pkceData = await _redisRepo.GetAsync<PkceData>(cacheKey);
 

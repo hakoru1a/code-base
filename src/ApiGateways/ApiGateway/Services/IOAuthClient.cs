@@ -1,6 +1,6 @@
-using Auth.Domain.Models;
+using ApiGateway.Models;
 
-namespace Auth.Application.Interfaces;
+namespace ApiGateway.Services;
 
 /// <summary>
 /// OAuth Client interface - communicate với Keycloak

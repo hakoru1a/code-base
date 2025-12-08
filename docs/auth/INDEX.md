@@ -4,10 +4,20 @@ Chào mừng bạn đến với tài liệu hướng dẫn về các hệ thốn
 
 ---
 
+## 🚀 Quick Start
+
+Bắt đầu nhanh với authentication tại API Gateway:
+*   **Quick Start Guide**: Hướng dẫn thiết lập và sử dụng authentication trong 10 phút.
+    *   [QUICK-START.md](./QUICK-START.md)
+
+---
+
 ## 🔑 Xác thực (Authentication)
 
-Phần này bao gồm các tài liệu liên quan đến việc xác định danh tính người dùng.
+Authentication hiện được xử lý **trực tiếp tại API Gateway** theo kiến trúc BFF (Backend-for-Frontend) đơn giản hóa.
 
+*   **Gateway Authentication Flow**: Hướng dẫn chi tiết về authentication flow mới tại API Gateway.
+    *   [GATEWAY-AUTH-FLOW.md](./GATEWAY-AUTH-FLOW.md)
 *   **Keycloak Guide**: Hướng dẫn chi tiết về cách tích hợp và sử dụng Keycloak làm Identity Provider.
     *   [keycloak-guide.md](./authentication/keycloak-guide.md)
 *   **JWT & Session Flow**: Mô tả luồng xử lý JWT (JSON Web Token) và quản lý phiên (session) trong hệ thống.
@@ -54,5 +64,37 @@ Tài liệu này giải thích cách sử dụng các claims trong JWT để đ�
 
 Phần này bao gồm các tài liệu mô tả kiến trúc liên quan đến hệ thống xác thực và phân quyền.
 
-*   **BFF Architecture Flow**: Giải thích luồng hoạt động của kiến trúc Backend-for-Frontend (BFF) trong ngữ cảnh xác thực.
+*   **BFF Architecture Flow**: Giải thích luồng hoạt động của kiến trúc Backend-for-Frontend (BFF) với authentication tại API Gateway.
     *   [bff-flow.md](./architecture/bff-flow.md)
+
+---
+
+## ⚡ Tóm tắt thay đổi kiến trúc
+
+### ❌ Kiến trúc cũ (Phức tạp)
+```
+Browser → Gateway → Auth Service → Keycloak
+                       ↓
+                     Redis
+```
+**Vấn đề:** Nhiều network hops, phức tạp, Auth Service là single point of failure
+
+### ✅ Kiến trúc mới (Đơn giản)
+```
+Browser → Gateway → Keycloak
+            ↓
+          Redis
+```
+**Lợi ích:** 
+- Giảm latency
+- Đơn giản hóa architecture  
+- Dễ maintain
+- Vẫn giữ security
+- Tiết kiệm resources
+
+---
+
+## 📚 Tài liệu liên quan
+
+*   **API Gateway README**: Chi tiết về cấu hình và sử dụng API Gateway
+    *   [src/ApiGateways/ApiGateway/README.md](../../src/ApiGateways/ApiGateway/README.md)

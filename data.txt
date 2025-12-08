@@ -1,0 +1,36 @@
+{
+  "filter": {
+    "and": [
+      {
+        "or": [
+          { "color": { "eq": "gold" } },
+          { "color": { "eq": "silver" } }
+        ]
+      },
+      { "brand": { "in": ["apple", "samsung"] } },
+      { "price": { "between": [100, 500] } },
+      { "name": { "like": "%iphone%" } }
+    ]
+  },
+  "sort": [
+    { "field": "created_at", "direction": "desc" }
+  ],
+  "page": { "number": 1, "size": 50 },
+  "fields": ["id", "name", "price", "image_url"],
+  "include": ["category"]
+}
+
+
+{
+  filters: [
+    "key": "AB",
+    "operator:"AC",
+    "value": 123213
+  ],
+  "sort: {
+     { "field": "created_at", "direction": "desc" }
+  }
+}
+
+
+

@@ -2,41 +2,60 @@
 
 ## 📋 Tổng quan
 
-API Gateway này implement **BFF (Backend-for-Frontend) Pattern** với các tính năng:
+API Gateway này implement **BFF (Backend-for-Frontend) Pattern** với authentication được xử lý **trực tiếp tại Gateway**:
 
 - ✅ **OAuth 2.0 Authorization Code Flow + PKCE** 
 - ✅ **Session-based authentication** với Redis
 - ✅ **HttpOnly cookies** để bảo mật tokens
-- ✅ **Automatic token refresh**
+- ✅ **Automatic token refresh** và session rotation
 - ✅ **CSRF protection** với state parameter
+- ✅ **RBAC/PBAC enforcement** tại Gateway
 - ✅ **Ocelot routing** tới downstream services
+- ✅ **Simplified architecture** - Không cần Auth Service riêng
 
-## 🏗️ Kiến trúc
+## 🏗️ Kiến trúc đơn giản hóa
 
 ```
 Browser (User) 
     ↓ (HttpOnly Cookie: session_id)
-API Gateway/BFF 
-    ↓ (Redis: Session Storage)
-    ↓ (Keycloak: OAuth Provider)
+API Gateway (All-in-One)
+    ├── OAuth Client (Keycloak)
+    ├── Session Manager (Redis)
+    ├── PKCE Service
+    └── RBAC/PBAC Policies
     ↓ (Bearer Token)
-Backend Services (Base API, Generate API)
+Backend Services (Generate API, Base API)
 ```
 
-### Security Flow
+**Lợi ích:**
+- ⚡ Giảm latency (ít network hops)
+- 🎯 Đơn giản hóa architecture
+- 🚀 Dễ deploy và maintain
+- 🔒 Vẫn giữ nguyên security
+- 💰 Tiết kiệm resources
+
+### Simplified Security Flow
 
 ```
 1. Browser → GET /auth/login
 2. Gateway tạo PKCE (code_verifier, code_challenge) → lưu Redis
-3. Gateway redirect → Keycloak login page (với code_challenge)
+3. Gateway redirect → Keycloak login page
 4. User login tại Keycloak
 5. Keycloak redirect → /auth/signin-oidc?code=xxx&state=yyy
-6. Gateway validate state, lấy PKCE từ Redis
-7. Gateway exchange code + code_verifier → tokens
-8. Gateway lưu tokens vào Redis với session_id
-9. Gateway set HttpOnly cookie: session_id
-10. Browser → API requests (tự động có cookie)
-11. Gateway lấy session từ Redis → add Bearer token → forward to services
+6. Gateway:
+   - Validate state & get PKCE từ Redis
+   - Exchange code + code_verifier → tokens với Keycloak
+   - Parse JWT, extract user info & roles
+   - Lưu session vào Redis
+   - Set HttpOnly cookie: session_id
+7. Browser → API requests (cookie tự động gửi)
+8. Gateway SessionValidationMiddleware:
+   - Get session từ Redis
+   - Check & refresh token nếu cần
+   - Rotate session ID (10 phút)
+   - Parse JWT → set User claims
+   - Add Bearer token
+9. Gateway → Forward request to backend
 ```
 
 ## 📁 Cấu trúc Project
@@ -44,35 +63,58 @@ Backend Services (Base API, Generate API)
 ```
 ApiGateway/
 ├── Configurations/          # Settings classes
-│   ├── RedisSettings.cs    # Cấu hình Redis
-│   └── OAuthSettings.cs    # Cấu hình OAuth/OIDC
+│   ├── OAuthOptions.cs     # OAuth & Session configuration
+│   └── ServicesOptions.cs  # Downstream services config
 │
 ├── Models/                  # Data models
 │   ├── UserSession.cs      # Session data structure
 │   ├── PkceData.cs         # PKCE data structure
 │   └── TokenResponse.cs    # OAuth token response
 │
-├── Services/                # Business logic
-│   ├── IPkceService.cs     # PKCE interface
-│   ├── PkceService.cs      # PKCE implementation
-│   ├── ISessionManager.cs  # Session interface
-│   ├── SessionManager.cs   # Session implementation
+├── Services/                # Authentication services
 │   ├── IOAuthClient.cs     # OAuth client interface
-│   └── OAuthClient.cs      # OAuth client implementation
+│   ├── OAuthClient.cs      # Keycloak communication
+│   ├── ISessionManager.cs  # Session interface
+│   ├── SessionManager.cs   # Redis session management
+│   ├── IPkceService.cs     # PKCE interface
+│   └── PkceService.cs      # PKCE generation & validation
 │
 ├── Middlewares/             # Request pipeline
-│   └── SessionValidationMiddleware.cs  # Validate & refresh tokens
+│   └── SessionValidationMiddleware.cs  # Validate, refresh, rotate
 │
 ├── Handlers/                # Ocelot handlers
 │   └── TokenDelegatingHandler.cs       # Inject Bearer token
 │
 ├── Controllers/             # API endpoints
-│   └── AuthController.cs   # Auth endpoints
+│   └── AuthController.cs   # OAuth flow: login, callback, logout
 │
-├── Program.cs              # Application setup
+├── Extensions/              # Extension methods
+│   ├── SwaggerExtensions.cs
+│   └── DevelopmentEndpointExtensions.cs
+│
+├── Program.cs              # Application setup & DI
 ├── ocelot.json            # Ocelot routing config
 └── appsettings.json       # Application config
 ```
+
+### Các Service chính
+
+#### 1. **OAuthClient** - Keycloak Communication
+- Exchange authorization code → tokens
+- Refresh access token
+- Revoke tokens
+- Build authorization URL
+
+#### 2. **SessionManager** - Redis Session Storage  
+- Create session from token response
+- Get/update/delete session
+- Session rotation (security)
+- Parse JWT & extract roles
+
+#### 3. **PkceService** - PKCE Security
+- Generate code_verifier & code_challenge
+- Store PKCE in Redis (one-time use)
+- CSRF protection with state parameter
 
 ## 🚀 Setup Instructions
 

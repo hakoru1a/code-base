@@ -1,14 +1,13 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text.Json;
-using Microsoft.Extensions.Options;
+using ApiGateway.Services;
 using ApiGateway.Configurations;
 
 namespace ApiGateway.Middlewares;
 
 /// <summary>
 /// Middleware để validate session cho mỗi request
-/// Gọi Auth service để validate session và lấy access token
+/// Validate session trực tiếp và refresh token nếu cần
 /// </summary>
 public class SessionValidationMiddleware
 {
@@ -27,8 +26,8 @@ public class SessionValidationMiddleware
 
     public async Task InvokeAsync(
         HttpContext context,
-        IHttpClientFactory httpClientFactory,
-        IOptions<ServicesOptions> servicesOptions)
+        ISessionManager sessionManager,
+        IOAuthClient oauthClient)
     {
         var path = context.Request.Path.Value ?? "";
 
@@ -39,23 +38,69 @@ public class SessionValidationMiddleware
             return;
         }
 
-        // 2. Validate session thông qua Auth service
-        var sessionValidation = await ValidateSessionAsync(
-            context, httpClientFactory, servicesOptions.Value);
-
-        if (sessionValidation == null || !sessionValidation.IsValid)
+        // 2. Get session ID from cookie
+        if (!context.Request.Cookies.TryGetValue(CookieConstants.SessionIdCookieName, out var sessionId) ||
+            string.IsNullOrEmpty(sessionId))
         {
             await WriteUnauthorizedResponseAsync(context, AuthenticationConstants.Unauthorized,
                 "Session not found or expired. Please login.");
             return;
         }
 
-        // 3. Nếu session đã được rotate, update cookie với session_id mới
-        if (!string.IsNullOrEmpty(sessionValidation.NewSessionId))
+        // 3. Get session from Redis
+        var session = await sessionManager.GetSessionAsync(sessionId);
+
+        if (session == null)
+        {
+            await WriteUnauthorizedResponseAsync(context, AuthenticationConstants.Unauthorized,
+                "Session not found or expired. Please login.");
+            return;
+        }
+
+        string? newSessionId = null;
+
+        // 4. Check if session needs rotation (> 10 phút kể từ lần rotate cuối hoặc từ lúc tạo)
+        var lastRotateTime = session.LastRotatedAt ?? session.CreatedAt;
+        var minutesSinceLastRotate = (DateTime.UtcNow - lastRotateTime).TotalMinutes;
+
+        if (minutesSinceLastRotate >= 10)
+        {
+            try
+            {
+                newSessionId = await sessionManager.RotateSessionIdAsync(session.SessionId);
+
+                // Lấy lại session mới sau khi rotate
+                var rotatedSession = await sessionManager.GetSessionAsync(newSessionId);
+
+                if (rotatedSession == null)
+                {
+                    _logger.LogError("Failed to get session after rotation: {NewSessionId}", newSessionId);
+                    await WriteUnauthorizedResponseAsync(context, AuthenticationConstants.Unauthorized,
+                        "Session error. Please login again.");
+                    return;
+                }
+
+                session = rotatedSession;
+
+                _logger.LogInformation(
+                    "Session rotated: {OldSessionId} -> {NewSessionId}, Minutes since last rotate: {Minutes}",
+                    sessionId,
+                    newSessionId,
+                    minutesSinceLastRotate);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to rotate session: {SessionId}", sessionId);
+                // Continue với session cũ nếu rotate fail
+            }
+        }
+
+        // 5. Update cookie nếu session đã được rotate
+        if (!string.IsNullOrEmpty(newSessionId))
         {
             context.Response.Cookies.Append(
                 CookieConstants.SessionIdCookieName,
-                sessionValidation.NewSessionId,
+                newSessionId,
                 new CookieOptions
                 {
                     HttpOnly = true,
@@ -67,57 +112,41 @@ public class SessionValidationMiddleware
 
             _logger.LogInformation(
                 "Session cookie updated with new session ID: {NewSessionId}",
-                sessionValidation.NewSessionId);
+                newSessionId);
         }
 
-        // 4. Parse JWT và set HttpContext.User để RBAC hoạt động
-        SetUserContextFromJwt(context, sessionValidation.AccessToken);
+        // 6. Check if token needs refresh
+        if (session.NeedsRefresh())
+        {
+            try
+            {
+                var tokenResponse = await oauthClient.RefreshTokenAsync(session.RefreshToken);
 
-        // 5. Set access token vào HttpContext.Items để TokenDelegatingHandler sử dụng
-        context.Items[HttpContextItemKeys.AccessToken] = sessionValidation.AccessToken;
+                session.AccessToken = tokenResponse.AccessToken;
+                session.RefreshToken = tokenResponse.RefreshToken ?? session.RefreshToken;
+                session.ExpiresAt = tokenResponse.CalculateExpiresAt();
 
-        // 6. Continue pipeline
+                await sessionManager.UpdateSessionAsync(session);
+
+                _logger.LogInformation("Token refreshed for session: {SessionId}", session.SessionId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to refresh token for session: {SessionId}", session.SessionId);
+                await WriteUnauthorizedResponseAsync(context, AuthenticationConstants.Unauthorized,
+                    "Token refresh failed. Please login again.");
+                return;
+            }
+        }
+
+        // 7. Parse JWT và set HttpContext.User để RBAC hoạt động
+        SetUserContextFromJwt(context, session.AccessToken);
+
+        // 8. Set access token vào HttpContext.Items để TokenDelegatingHandler sử dụng
+        context.Items[HttpContextItemKeys.AccessToken] = session.AccessToken;
+
+        // 9. Continue pipeline
         await _next(context);
-    }
-
-    /// <summary>
-    /// Validate session thông qua Auth service
-    /// </summary>
-    private async Task<SessionValidationResponse?> ValidateSessionAsync(
-        HttpContext context,
-        IHttpClientFactory httpClientFactory,
-        ServicesOptions servicesOptions)
-    {
-        try
-        {
-            if (!context.Request.Cookies.TryGetValue(CookieConstants.SessionIdCookieName, out var sessionId) ||
-                string.IsNullOrEmpty(sessionId))
-            {
-                _logger.LogWarning("No session cookie found");
-                return null;
-            }
-
-            var client = httpClientFactory.CreateClient("AuthService");
-
-            var response = await client.GetAsync($"/api/auth/session/{sessionId}/validate");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogWarning("Session validation failed for session: {SessionId}", sessionId);
-                return null;
-            }
-
-            var validation = await response.Content.ReadFromJsonAsync<SessionValidationResponse>();
-
-            return validation;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error validating session");
-            // Re-throw the exception to allow upstream error handling
-            // This ensures the root cause is not hidden
-            throw new InvalidOperationException("Failed to validate session", ex);
-        }
     }
 
     /// <summary>
@@ -169,18 +198,6 @@ public class SessionValidationMiddleware
 
         return false;
     }
-
-    #region DTOs
-
-    private class SessionValidationResponse
-    {
-        public bool IsValid { get; set; }
-        public string? AccessToken { get; set; }
-        public DateTime? ExpiresAt { get; set; }
-        public string? NewSessionId { get; set; }
-    }
-
-    #endregion
 }
 
 public static class SessionValidationMiddlewareExtensions
