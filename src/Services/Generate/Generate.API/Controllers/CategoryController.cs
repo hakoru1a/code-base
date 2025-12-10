@@ -37,7 +37,7 @@ namespace Generate.API.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(ApiSuccessResult<List<CategoryResponseDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [Authorize(Policy = PolicyNames.Hybrid.Category.CanView)]
+        // [Authorize(Policy = PolicyNames.Hybrid.Category.CanView)]
         public async Task<IActionResult> GetList()
         {
             var query = new GetCategoriesQuery();

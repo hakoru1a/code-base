@@ -1,29 +1,30 @@
-# Keycloak Complete Guide - Architecture, Setup & Configuration
+# Keycloak Gateway Setup Guide - Direct JWT Authentication
 
 ## 🏗️ Tổng quan Architecture
 
-### BFF Pattern Overview
+### Gateway-Direct Pattern
 
-Trong kiến trúc BFF (Backend-for-Frontend), **API Gateway đóng vai trò routing đơn giản** giữa browser/frontend và các services. **Auth Service** chịu trách nhiệm xử lý OAuth 2.0 và quản lý session.
+Trong kiến trúc này, **API Gateway trực tiếp xử lý JWT authentication** từ Keycloak. Frontend sẽ authenticate trực tiếp với Keycloak và gửi Bearer token qua Gateway.
 
 ```
 ┌─────────────┐                    ┌─────────────┐                    ┌─────────────┐
-│   Browser   │◄──── Cookie ──────►│  Gateway    │◄── Session Val ───►│Auth Service │
-│  (Frontend) │   (session_id)     │  (Routing)  │                    │   (OAuth)   │
+│   Browser   │◄──── JWT Auth ────►│   Gateway   │◄───── JWT Val ────►│  Keycloak   │
+│  (Frontend) │   Bearer Token     │(Auth + Route)│                    │    (IdP)    │
 │             │                    │             │                    │             │
-│  ❌ NO      │                    │  ✅ Simple  │                    │  ✅ Handles │
-│  Tokens     │                    │  - Routing  │                    │  - OAuth    │
-│             │                    │  - RBAC     │                    │  - PKCE     │
-│             │                    │  - Proxy    │                    │  - Tokens   │
-│             │                    │             │                    │  - Sessions │
-└─────────────┘                    └─────────────┘                    └──────┬──────┘
-                                          │                                   │
-                                          │ Bearer Token              OAuth 2.0 + PKCE
-                                          ▼                                   ▼
-                                   ┌─────────────┐                    ┌─────────────┐
-                                   │ Backend APIs│                    │  Keycloak   │
-                                   │  Services   │                    │    (IdP)    │
-                                   │   (PBAC)    │                    └─────────────┘
+│  ✅ Handles │                    │  ✅ Handles │                    │  ✅ Issues  │
+│  - Login UI │                    │  - JWT Val  │                    │  - JWT      │
+│  - Tokens   │                    │  - RBAC     │                    │  - Refresh  │
+│  - Refresh  │                    │  - Routing  │                    │  - UserInfo │
+│             │                    │  - Proxy    │                    │             │
+└─────────────┘                    └─────────────┘                    └─────────────┘
+        │                                  │                                   │
+        │ Direct OAuth 2.0 Flow           │ Bearer Token Forward                │
+        └──────────────────────────────────┼──────────────────────────────────┘
+                                          ▼
+                                   ┌─────────────┐
+                                   │ Backend APIs│
+                                   │  Services   │
+                                   │   (RBAC)    │
                                    └─────────────┘
 ```
 
@@ -126,24 +127,24 @@ docker-compose -f keycloak.yml logs -f keycloak
    - Click **"Assign role"** → Chọn **admin**, **manager**, **user** → Click **"Assign"**
    - Làm tương tự cho user **user**, chỉ assign role **user**
 
-### Bước 7: Tạo Client
+### Bước 7: Tạo Client cho Frontend & Gateway
 
-**Lưu ý:** Với BFF (Backend-for-Frontend) flow, chỉ cần tạo **1 client duy nhất** cho tất cả services.
+**Lưu ý:** Với Gateway-direct flow, tạo **1 client** cho frontend authentication và Gateway sử dụng để validate JWT.
 
 1. Menu **Clients** → Click **"Create client"**
 
 #### Tab 1: General Settings
 - **Client type**: `OpenID Connect`
-- **Client ID**: `auth-client` ⚠️ **Quan trọng: Phải đúng tên này**
-- Click **"Next"**
+- **Client ID**: `gateway` ⚠️ **Quan trọng: Phải đúng tên này**
+- Click **"Next""
 
 #### Tab 2: Capability config
-- **Client authentication**: ✅ **ON** (quan trọng!)
+- **Client authentication**: ✅ **ON** (quan trọng cho Gateway!)
 - **Authorization**: ❌ OFF
 - **Authentication flow**:
-  - ✅ **Standard flow** (Authorization Code Flow)
-  - ✅ **Direct access grants** (cho testing)
-  - ❌ Implicit flow
+  - ✅ **Standard flow** (Authorization Code Flow cho Frontend)
+  - ✅ **Direct access grants** (cho testing và mobile app)
+  - ❌ Implicit flow (deprecated)
   - ❌ Service accounts roles
 - Click **"Next"**
 
@@ -152,112 +153,63 @@ docker-compose -f keycloak.yml logs -f keycloak
 Root URL: http://localhost:5238
 Home URL: http://localhost:5238
 Valid redirect URIs:
-  http://localhost:5238/*
   http://localhost:3000/*
+  http://localhost:5238/auth/signin-oidc
 Valid post logout redirect URIs:
-  http://localhost:5238/*
   http://localhost:3000/*
+  http://localhost:5238/*
 Web origins:
-  http://localhost:5238
   http://localhost:3000
+  http://localhost:5238
 ```
 - Click **"Save"**
 
-#### Tab 4: Advanced Settings (PKCE)
+**Lưu ý quan trọng về Redirect URIs:**
+- `http://localhost:5238/auth/signin-oidc` - Callback URL của Gateway (cho server-side flow)
+- `http://localhost:3000/*` - Frontend URLs (cho client-side flow)
+
+#### Tab 4: Advanced Settings (PKCE cho Frontend Security)
 1. Vào tab **"Advanced"**
 2. Scroll xuống tìm **"Proof Key for Code Exchange Code Challenge Method"**
-3. Chọn: **S256** ⚠️ **Bắt buộc cho BFF flow**
+3. Chọn: **S256** ⚠️ **Bắt buộc cho frontend security**
 4. Click **"Save"**
 
 ### Bước 8: Lấy Client Secret
 
-1. Vào **Clients** → Click vào `auth-client`
+1. Vào **Clients** → Click vào `gateway`
 2. Click tab **"Credentials"**
 3. Copy **Client Secret** (ví dụ: `gpdyurA7fL4MML2SOFu156KExv2P8NUJ`)
 
-**Lưu ý:** Client Secret này sẽ được sử dụng trong tất cả services:
-- Auth Service (OAuth flow)
+**Lưu ý:** Client Secret này sẽ được sử dụng cho:
 - Gateway (JWT validation)
-- Base API (JWT validation)
-- Generate API (JWT validation)
+- Backend APIs (JWT validation)
 
-### Bước 9: Cấu hình Permissions (Tùy chọn - cho PBAC)
+**Frontend KHÔNG cần Client Secret** vì sử dụng PKCE flow.
 
-#### 9.1. Tạo Client Scope
+### Bước 9: Cập nhật Environment Variables
 
-1. Vào **Client scopes** → Click **"Create client scope"**
-2. **Name**: `permissions`
-3. **Type**: `Optional`
-4. **Protocol**: `OpenID Connect`
-5. **Display on consent screen**: OFF
-6. Click **"Save"**
-
-#### 9.2. Tạo Protocol Mapper
-
-1. Trong client scope `permissions` → Tab **"Mappers"**
-2. Click **"Add mapper"** → **"By configuration"**
-3. Chọn **"User Attribute"**
-4. Điền thông tin:
-   - **Name**: `permissions-mapper`
-   - **User Attribute**: `permissions`
-   - **Token Claim Name**: `permissions`
-   - **Claim JSON Type**: `String`
-   - **Add to ID token**: ✅ ON
-   - **Add to access token**: ✅ ON
-   - **Add to userinfo**: ✅ ON
-   - **Multivalued**: ❌ OFF
-5. Click **"Save"**
-
-#### 9.3. Assign Client Scope to Client
-
-1. Vào **Clients** → Click `auth-client`
-2. Tab **"Client scopes"**
-3. Click **"Add client scope"**
-4. Chọn `permissions`
-5. Click **"Add"** → **"Default"** (quan trọng: phải là Default, không phải Optional)
-
-#### 9.4. Thêm Permissions cho User
-
-1. Vào **Users** → Click `admin` (hoặc user khác)
-2. Tab **"Attributes"**
-3. Click **"Add an attribute"**
-4. **Key**: `permissions`
-5. **Value**: `product:view product:create product:update product:delete category:view category:create`
-6. Click **"Save"**
-
-### Bước 10: Cập nhật appsettings.json
-
-Tất cả services đã được cấu hình sẵn với:
-- **ClientId**: `auth-client`
-- **ClientSecret**: `gpdyurA7fL4MML2SOFu156KExv2P8NUJ`
-
-**Kiểm tra các file:**
-- ✅ `src/Services/Auth/Auth.API/appsettings.json`
-- ✅ `src/ApiGateways/ApiGateway/appsettings.json`
-- ✅ `src/Services/Base/Base.API/appsettings.json`
-- ✅ `src/Services/Generate/Generate.API/appsettings.json`
-
-**Nếu Client Secret khác**, cập nhật trong Keycloak Admin Console → Clients → `auth-client` → Credentials → Copy secret mới.
-
-### Bước 11: Khởi động Redis (cần thiết cho Auth Service)
+Kiểm tra file `.env` trong Gateway có đúng không:
 
 ```bash
-docker run -d --name redis -p 6379:6379 redis:latest
+# Keycloak Settings
+KEYCLOAK_AUTHORITY=http://localhost:8080
+KEYCLOAK_REALM=base-realm
+KEYCLOAK_CLIENTID=gateway
+KEYCLOAK_CLIENTSECRET=gpdyurA7fL4MML2SOFu156KExv2P8NUJ
+KEYCLOAK_VALIDATEISSUER=true
+KEYCLOAK_VALIDATEAUDIENCE=true
+KEYCLOAK_VALIDATELIFETIME=true
+KEYCLOAK_REQUIREHTTPSMETADATA=false
+KEYCLOAK_ROLECLAIMTYPE=realm_access.roles
 ```
 
-### Bước 12: Chạy Services
+### Bước 10: Khởi động Services
+
+Chỉ cần Gateway và Backend APIs:
 
 ```bash
-# Auth Service (port 5100)
-cd src/Services/Auth/Auth.API
-dotnet run
-
-# Gateway (port 5238)
+# Gateway (port 5238) 
 cd src/ApiGateways/ApiGateway
-dotnet run
-
-# Base API (port 5239)
-cd src/Services/Base/Base.API
 dotnet run
 
 # Generate API (port 5027)
@@ -281,13 +233,95 @@ Kết quả: `{"status":"UP"}`
 curl http://localhost:8080/realms/base-realm/.well-known/openid-configuration
 ```
 
-### 3. Test Login Flow
+### 3. Test JWT Token với Direct Access Grant (cho Development)
 
-**URL**: http://localhost:5100/auth/login
+```bash
+# Lấy access token
+curl -X POST http://localhost:8080/realms/base-realm/protocol/openid-connect/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=password" \
+  -d "client_id=gateway" \
+  -d "client_secret=gpdyurA7fL4MML2SOFu156KExv2P8NUJ" \
+  -d "username=admin" \
+  -d "password=admin123"
+```
 
-Hoặc qua Gateway: http://localhost:5238/auth/login
+### 4. Test Gateway với JWT
 
-Hoặc test qua Swagger UI tại: http://localhost:5100/swagger
+```bash
+# Sử dụng token từ step 3
+curl -H "Authorization: Bearer <your_access_token>" \
+  http://localhost:5238/api/generate/health
+```
+
+### 5. Gateway Authentication Flow (Server-side)
+
+**Gateway** có thể xử lý OAuth flow trực tiếp cho frontend:
+
+```bash
+# Step 1: Frontend redirect user đến Gateway login
+http://localhost:5238/auth/login?returnUrl=http://localhost:3000/dashboard
+
+# Step 2: Gateway redirect đến Keycloak với PKCE
+# (Gateway tự động generate state, code_verifier, code_challenge)
+
+# Step 3: Keycloak callback về Gateway
+http://localhost:5238/auth/signin-oidc?code=xxx&state=xxx
+
+# Step 4: Gateway exchange code → tokens, tạo session, set cookie
+
+# Step 5: Gateway redirect về frontend với session cookie
+```
+
+**Kiểm tra Gateway Auth:**
+```bash
+# Test login endpoint
+curl -v http://localhost:5238/auth/login
+
+# Test user info (cần session cookie)
+curl -b "session_id=xxx" http://localhost:5238/auth/user
+
+# Test logout
+curl -X POST -b "session_id=xxx" http://localhost:5238/auth/logout
+```
+
+1. **Login Flow**: Redirect đến Keycloak
+```javascript
+const authUrl = "http://localhost:8080/realms/base-realm/protocol/openid-connect/auth?" +
+  "client_id=gateway&" +
+  "response_type=code&" +
+  "scope=openid profile&" +
+  "redirect_uri=http://localhost:3000/callback&" +
+  "code_challenge_method=S256&" +
+  "code_challenge=<generated_code_challenge>";
+
+window.location.href = authUrl;
+```
+
+2. **Token Exchange**: Đổi code lấy token
+```javascript
+const tokenResponse = await fetch("http://localhost:8080/realms/base-realm/protocol/openid-connect/token", {
+  method: "POST",
+  headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  body: new URLSearchParams({
+    grant_type: "authorization_code",
+    client_id: "gateway",
+    code: authorizationCode,
+    redirect_uri: "http://localhost:3000/callback",
+    code_verifier: codeVerifier
+  })
+});
+```
+
+3. **API Calls**: Gửi token qua Gateway
+```javascript
+const apiResponse = await fetch("http://localhost:5238/api/generate/health", {
+  headers: {
+    "Authorization": `Bearer ${accessToken}`,
+    "Content-Type": "application/json"
+  }
+});
+```
 
 ---
 
@@ -305,27 +339,29 @@ docker logs codebase_keycloak
 docker restart codebase_keycloak
 ```
 
-### Lỗi: "Invalid client credentials"
-- Kiểm tra Client Secret trong appsettings.json khớp với Keycloak
+### Lỗi: "Invalid client credentials" trong Gateway
+- Kiểm tra Client Secret trong `.env` file khớp với Keycloak
 - Đảm bảo Client authentication = ON trong Keycloak
-- Kiểm tra Client ID = `auth-client` trong tất cả services
+- Kiểm tra Client ID = `gateway` trong Gateway config
 
-### Lỗi: "PKCE validation failed"
-- Vào Client → Advanced → Proof Key for Code Exchange = S256
+### Lỗi: "Token validation failed"
+- Kiểm tra `KEYCLOAK_AUTHORITY` đúng: `http://localhost:8080`
+- Kiểm tra `KEYCLOAK_REALM` đúng: `base-realm`
+- Đảm bảo token được issue bởi client `auth-client`
 
-### Lỗi: "Invalid redirect URI"
-- Kiểm tra Valid redirect URIs trong Keycloak có `http://localhost:5238/*`
-- Đảm bảo RedirectUri trong AuthService config = `http://localhost:5238/auth/signin-oidc`
-
-### Permissions không có trong token
-- Kiểm tra Client Scope `permissions` đã assign vào client chưa
-- Phải là **Default**, không phải **Optional**
-- Kiểm tra user có attribute `permissions` chưa
+### Lỗi: "CORS issues" từ Frontend
+- Kiểm tra Web origins trong Keycloak client có `http://localhost:3000`
+- Gateway cần enable CORS cho frontend domain
 
 ### Lỗi: "Invalid audience" khi validate JWT
-- Đảm bảo tất cả services dùng cùng ClientId: `auth-client`
-- Kiểm tra tokens được issue bởi client `auth-client`
+- Đảm bảo Gateway và APIs dùng cùng ClientId: `gateway`
+- Token phải được issue cho đúng audience
+
+### Frontend không thể login
+- Kiểm tra Valid redirect URIs có `http://localhost:3000/*`
+- Đảm bảo PKCE code challenge method = S256
+- Kiểm tra client_id trong frontend code = `gateway`
 
 ---
 
-**Hoàn thành!** 🎉 Bạn đã setup xong Keycloak với BFF flow.
+**Hoàn thành!** 🎉 Bạn đã setup xong Keycloak với Gateway-direct JWT authentication.
