@@ -35,7 +35,7 @@ echo "================================================================="
 echo "STARTING SERVICES"
 echo "================================================================="
 
-Start MySQL
+# Start MySQL
 echo "[1/3] Starting MySQL Database..."
 docker-compose --env-file .env -f database/mysql.yml up -d
 if [ $? -ne 0 ]; then
