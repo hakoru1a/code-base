@@ -29,9 +29,7 @@ echo "Stopping all services first..."
 
 # Stop all services
 if [ -f .env ]; then
-    docker-compose --env-file .env -f database/mysql.yml down 2>/dev/null || true
-    docker-compose --env-file .env -f cache/redis.yml down 2>/dev/null || true
-    docker-compose --env-file .env -f auth/keycloak.yml down 2>/dev/null || true
+    docker-compose --env-file .env down 2>/dev/null || true
 fi
 
 echo ""
@@ -62,7 +60,7 @@ echo "TẤT CẢ DỮ LIỆU VOLUMES ĐÃ ĐƯỢC XÓA!"
 echo "================================================================="
 echo ""
 echo "Lần khởi động tiếp theo sẽ như lần đầu cài đặt."
-echo "Chạy run-all.sh để khởi động lại các services."
+echo "Chạy 'docker-compose --env-file .env up -d' để khởi động lại các services."
 echo ""
 echo "Press Enter to exit..."
 read
