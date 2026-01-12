@@ -37,7 +37,7 @@ echo =================================================================
 
 rem Start MySQL
 echo [1/3] Starting MySQL Database...
-call run-mysql.bat
+docker-compose --env-file .env -f database/mysql.yml up -d
 if %errorlevel% neq 0 (
     echo Error starting MySQL!
     pause
@@ -46,7 +46,7 @@ if %errorlevel% neq 0 (
 
 rem Start Redis
 echo [2/3] Starting Redis Cache...
-call run-redis.bat
+docker-compose --env-file .env -f cache/redis.yml up -d
 if %errorlevel% neq 0 (
     echo Error starting Redis!
     pause
@@ -55,7 +55,7 @@ if %errorlevel% neq 0 (
 
 rem Start Keycloak
 echo [3/3] Starting Keycloak Auth Server...
-call run-keycloak.bat
+docker-compose --env-file .env -f auth/keycloak.yml up -d
 if %errorlevel% neq 0 (
     echo Error starting Keycloak!
     pause
