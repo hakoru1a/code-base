@@ -54,7 +54,7 @@ namespace Infrastructure.Extensions
                     ValidateLifetime = keycloakSettings.ValidateLifetime,
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = $"{keycloakSettings.Authority}/realms/{keycloakSettings.Realm}",
-                    ValidAudiences = new[] { 
+                    ValidAudiences = new[] {
                         keycloakSettings.ClientId
                     },
                     ClockSkew = TimeSpan.FromMinutes(5),
@@ -215,9 +215,9 @@ namespace Infrastructure.Extensions
                             allClaims.Count,
                             string.Join(" | ", allClaims));
 
-                        // Debug: Log permission claims specifically
+                        // Debug: Log permission claims from resource_access roles
                         var permissionClaims = context.User.Claims
-                            .Where(c => c.Type == "permissions")
+                            .Where(c => c.Type == ClaimTypes.Role && c.Value.Contains(":"))
                             .Select(c => c.Value)
                             .ToList();
                         Log.Debug(
@@ -226,12 +226,12 @@ namespace Infrastructure.Extensions
                             permissionClaims.Count,
                             string.Join(" | ", permissionClaims));
 
-                        // Check permission
+                        // Check permission in ClaimTypes.Role (from resource_access)
                         hasPermission = context.User.HasClaim(c =>
-                            c.Type == "permissions" &&
-                            c.Value.Contains(requiredPermission, StringComparison.OrdinalIgnoreCase));
+                            c.Type == ClaimTypes.Role &&
+                            c.Value.Equals(requiredPermission, StringComparison.OrdinalIgnoreCase));
 
-                        Log.Debug(
+                        Log.Information(
                             "[POLICY DEBUG] Permission Check Result: {HasPermission}\n" +
                             "  Required: {RequiredPermission}\n" +
                             "  Found in Claims: {Found}",
@@ -320,20 +320,26 @@ namespace Infrastructure.Extensions
 
                         if (resourceAccess != null)
                         {
-                            // Add client-specific roles
-                            if (resourceAccess.TryGetValue(settings.ClientId, out var clientRoles))
+                            var clientNames = new[] { settings.ClientId, };
+                            foreach (var clientName in clientNames)
                             {
-                                if (clientRoles.TryGetProperty("roles", out var rolesElement))
+                                if (resourceAccess.TryGetValue(clientName, out var clientRoles))
                                 {
-                                    var roles = JsonSerializer.Deserialize<List<string>>(
-                                        rolesElement.GetRawText());
-
-                                    if (roles != null)
                                     {
-                                        foreach (var role in roles)
+                                        if (clientRoles.TryGetProperty("roles", out var rolesElement))
                                         {
-                                            identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                                            var roles = JsonSerializer.Deserialize<List<string>>(
+                                                rolesElement.GetRawText());
+
+                                            if (roles != null)
+                                            {
+                                                foreach (var role in roles)
+                                                {
+                                                    identity.AddClaim(new Claim(ClaimTypes.Role, role));
+                                                }
+                                            }
                                         }
+                                        break; // Found client, stop searching
                                     }
                                 }
                             }
@@ -346,12 +352,6 @@ namespace Infrastructure.Extensions
                 }
             }
 
-            // Extract permissions from scope
-            var scopeClaim = identity.FindFirst("scope");
-            if (scopeClaim != null)
-            {
-                identity.AddClaim(new Claim("permissions", scopeClaim.Value));
-            }
         }
     }
 }

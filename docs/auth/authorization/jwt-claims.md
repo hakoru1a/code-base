@@ -32,14 +32,12 @@
   
   "resource_access": {
     "api-gateway": {
-      "roles": ["api-admin", "api-user"]
+      "roles": ["product:view", "product:create", "product:update", "category:view", "category:create", "order:view"]
     },
     "account": {
       "roles": ["manage-account", "view-profile"]
     }
   },
-  
-  "permissions": "product:view product:create product:update category:view category:create order:view",
   
   "department": "Sales",
   "region": "Hanoi",
@@ -68,9 +66,10 @@
 | `email` | String | Email address | Contact info |
 | `name` | String | Full name | Display name |
 | `realm_access` | Object | Realm-level roles | RBAC |
-| `resource_access` | Object | Client-specific roles | RBAC |
-| `permissions` | String | Space-separated permissions | PBAC |
+| `resource_access` | Object | Client-specific roles & permissions | RBAC + PBAC |
 | `department`, `region`, etc. | String | Custom attributes | ABAC (Attribute-Based AC) |
+
+**📝 Lưu ý:** Để cấu hình custom attributes (department, region, clearance_level, permissions) xuất hiện trong JWT token, xem hướng dẫn chi tiết tại [Keycloak Guide - Bước 9: Cấu hình Attribute Permissions](../authentication/keycloak-guide.md#bước-9-cấu-hình-attribute-permissions-mappers).
 
 ---
 
@@ -91,13 +90,13 @@
          ↓
 6. KeycloakAuthenticationExtensions.MapKeycloakRoles()
    - Extract realm_access.roles → Add to ClaimTypes.Role
-   - Extract resource_access.{client}.roles → Add to ClaimTypes.Role
-   - Extract scope → Add to "permissions" claim
+   - Extract resource_access.{client}.roles → Add to ClaimTypes.Role (includes permissions)
+   - Extract scope → Add to "scope" claim
          ↓
 7. ClaimsPrincipalExtensions.ToUserClaimsContext()
    - Extract UserId from "sub"
-   - Collect all Roles (from ClaimTypes.Role)
-   - Parse Permissions (from "permissions" or "scope")
+   - Collect all Roles (from ClaimTypes.Role) 
+   - Parse Permissions (from resource_access roles with ":" format)
    - Extract CustomAttributes (department, region, etc.)
          ↓
 8. UserClaimsContext Object
@@ -207,11 +206,11 @@ private static void MapKeycloakRoles(ClaimsIdentity identity, KeycloakSettings s
         }
     }
     
-    // 3. Extract permissions from scope
+    // 3. Extract scope (OAuth scopes, not permissions)
     var scopeClaim = identity.FindFirst("scope");
     if (scopeClaim != null)
     {
-        identity.AddClaim(new Claim("permissions", scopeClaim.Value));
+        identity.AddClaim(new Claim("scope", scopeClaim.Value));
     }
 }
 ```
@@ -220,7 +219,7 @@ private static void MapKeycloakRoles(ClaimsIdentity identity, KeycloakSettings s
 ```json
 {
   "realm_access": { "roles": ["admin", "user"] },
-  "resource_access": { "api-gateway": { "roles": ["api-admin"] } },
+  "resource_access": { "api-gateway": { "roles": ["product:view", "product:create"] } },
   "scope": "openid profile email"
 }
 ```
@@ -229,9 +228,10 @@ private static void MapKeycloakRoles(ClaimsIdentity identity, KeycloakSettings s
 ```csharp
 Claims:
   - ClaimTypes.Role = "admin"
-  - ClaimTypes.Role = "user"
-  - ClaimTypes.Role = "api-admin"
-  - "permissions" = "openid profile email"
+  - ClaimTypes.Role = "user"  
+  - ClaimTypes.Role = "product:view"
+  - ClaimTypes.Role = "product:create"
+  - "scope" = "openid profile email"
 ```
 
 #### Step 3: Extract to UserClaimsContext
@@ -300,11 +300,10 @@ private static void ExtractClaims(ClaimsPrincipal user, UserClaimsContext contex
             context.Claims[claim.Type] = claim.Value;
         }
         
-        // Extract permissions from custom claim
-        if (claim.Type == "permissions" || claim.Type == "scope")
+        // Extract permissions from roles (resource_access format: "permission:action")
+        if (claim.Type == ClaimTypes.Role && claim.Value.Contains(':'))
         {
-            var permissions = claim.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            context.Permissions.AddRange(permissions);
+            context.Permissions.Add(claim.Value);
         }
     }
     
@@ -329,11 +328,11 @@ private static void ExtractCustomAttributes(ClaimsPrincipal user, UserClaimsCont
 ```csharp
 {
     UserId = "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    Roles = ["admin", "user", "api-admin"],
-    Permissions = ["product:view", "product:create", "category:view"],
+    Roles = ["admin", "user"],  // Only realm/traditional roles
+    Permissions = ["product:view", "product:create", "category:view"],  // From resource_access roles
     Claims = {
         "sub" = "a1b2c3d4...",
-        "preferred_username" = "testuser",
+        "preferred_username" = "testuser", 
         "email" = "testuser@example.com",
         ...
     },
@@ -581,13 +580,13 @@ private static void AddHybridPolicy(
     options.AddPolicy(policyName, policy =>
         policy.RequireAssertion(context =>
         {
-            // Check permission (PBAC)
+            // Check permission (PBAC) - from resource_access roles
             bool hasPermission = false;
             if (!string.IsNullOrEmpty(requiredPermission))
             {
                 hasPermission = context.User.HasClaim(c =>
-                    c.Type == "permissions" &&
-                    c.Value.Contains(requiredPermission, StringComparison.OrdinalIgnoreCase));
+                    c.Type == ClaimTypes.Role &&
+                    c.Value.Equals(requiredPermission, StringComparison.OrdinalIgnoreCase));
             }
             
             // Check role (RBAC)
@@ -777,7 +776,8 @@ _logger.LogDebug("User Claims: {Claims}", string.Join(", ", claims));
 // preferred_username = testuser,
 // http://schemas.microsoft.com/ws/2008/06/identity/claims/role = admin,
 // http://schemas.microsoft.com/ws/2008/06/identity/claims/role = user,
-// permissions = product:view product:create
+// http://schemas.microsoft.com/ws/2008/06/identity/claims/role = product:view,
+// http://schemas.microsoft.com/ws/2008/06/identity/claims/role = product:create
 ```
 
 ### Log UserClaimsContext
@@ -804,12 +804,12 @@ _logger.LogDebug("UserContext: UserId={UserId}, Roles={Roles}, Permissions={Perm
   User: testuser, IsAuthenticated: True
   All Claims (15): sub=a1b2c3d4 | preferred_username=testuser | ...
 
-[POLICY DEBUG] Permission Claims Found: 1
-  Permission Values: product:view product:create category:view
+[POLICY DEBUG] Permission Claims Found: 3
+  Permission Values: product:view, product:create, category:view
 
 [POLICY DEBUG] Permission Check Result: True
   Required: product:view
-  Found in Claims: YES
+  Found in Role Claims: YES
 
 [POLICY DEBUG] Final Result for Policy 'CanViewProducts': ALLOWED
   HasPermission: True, HasRole: False
@@ -833,9 +833,9 @@ Gateway parses JWT Token
 JwtBearerAuthentication validates signature
     ↓
 MapKeycloakRoles() extracts:
-    - realm_access.roles → ClaimTypes.Role
-    - resource_access.{client}.roles → ClaimTypes.Role
-    - scope → "permissions" claim
+    - realm_access.roles → ClaimTypes.Role (traditional roles)
+    - resource_access.{client}.roles → ClaimTypes.Role (permissions as roles)
+    - scope → "scope" claim (OAuth scopes)
     ↓
 ClaimsPrincipal with all claims
     ↓
