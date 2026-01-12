@@ -41,7 +41,7 @@ services:
       POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - keycloak_db_data:/var/lib/postgresql/data
+      - ../volumes/keycloak:/var/lib/postgresql/data
     networks:
       - codebase_network
     healthcheck:
@@ -49,10 +49,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-volumes:
-  keycloak_db_data:
-    driver: local
 
 networks:
   codebase_network:

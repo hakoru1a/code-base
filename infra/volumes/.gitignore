@@ -1,0 +1,5 @@
+# Ignore all data in volumes directory
+# These are database and cache data files
+*
+!.gitignore
+!README.md
