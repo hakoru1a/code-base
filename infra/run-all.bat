@@ -36,13 +36,13 @@ echo STARTING SERVICES
 echo =================================================================
 
 rem Start MySQL
-echo [1/3] Starting MySQL Database...
-docker-compose --env-file .env -f database/mysql.yml up -d
-if %errorlevel% neq 0 (
-    echo Error starting MySQL!
-    pause
-    exit /b 1
-)
+@REM echo [1/3] Starting MySQL Database...
+@REM docker-compose --env-file .env -f database/mysql.yml up -d
+@REM if %errorlevel% neq 0 (
+@REM     echo Error starting MySQL!
+@REM     pause
+@REM     exit /b 1
+@REM )
 
 rem Start Redis
 echo [2/3] Starting Redis Cache...
