@@ -75,6 +75,10 @@ try
     // Register authentication services
     builder.Services.AddScoped<ApiGateway.Services.IPkceService, ApiGateway.Services.PkceService>();
     builder.Services.AddScoped<ApiGateway.Services.ISessionManager, ApiGateway.Services.SessionManager>();
+    
+    // Register enhanced security services
+    builder.Services.AddScoped<ApiGateway.Services.IClientFingerprintService, ApiGateway.Services.ClientFingerprintService>();
+    builder.Services.AddScoped<Infrastructure.Identity.IJwtClaimsCache, Infrastructure.Identity.JwtClaimsCache>();
 
     #endregion
 

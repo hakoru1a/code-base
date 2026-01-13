@@ -120,7 +120,7 @@ public class AuthController : ControllerBase
                 pkceData.CodeVerifier,
                 callbackUri);
 
-            var sessionId = await _sessionManager.CreateSessionAsync(tokenResponse);
+            var sessionId = await _sessionManager.CreateSessionAsync(tokenResponse, HttpContext);
 
             Response.Cookies.Append(CookieConstants.SessionIdCookieName, sessionId, new CookieOptions
             {

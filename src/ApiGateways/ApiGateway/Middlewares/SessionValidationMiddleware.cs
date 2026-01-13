@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using ApiGateway.Services;
 using ApiGateway.Configurations;
+using Infrastructure.Identity;
 
 namespace ApiGateway.Middlewares;
 
@@ -13,21 +14,23 @@ public class SessionValidationMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<SessionValidationMiddleware> _logger;
-    private readonly JwtSecurityTokenHandler _jwtHandler;
+    private readonly IJwtClaimsCache _jwtClaimsCache;
 
     public SessionValidationMiddleware(
         RequestDelegate next,
-        ILogger<SessionValidationMiddleware> logger)
+        ILogger<SessionValidationMiddleware> logger,
+        IJwtClaimsCache jwtClaimsCache)
     {
         _next = next;
         _logger = logger;
-        _jwtHandler = new JwtSecurityTokenHandler();
+        _jwtClaimsCache = jwtClaimsCache;
     }
 
     public async Task InvokeAsync(
         HttpContext context,
         ISessionManager sessionManager,
-        IOAuthClient oauthClient)
+        IOAuthClient oauthClient,
+        IClientFingerprintService fingerprintService)
     {
         var path = context.Request.Path.Value ?? "";
 
@@ -57,9 +60,17 @@ public class SessionValidationMiddleware
             return;
         }
 
+        // 4. Validate session context (fingerprint, etc.)
+        if (!await sessionManager.ValidateSessionContextAsync(sessionId, context))
+        {
+            await WriteUnauthorizedResponseAsync(context, AuthenticationConstants.Unauthorized,
+                "Session validation failed. Please login again.");
+            return;
+        }
+
         string? newSessionId = null;
 
-        // 4. Check if session needs rotation (> 10 phút kể từ lần rotate cuối hoặc từ lúc tạo)
+        // 5. Check if session needs rotation (> 10 phút kể từ lần rotate cuối hoặc từ lúc tạo)
         var lastRotateTime = session.LastRotatedAt ?? session.CreatedAt;
         var minutesSinceLastRotate = (DateTime.UtcNow - lastRotateTime).TotalMinutes;
 
@@ -95,7 +106,7 @@ public class SessionValidationMiddleware
             }
         }
 
-        // 5. Update cookie nếu session đã được rotate
+        // 6. Update cookie nếu session đã được rotate
         if (!string.IsNullOrEmpty(newSessionId))
         {
             context.Response.Cookies.Append(
@@ -115,8 +126,9 @@ public class SessionValidationMiddleware
                 newSessionId);
         }
 
-        // 6. Check if token needs refresh
-        if (session.NeedsRefresh())
+        // 7. Check if token needs refresh using cached expiration check
+        var needsRefresh = await _jwtClaimsCache.IsTokenNearExpirationAsync(session.AccessToken);
+        if (needsRefresh)
         {
             try
             {
@@ -139,20 +151,20 @@ public class SessionValidationMiddleware
             }
         }
 
-        // 7. Parse JWT và set HttpContext.User để RBAC hoạt động
-        SetUserContextFromJwt(context, session.AccessToken);
+        // 8. Parse JWT và set HttpContext.User để RBAC hoạt động (using cache)
+        await SetUserContextFromJwtAsync(context, session.AccessToken);
 
-        // 8. Set access token vào HttpContext.Items để TokenDelegatingHandler sử dụng
+        // 9. Set access token vào HttpContext.Items để TokenDelegatingHandler sử dụng
         context.Items[HttpContextItemKeys.AccessToken] = session.AccessToken;
 
-        // 9. Continue pipeline
+        // 10. Continue pipeline
         await _next(context);
     }
 
     /// <summary>
-    /// Parse JWT và set HttpContext.User để RBAC hoạt động
+    /// Parse JWT và set HttpContext.User để RBAC hoạt động (using cache for better performance)
     /// </summary>
-    private void SetUserContextFromJwt(HttpContext context, string? accessToken)
+    private async Task SetUserContextFromJwtAsync(HttpContext context, string? accessToken)
     {
         if (string.IsNullOrEmpty(accessToken))
         {
@@ -162,17 +174,13 @@ public class SessionValidationMiddleware
 
         try
         {
-            var jwtToken = _jwtHandler.ReadJwtToken(accessToken);
-            var claims = jwtToken.Claims.ToList();
-
-            var identity = new ClaimsIdentity(claims, AuthenticationConstants.BearerScheme);
-            var principal = new ClaimsPrincipal(identity);
-
+            // Use cached claims principal for better performance
+            var principal = await _jwtClaimsCache.GetOrCreateClaimsAsync(accessToken);
             context.User = principal;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Failed to parse JWT. RBAC may not work properly.");
+            _logger.LogWarning(ex, "Failed to parse JWT from cache. RBAC may not work properly.");
         }
     }
 

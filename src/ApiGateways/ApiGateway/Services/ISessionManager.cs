@@ -13,6 +13,11 @@ public interface ISessionManager
     Task<string> CreateSessionAsync(TokenResponse tokenResponse);
 
     /// <summary>
+    /// Tạo session mới với client context để tăng cường bảo mật
+    /// </summary>
+    Task<string> CreateSessionAsync(TokenResponse tokenResponse, HttpContext httpContext);
+
+    /// <summary>
     /// Lấy session từ Redis
     /// </summary>
     Task<UserSession?> GetSessionAsync(string sessionId);
@@ -43,4 +48,14 @@ public interface ISessionManager
     /// <param name="oldSessionId">Session ID cũ</param>
     /// <returns>Session ID mới</returns>
     Task<string> RotateSessionIdAsync(string oldSessionId);
+
+    /// <summary>
+    /// Invalidate session ngay lập tức (security breach)
+    /// </summary>
+    Task InvalidateSessionAsync(string sessionId);
+
+    /// <summary>
+    /// Validate session với client context
+    /// </summary>
+    Task<bool> ValidateSessionContextAsync(string sessionId, HttpContext httpContext);
 }

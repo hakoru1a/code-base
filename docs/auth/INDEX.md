@@ -94,6 +94,15 @@ Browser → Gateway → Keycloak
 
 ---
 
+## 🔒 Cải tiến Bảo mật
+
+*   **Security Improvements**: Tài liệu chi tiết về các cải tiến bảo mật đã thực hiện
+    *   [security-improvements.md](./security-improvements.md)
+*   **Troubleshooting**: Hướng dẫn khắc phục sự cố liên quan đến cải tiến bảo mật
+    *   [troubleshooting-security-improvements.md](./troubleshooting-security-improvements.md)
+
+---
+
 ## 📚 Tài liệu liên quan
 
 *   **API Gateway README**: Chi tiết về cấu hình và sử dụng API Gateway

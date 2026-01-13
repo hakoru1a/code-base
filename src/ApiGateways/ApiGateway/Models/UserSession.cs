@@ -77,6 +77,21 @@ public class UserSession
     public Dictionary<string, string> Claims { get; set; } = new();
 
     /// <summary>
+    /// Client fingerprint để bind session với specific client
+    /// </summary>
+    public string ClientFingerprint { get; set; } = string.Empty;
+
+    /// <summary>
+    /// IP Address khi tạo session
+    /// </summary>
+    public string IpAddress { get; set; } = string.Empty;
+
+    /// <summary>
+    /// User Agent khi tạo session
+    /// </summary>
+    public string UserAgent { get; set; } = string.Empty;
+
+    /// <summary>
     /// Kiểm tra access token đã hết hạn chưa
     /// </summary>
     public bool IsAccessTokenExpired()
@@ -90,5 +105,20 @@ public class UserSession
     public bool NeedsRefresh(int bufferSeconds = 60)
     {
         return DateTime.UtcNow.AddSeconds(bufferSeconds) >= ExpiresAt;
+    }
+
+    /// <summary>
+    /// Lấy session timeout dựa trên roles
+    /// Admin: 2h, Manager: 4h, User: 8h
+    /// </summary>
+    public TimeSpan GetSessionTimeout()
+    {
+        if (Roles.Contains("admin", StringComparer.OrdinalIgnoreCase))
+            return TimeSpan.FromHours(2);
+        
+        if (Roles.Any(r => r.Contains("manager", StringComparison.OrdinalIgnoreCase)))
+            return TimeSpan.FromHours(4);
+        
+        return TimeSpan.FromHours(8);
     }
 }

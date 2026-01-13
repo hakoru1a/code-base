@@ -16,21 +16,36 @@ public class SessionManager : ISessionManager
     private readonly IRedisRepository _redisRepo;
     private readonly OAuthOptions _oauthOptions;
     private readonly ILogger<SessionManager> _logger;
+    private readonly IClientFingerprintService _fingerprintService;
 
     private const string SessionKeyPrefix = "session:";
     private const string WillRemoveKeyPrefix = "will_remove:";
+    private const string InvalidSessionKeyPrefix = "invalid_session:";
 
     public SessionManager(
         IRedisRepository redisRepo,
         IOptions<OAuthOptions> oauthOptions,
-        ILogger<SessionManager> logger)
+        ILogger<SessionManager> logger,
+        IClientFingerprintService fingerprintService)
     {
         _redisRepo = redisRepo;
         _oauthOptions = oauthOptions.Value;
         _logger = logger;
+        _fingerprintService = fingerprintService;
     }
 
     public async Task<string> CreateSessionAsync(TokenResponse tokenResponse)
+    {
+        // Backward compatibility - create session without HTTP context
+        return await CreateSessionInternalAsync(tokenResponse, null);
+    }
+
+    public async Task<string> CreateSessionAsync(TokenResponse tokenResponse, HttpContext httpContext)
+    {
+        return await CreateSessionInternalAsync(tokenResponse, httpContext);
+    }
+
+    private async Task<string> CreateSessionInternalAsync(TokenResponse tokenResponse, HttpContext? httpContext)
     {
         try
         {
@@ -64,16 +79,21 @@ public class SessionManager : ISessionManager
                 Username = username,
                 Email = email,
                 Roles = roles,
-                Claims = claims
+                Claims = claims,
+                // Enhanced security features
+                ClientFingerprint = httpContext != null ? _fingerprintService.GenerateFingerprint(httpContext) : "",
+                IpAddress = httpContext?.Connection.RemoteIpAddress?.ToString() ?? "",
+                UserAgent = httpContext?.Request.Headers.UserAgent.ToString() ?? ""
             };
 
             await SaveSessionToRedisAsync(session);
 
             _logger.LogInformation(
-                "Session created for user {Username} (ID: {UserId}), SessionId: {SessionId}",
+                "Session created for user {Username} (ID: {UserId}), SessionId: {SessionId}, IP: {IpAddress}",
                 username,
                 userId,
-                sessionId);
+                sessionId,
+                session.IpAddress);
 
             return sessionId;
         }
@@ -88,6 +108,14 @@ public class SessionManager : ISessionManager
     {
         try
         {
+            // Check if session is marked as invalid first
+            var invalidKey = $"{_oauthOptions.InstanceName}{InvalidSessionKeyPrefix}{sessionId}";
+            if (await _redisRepo.ExistsAsync(invalidKey))
+            {
+                _logger.LogWarning("Attempted to access invalidated session: {SessionId}", sessionId);
+                return null;
+            }
+
             var cacheKey = $"{_oauthOptions.InstanceName}{SessionKeyPrefix}{sessionId}";
             var session = await _redisRepo.GetAsync<UserSession>(cacheKey);
 
@@ -246,10 +274,72 @@ public class SessionManager : ISessionManager
 
     #region Private Methods
 
+    public async Task InvalidateSessionAsync(string sessionId)
+    {
+        try
+        {
+            // Mark session as invalid immediately
+            var invalidKey = $"{_oauthOptions.InstanceName}{InvalidSessionKeyPrefix}{sessionId}";
+            await _redisRepo.SetAsync(invalidKey, true, TimeSpan.FromHours(24));
+
+            // Remove session data
+            var cacheKey = $"{_oauthOptions.InstanceName}{SessionKeyPrefix}{sessionId}";
+            await _redisRepo.DeleteAsync(cacheKey);
+
+            _logger.LogWarning("Session invalidated immediately: {SessionId}", sessionId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to invalidate session: {SessionId}", sessionId);
+            throw;
+        }
+    }
+
+    public async Task<bool> ValidateSessionContextAsync(string sessionId, HttpContext httpContext)
+    {
+        try
+        {
+            var session = await GetSessionWithoutUpdateAsync(sessionId);
+            if (session == null)
+                return false;
+
+            // Validate client fingerprint if available
+            if (!string.IsNullOrEmpty(session.ClientFingerprint))
+            {
+                if (!_fingerprintService.ValidateFingerprint(session.ClientFingerprint, httpContext))
+                {
+                    _logger.LogWarning(
+                        "Client fingerprint mismatch for session {SessionId}, User: {Username}",
+                        sessionId,
+                        session.Username);
+                    
+                    // Invalidate session on fingerprint mismatch
+                    await InvalidateSessionAsync(sessionId);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to validate session context: {SessionId}", sessionId);
+            return false;
+        }
+    }
+
     private async Task SaveSessionToRedisAsync(UserSession session)
     {
         var cacheKey = $"{_oauthOptions.InstanceName}{SessionKeyPrefix}{session.SessionId}";
-        var expiry = TimeSpan.FromMinutes(_oauthOptions.SessionAbsoluteExpirationMinutes);
+        
+        // Use role-based timeout instead of fixed timeout
+        var expiry = session.GetSessionTimeout();
+        
+        // Ensure we don't exceed configured maximum
+        var maxExpiry = TimeSpan.FromMinutes(_oauthOptions.SessionAbsoluteExpirationMinutes);
+        if (expiry > maxExpiry)
+            expiry = maxExpiry;
+            
         await _redisRepo.SetAsync(cacheKey, session, expiry);
     }
 
