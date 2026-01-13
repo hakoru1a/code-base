@@ -140,6 +140,13 @@ namespace Infrastructure.Extensions
                 services.AddSingleton<IConnectionMultiplexer>(sp =>
                 {
                     var configurationOptions = ConfigurationOptions.Parse(cacheSettings.ConnectionStrings);
+                    
+                    // Add password if provided
+                    if (!string.IsNullOrEmpty(cacheSettings.Password))
+                    {
+                        configurationOptions.Password = cacheSettings.Password;
+                    }
+                    
                     configurationOptions.AbortOnConnectFail = false;
                     configurationOptions.ConnectTimeout = 5000;
                     configurationOptions.SyncTimeout = 5000;
