@@ -53,6 +53,9 @@ public class SessionValidationMiddleware
 
         if (session == null)
         {
+            // Session không tồn tại hoặc đã bị invalidated
+            // Xóa cookie để tránh client tiếp tục gửi session_id cũ trong các request tiếp theo
+            DeleteSessionCookie(context);
             await WriteUnauthorizedResponseAsync(context, AuthenticationConstants.Unauthorized,
                 "Session not found or expired. Please login.");
             return;
@@ -61,6 +64,10 @@ public class SessionValidationMiddleware
         // 4. Validate session context (fingerprint, etc.)
         if (!await sessionManager.ValidateSessionContextAsync(sessionId, context))
         {
+            // Session validation failed (có thể do fingerprint mismatch)
+            // ValidateSessionContextAsync đã gọi InvalidateSessionAsync, session đã bị đánh dấu invalid
+            // Xóa cookie để client không tiếp tục gửi session_id đã invalidated
+            DeleteSessionCookie(context);
             await WriteUnauthorizedResponseAsync(context, AuthenticationConstants.Unauthorized,
                 "Session validation failed. Please login again.");
             return;
@@ -143,6 +150,8 @@ public class SessionValidationMiddleware
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to refresh token for session: {SessionId}", session.SessionId);
+                // Token refresh failed - xóa cookie để client login lại
+                DeleteSessionCookie(context);
                 await WriteUnauthorizedResponseAsync(context, AuthenticationConstants.Unauthorized,
                     "Token refresh failed. Please login again.");
                 return;
@@ -203,6 +212,28 @@ public class SessionValidationMiddleware
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Xóa session cookie khi session không hợp lệ hoặc đã bị invalidated
+    /// Điều này ngăn client tiếp tục gửi session_id cũ trong các request tiếp theo
+    /// </summary>
+    private static void DeleteSessionCookie(HttpContext context)
+    {
+        try
+        {
+            context.Response.Cookies.Delete(CookieConstants.SessionIdCookieName, new CookieOptions
+            {
+                Path = CookieConstants.CookiePath,
+                HttpOnly = true,
+                Secure = context.Request.IsHttps,
+                SameSite = SameSiteMode.Lax
+            });
+        }
+        catch
+        {
+            // Ignore errors when deleting cookie
+        }
     }
 }
 

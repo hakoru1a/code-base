@@ -33,17 +33,18 @@ public class ClientFingerprintService : IClientFingerprintService
     {
         try
         {
-            var components = new[]
+            // Chỉ dùng User-Agent để tránh vấn đề IP thay đổi (load balancer/proxy)
+            // và các headers khác có thể thay đổi giữa các request
+            var userAgent = NormalizeHeader(context.Request.Headers.UserAgent.ToString());
+            
+            // Nếu User-Agent rỗng, fallback về IP
+            if (string.IsNullOrEmpty(userAgent))
             {
-                GetClientIpAddress(context),
-                context.Request.Headers.UserAgent.ToString(),
-                context.Request.Headers.AcceptLanguage.ToString(),
-                context.Request.Headers.AcceptEncoding.ToString(),
-                context.Request.Headers.Accept.ToString()
-            };
+                var ip = GetClientIpAddress(context);
+                userAgent = ip;
+            }
 
-            var combined = string.Join("|", components);
-            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(combined));
+            var hash = SHA256.HashData(Encoding.UTF8.GetBytes(userAgent));
             
             return Convert.ToBase64String(hash);
         }
@@ -54,6 +55,18 @@ public class ClientFingerprintService : IClientFingerprintService
         }
     }
 
+    /// <summary>
+    /// Normalize header value để tránh sự khác biệt về whitespace, case
+    /// </summary>
+    private static string NormalizeHeader(string headerValue)
+    {
+        if (string.IsNullOrEmpty(headerValue))
+            return string.Empty;
+
+        // Remove extra whitespace và convert to lowercase
+        return headerValue.Trim().ToLowerInvariant();
+    }
+
     public bool ValidateFingerprint(string storedFingerprint, HttpContext context)
     {
         try
@@ -62,6 +75,19 @@ public class ClientFingerprintService : IClientFingerprintService
                 return true; // Backward compatibility
 
             var currentFingerprint = GenerateFingerprint(context);
+            
+            // Log để debug nếu fingerprint khác nhau
+            if (storedFingerprint != currentFingerprint)
+            {
+                _logger.LogWarning(
+                    "Fingerprint mismatch. Stored: {StoredFingerprint}, Current: {CurrentFingerprint}. " +
+                    "IP: {Ip}, UserAgent: {UserAgent}",
+                    storedFingerprint,
+                    currentFingerprint,
+                    GetClientIpAddress(context),
+                    context.Request.Headers.UserAgent.ToString());
+            }
+            
             return storedFingerprint == currentFingerprint;
         }
         catch (Exception ex)
