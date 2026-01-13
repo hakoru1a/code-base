@@ -14,23 +14,21 @@ public class SessionValidationMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<SessionValidationMiddleware> _logger;
-    private readonly IJwtClaimsCache _jwtClaimsCache;
 
     public SessionValidationMiddleware(
         RequestDelegate next,
-        ILogger<SessionValidationMiddleware> logger,
-        IJwtClaimsCache jwtClaimsCache)
+        ILogger<SessionValidationMiddleware> logger)
     {
         _next = next;
         _logger = logger;
-        _jwtClaimsCache = jwtClaimsCache;
     }
 
     public async Task InvokeAsync(
         HttpContext context,
         ISessionManager sessionManager,
         IOAuthClient oauthClient,
-        IClientFingerprintService fingerprintService)
+        IClientFingerprintService fingerprintService,
+        IJwtClaimsCache jwtClaimsCache)
     {
         var path = context.Request.Path.Value ?? "";
 
@@ -127,7 +125,7 @@ public class SessionValidationMiddleware
         }
 
         // 7. Check if token needs refresh using cached expiration check
-        var needsRefresh = await _jwtClaimsCache.IsTokenNearExpirationAsync(session.AccessToken);
+        var needsRefresh = await jwtClaimsCache.IsTokenNearExpirationAsync(session.AccessToken);
         if (needsRefresh)
         {
             try
@@ -152,7 +150,7 @@ public class SessionValidationMiddleware
         }
 
         // 8. Parse JWT và set HttpContext.User để RBAC hoạt động (using cache)
-        await SetUserContextFromJwtAsync(context, session.AccessToken);
+        await SetUserContextFromJwtAsync(context, session.AccessToken, jwtClaimsCache);
 
         // 9. Set access token vào HttpContext.Items để TokenDelegatingHandler sử dụng
         context.Items[HttpContextItemKeys.AccessToken] = session.AccessToken;
@@ -164,7 +162,7 @@ public class SessionValidationMiddleware
     /// <summary>
     /// Parse JWT và set HttpContext.User để RBAC hoạt động (using cache for better performance)
     /// </summary>
-    private async Task SetUserContextFromJwtAsync(HttpContext context, string? accessToken)
+    private async Task SetUserContextFromJwtAsync(HttpContext context, string? accessToken, IJwtClaimsCache jwtClaimsCache)
     {
         if (string.IsNullOrEmpty(accessToken))
         {
@@ -175,7 +173,7 @@ public class SessionValidationMiddleware
         try
         {
             // Use cached claims principal for better performance
-            var principal = await _jwtClaimsCache.GetOrCreateClaimsAsync(accessToken);
+            var principal = await jwtClaimsCache.GetOrCreateClaimsAsync(accessToken);
             context.User = principal;
         }
         catch (Exception ex)

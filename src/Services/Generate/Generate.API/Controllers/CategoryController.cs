@@ -39,7 +39,7 @@ namespace Generate.API.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [Authorize(Policy = PolicyNames.Hybrid.Category.CanView)]
+        //[Authorize(Policy = PolicyNames.Hybrid.Category.CanView)]
         public async Task<IActionResult> GetList()
         {
             var query = new GetCategoriesQuery();
