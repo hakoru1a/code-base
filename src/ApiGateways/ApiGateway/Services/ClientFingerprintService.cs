@@ -36,7 +36,7 @@ public class ClientFingerprintService : IClientFingerprintService
             // Chỉ dùng User-Agent để tránh vấn đề IP thay đổi (load balancer/proxy)
             // và các headers khác có thể thay đổi giữa các request
             var userAgent = NormalizeHeader(context.Request.Headers.UserAgent.ToString());
-            
+
             // Nếu User-Agent rỗng, fallback về IP
             if (string.IsNullOrEmpty(userAgent))
             {
@@ -45,7 +45,7 @@ public class ClientFingerprintService : IClientFingerprintService
             }
 
             var hash = SHA256.HashData(Encoding.UTF8.GetBytes(userAgent));
-            
+
             return Convert.ToBase64String(hash);
         }
         catch (Exception ex)
@@ -75,7 +75,7 @@ public class ClientFingerprintService : IClientFingerprintService
                 return true; // Backward compatibility
 
             var currentFingerprint = GenerateFingerprint(context);
-            
+
             // Log để debug nếu fingerprint khác nhau
             if (storedFingerprint != currentFingerprint)
             {
@@ -87,7 +87,7 @@ public class ClientFingerprintService : IClientFingerprintService
                     GetClientIpAddress(context),
                     context.Request.Headers.UserAgent.ToString());
             }
-            
+
             return storedFingerprint == currentFingerprint;
         }
         catch (Exception ex)

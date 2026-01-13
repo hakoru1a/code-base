@@ -38,15 +38,31 @@ public class AuthController : ControllerBase
     /// Khởi tạo OAuth login flow
     /// </summary>
     [HttpGet("login")]
-    public async Task<IActionResult> Login([FromQuery] string? returnUrl = null)
+    public async Task<IActionResult> Login([FromQuery] string? returnUrl = null, [FromQuery] bool force = false)
     {
         try
         {
-            _logger.LogInformation("Login initiated, returnUrl: {ReturnUrl}", returnUrl);
+            _logger.LogInformation("Login initiated, returnUrl: {ReturnUrl}, force: {Force}", returnUrl, force);
 
             var redirectUri = string.IsNullOrEmpty(returnUrl)
                 ? _oauthOptions.WebAppUrl
                 : returnUrl;
+
+            // Check if user already has a valid session (unless force=true)
+            if (!force && Request.Cookies.TryGetValue(CookieConstants.SessionIdCookieName, out var existingSessionId) &&
+                !string.IsNullOrEmpty(existingSessionId))
+            {
+                var existingSession = await _sessionManager.GetSessionAsync(existingSessionId);
+                if (existingSession != null)
+                {
+                    _logger.LogInformation(
+                        "User already has valid session {SessionId}, redirecting to {RedirectUri}",
+                        existingSessionId,
+                        redirectUri);
+                    
+                    return Redirect(redirectUri);
+                }
+            }
 
             var pkceData = await _pkceService.GeneratePkceAsync(redirectUri);
 
@@ -120,6 +136,38 @@ public class AuthController : ControllerBase
                 pkceData.CodeVerifier,
                 callbackUri);
 
+            // Clean up old session if exists
+            string? oldSessionId = null;
+            if (Request.Cookies.TryGetValue(CookieConstants.SessionIdCookieName, out oldSessionId) &&
+                !string.IsNullOrEmpty(oldSessionId))
+            {
+                try
+                {
+                    var oldSession = await _sessionManager.GetSessionAsync(oldSessionId);
+                    if (oldSession != null)
+                    {
+                        // Revoke old refresh token for security
+                        try
+                        {
+                            await _oauthClient.RevokeTokenAsync(oldSession.RefreshToken);
+                            _logger.LogInformation("Revoked old refresh token for session: {OldSessionId}", oldSessionId);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Failed to revoke old refresh token, continuing with login");
+                        }
+
+                        // Remove old session from Redis
+                        await _sessionManager.RemoveSessionAsync(oldSessionId);
+                        _logger.LogInformation("Removed old session: {OldSessionId}", oldSessionId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to clean up old session: {OldSessionId}", oldSessionId);
+                }
+            }
+
             var sessionId = await _sessionManager.CreateSessionAsync(tokenResponse, HttpContext);
 
             Response.Cookies.Append(CookieConstants.SessionIdCookieName, sessionId, new CookieOptions
@@ -131,7 +179,8 @@ public class AuthController : ControllerBase
                 Path = CookieConstants.CookiePath
             });
 
-            _logger.LogInformation("User logged in successfully, session: {SessionId}", sessionId);
+            _logger.LogInformation("User logged in successfully, new session: {SessionId}, old session cleaned: {OldSessionId}", 
+                sessionId, oldSessionId ?? "none");
 
             return Redirect(pkceData.RedirectUri);
         }

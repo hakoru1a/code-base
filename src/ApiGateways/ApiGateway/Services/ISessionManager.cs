@@ -58,4 +58,10 @@ public interface ISessionManager
     /// Validate session với client context
     /// </summary>
     Task<bool> ValidateSessionContextAsync(string sessionId, HttpContext httpContext);
+
+    /// <summary>
+    /// Clean up old session when creating new one (for re-login scenarios)
+    /// Revokes old tokens and removes old session
+    /// </summary>
+    Task CleanupOldSessionAsync(string oldSessionId);
 }

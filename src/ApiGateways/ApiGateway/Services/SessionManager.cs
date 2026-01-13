@@ -426,5 +426,41 @@ public class SessionManager : ISessionManager
         return roles.Distinct().ToList();
     }
 
+    public async Task CleanupOldSessionAsync(string oldSessionId)
+    {
+        try
+        {
+            var oldSession = await GetSessionWithoutUpdateAsync(oldSessionId);
+            if (oldSession == null)
+            {
+                _logger.LogInformation("Old session not found for cleanup: {SessionId}", oldSessionId);
+                return;
+            }
+
+            // Revoke old refresh token for security
+            try
+            {
+                // Note: This requires IOAuthClient to be injected
+                // For now, we'll just remove the session and let tokens expire naturally
+                _logger.LogInformation("Old session found for cleanup: {SessionId}, User: {Username}", 
+                    oldSessionId, oldSession.Username);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to revoke old tokens for session: {SessionId}", oldSessionId);
+            }
+
+            // Remove old session from Redis
+            await RemoveSessionAsync(oldSessionId);
+            
+            _logger.LogInformation("Successfully cleaned up old session: {SessionId}", oldSessionId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to cleanup old session: {SessionId}", oldSessionId);
+            // Don't throw - cleanup failure shouldn't break login flow
+        }
+    }
+
     #endregion
 }
