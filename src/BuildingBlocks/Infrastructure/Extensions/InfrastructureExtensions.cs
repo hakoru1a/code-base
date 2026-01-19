@@ -8,6 +8,7 @@ using Infrastructure.Common.Repository;
 using Contracts.Common.Interface;
 using Infrastructure.Common;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Infrastructure.Extensions
 {
@@ -153,6 +154,23 @@ namespace Infrastructure.Extensions
                     return ConnectionMultiplexer.Connect(configurationOptions);
                 });
                 services.AddScoped<IRedisRepository, RedisRepository>();
+                
+                // Register IDistributedCache for caching services (JWT claims, PKCE data, etc.)
+                services.AddStackExchangeRedisCache(options =>
+                {
+                    options.Configuration = cacheSettings.ConnectionStrings;
+                    if (!string.IsNullOrEmpty(cacheSettings.Password))
+                    {
+                        var configOptions = ConfigurationOptions.Parse(cacheSettings.ConnectionStrings);
+                        configOptions.Password = cacheSettings.Password;
+                        options.ConfigurationOptions = configOptions;
+                    }
+                });
+            }
+            else
+            {
+                // Fallback to in-memory cache if Redis not configured
+                services.AddDistributedMemoryCache();
             }
 
             return services;

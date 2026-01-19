@@ -65,9 +65,9 @@ try
 
     #region Redis Configuration
 
-    // Configure Redis connection for session storage
+    // Configure Redis connection for caching and storage
     builder.Services.AddRedisInfrastructure(builder.Configuration);
-
+    
     #endregion
 
     #region Auth Services
