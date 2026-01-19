@@ -3,32 +3,38 @@ using Microsoft.Extensions.Options;
 using ApiGateway.Configurations;
 using ApiGateway.Services;
 using ApiGateway.Models;
+using Shared.SeedWork;
+using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 
 namespace ApiGateway.Controllers;
 
 /// <summary>
-/// Authentication Controller - Xử lý OAuth flow trực tiếp tại Gateway
+/// Authentication Controller - JWT-only approach
+/// Không sử dụng session, cookie - chỉ trả JWT tokens
 /// </summary>
 [ApiController]
 [Route("auth")]
+[Produces("application/json")]
+[ProducesResponseType(typeof(ApiErrorResult<object>), StatusCodes.Status500InternalServerError)]
 public class AuthController : ControllerBase
 {
     private readonly IPkceService _pkceService;
-    private readonly ISessionManager _sessionManager;
     private readonly IOAuthClient _oauthClient;
+    private readonly IUserClaimsCache _userClaimsCache;
     private readonly OAuthOptions _oauthOptions;
     private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         IPkceService pkceService,
-        ISessionManager sessionManager,
         IOAuthClient oauthClient,
+        IUserClaimsCache userClaimsCache,
         IOptions<OAuthOptions> oauthOptions,
         ILogger<AuthController> logger)
     {
         _pkceService = pkceService;
-        _sessionManager = sessionManager;
         _oauthClient = oauthClient;
+        _userClaimsCache = userClaimsCache;
         _oauthOptions = oauthOptions.Value;
         _logger = logger;
     }
@@ -38,242 +44,248 @@ public class AuthController : ControllerBase
     /// Khởi tạo OAuth login flow
     /// </summary>
     [HttpGet("login")]
-    public async Task<IActionResult> Login([FromQuery] string? returnUrl = null, [FromQuery] bool force = false)
+    [ProducesResponseType(302)]
+    [ProducesResponseType(typeof(ApiErrorResult<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> Login([FromQuery] string? returnUrl = null)
     {
+        var correlationId = Activity.Current?.Id ?? Guid.NewGuid().ToString();
+        using var scope = _logger.BeginScope("CorrelationId: {CorrelationId}", correlationId);
+        
         try
         {
-            _logger.LogInformation("Login initiated, returnUrl: {ReturnUrl}, force: {Force}", returnUrl, force);
+            _logger.LogInformation("Login initiated, returnUrl: {ReturnUrl}, CorrelationId: {CorrelationId}", returnUrl, correlationId);
 
-            var redirectUri = string.IsNullOrEmpty(returnUrl)
-                ? _oauthOptions.WebAppUrl
-                : returnUrl;
-
-            // Check if user already has a valid session (unless force=true)
-            if (!force && Request.Cookies.TryGetValue(CookieConstants.SessionIdCookieName, out var existingSessionId) &&
-                !string.IsNullOrEmpty(existingSessionId))
-            {
-                var existingSession = await _sessionManager.GetSessionAsync(existingSessionId);
-                if (existingSession != null)
-                {
-                    _logger.LogInformation(
-                        "User already has valid session {SessionId}, redirecting to {RedirectUri}",
-                        existingSessionId,
-                        redirectUri);
-                    
-                    return Redirect(redirectUri);
-                }
-            }
-
+            var redirectUri = string.IsNullOrEmpty(returnUrl) ? _oauthOptions.WebAppUrl : returnUrl;
             var pkceData = await _pkceService.GeneratePkceAsync(redirectUri);
-
-            // Callback URI là URL của gateway
             var callbackUri = $"{Request.Scheme}://{Request.Host}{_oauthOptions.RedirectUri}";
             var authUrl = _oauthClient.BuildAuthorizationUrl(pkceData, callbackUri);
 
-            _logger.LogInformation("Authorization URL generated, state: {State}", pkceData.State);
-
+            _logger.LogInformation("Authorization URL generated, state: {State}, CorrelationId: {CorrelationId}", pkceData.State, correlationId);
             return Redirect(authUrl);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error initiating login");
-            return StatusCode(500, new { error = "login_failed", message = ex.Message });
+            _logger.LogError(ex, "Login initiation failed, CorrelationId: {CorrelationId}", correlationId);
+            return StatusCode(500, new ApiErrorResult<object>("Authentication service temporarily unavailable. Please try again."));
         }
     }
 
     /// <summary>
     /// GET /auth/signin-oidc
-    /// Callback endpoint sau khi user login thành công ở Keycloak
+    /// Callback endpoint - Trả JWT tokens thay vì redirect
     /// </summary>
     [HttpGet("signin-oidc")]
+    [ProducesResponseType(typeof(ApiSuccessResult<AuthResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResult<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResult<object>), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> SignInCallback(
         [FromQuery] string? code,
         [FromQuery] string? state,
         [FromQuery] string? error,
         [FromQuery(Name = "error_description")] string? errorDescription)
     {
+        var correlationId = Activity.Current?.Id ?? Guid.NewGuid().ToString();
+        using var scope = _logger.BeginScope("CorrelationId: {CorrelationId}", correlationId);
+        
         try
         {
             if (!string.IsNullOrEmpty(error))
             {
-                _logger.LogError("OAuth error: {Error}, Description: {Description}",
-                    error, errorDescription);
-
-                return BadRequest(new
-                {
-                    error,
-                    message = errorDescription ?? "Authentication failed"
-                });
+                _logger.LogError("OAuth callback error: {Error}, Description: {Description}, CorrelationId: {CorrelationId}", 
+                    error, errorDescription, correlationId);
+                return BadRequest(new ApiErrorResult<object>(errorDescription ?? "Authentication failed"));
             }
 
             if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
             {
-                _logger.LogError("Missing code or state parameter");
-                return BadRequest(new
-                {
-                    error = "invalid_callback",
-                    message = "Missing required parameters"
-                });
+                _logger.LogError("Missing required parameters in OAuth callback, CorrelationId: {CorrelationId}", correlationId);
+                return BadRequest(new ApiErrorResult<object>("Missing required parameters"));
             }
 
-            _logger.LogInformation("Processing callback, state: {State}", state);
+            _logger.LogInformation("Processing OAuth callback, state: {State}, CorrelationId: {CorrelationId}", state, correlationId);
 
             var pkceData = await _pkceService.GetAndRemovePkceAsync(state);
-
             if (pkceData == null)
             {
-                _logger.LogError("PKCE data not found or expired for state: {State}", state);
-                return BadRequest(new
-                {
-                    error = "invalid_state",
-                    message = "Invalid or expired state parameter"
-                });
+                _logger.LogError("PKCE validation failed for state: {State}, CorrelationId: {CorrelationId}", state, correlationId);
+                return BadRequest(new ApiErrorResult<object>("Invalid or expired authentication state"));
             }
 
             var callbackUri = $"{Request.Scheme}://{Request.Host}{_oauthOptions.RedirectUri}";
-            var tokenResponse = await _oauthClient.ExchangeCodeForTokensAsync(
-                code,
-                pkceData.CodeVerifier,
-                callbackUri);
+            var tokenResponse = await _oauthClient.ExchangeCodeForTokensAsync(code, pkceData.CodeVerifier, callbackUri);
 
-            // Clean up old session if exists
-            string? oldSessionId = null;
-            if (Request.Cookies.TryGetValue(CookieConstants.SessionIdCookieName, out oldSessionId) &&
-                !string.IsNullOrEmpty(oldSessionId))
+            // Cache user claims from ID token
+            if (!string.IsNullOrEmpty(tokenResponse.IdToken))
             {
-                try
-                {
-                    var oldSession = await _sessionManager.GetSessionAsync(oldSessionId);
-                    if (oldSession != null)
-                    {
-                        // Revoke old refresh token for security
-                        try
-                        {
-                            await _oauthClient.RevokeTokenAsync(oldSession.RefreshToken);
-                            _logger.LogInformation("Revoked old refresh token for session: {OldSessionId}", oldSessionId);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogWarning(ex, "Failed to revoke old refresh token, continuing with login");
-                        }
-
-                        // Remove old session from Redis
-                        await _sessionManager.RemoveSessionAsync(oldSessionId);
-                        _logger.LogInformation("Removed old session: {OldSessionId}", oldSessionId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to clean up old session: {OldSessionId}", oldSessionId);
-                }
+                await _userClaimsCache.CacheUserClaimsAsync(tokenResponse.IdToken);
             }
 
-            var sessionId = await _sessionManager.CreateSessionAsync(tokenResponse, HttpContext);
-
-            Response.Cookies.Append(CookieConstants.SessionIdCookieName, sessionId, new CookieOptions
+            var authResponse = new AuthResponse
             {
-                HttpOnly = true,
-                Secure = Request.IsHttps,
-                SameSite = SameSiteMode.Lax,
-                MaxAge = TimeSpan.FromMinutes(CookieConstants.SessionMaxAgeMinutes),
-                Path = CookieConstants.CookiePath
-            });
+                AccessToken = tokenResponse.AccessToken,
+                RefreshToken = tokenResponse.RefreshToken,
+                TokenType = tokenResponse.TokenType,
+                ExpiresIn = tokenResponse.ExpiresIn,
+                RedirectUrl = pkceData.RedirectUri
+            };
 
-            _logger.LogInformation("User logged in successfully, new session: {SessionId}, old session cleaned: {OldSessionId}", 
-                sessionId, oldSessionId ?? "none");
-
-            return Redirect(pkceData.RedirectUri);
+            _logger.LogInformation("User authentication successful, CorrelationId: {CorrelationId}", correlationId);
+            return Ok(new ApiSuccessResult<AuthResponse>(authResponse, "Authentication successful"));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing callback");
-            return StatusCode(500, new { error = "callback_failed", message = ex.Message });
+            _logger.LogError(ex, "OAuth callback processing failed, CorrelationId: {CorrelationId}", correlationId);
+            return StatusCode(500, new ApiErrorResult<object>("Authentication processing failed. Please try again."));
+        }
+    }
+
+    /// <summary>
+    /// POST /auth/refresh
+    /// Refresh access token
+    /// </summary>
+    [HttpPost("refresh")]
+    [ProducesResponseType(typeof(ApiSuccessResult<AuthResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResult<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResult<object>), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiErrorResult<object>), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest? request)
+    {
+        var correlationId = Activity.Current?.Id ?? Guid.NewGuid().ToString();
+        using var scope = _logger.BeginScope("CorrelationId: {CorrelationId}", correlationId);
+        
+        try
+        {
+            // Validation
+            if (request == null)
+            {
+                _logger.LogWarning("Refresh token request is null, CorrelationId: {CorrelationId}", correlationId);
+                return BadRequest(new ApiErrorResult<object>("Request body is required"));
+            }
+
+            if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            {
+                _logger.LogWarning("Empty refresh token provided, CorrelationId: {CorrelationId}", correlationId);
+                return BadRequest(new ApiErrorResult<object>("Refresh token is required"));
+            }
+
+            _logger.LogInformation("Processing token refresh request, CorrelationId: {CorrelationId}", correlationId);
+
+            var tokenResponse = await _oauthClient.RefreshTokenAsync(request.RefreshToken);
+
+            // Update cache if ID token available
+            if (!string.IsNullOrEmpty(tokenResponse.IdToken))
+            {
+                await _userClaimsCache.CacheUserClaimsAsync(tokenResponse.IdToken);
+            }
+
+            var authResponse = new AuthResponse
+            {
+                AccessToken = tokenResponse.AccessToken,
+                RefreshToken = tokenResponse.RefreshToken,
+                TokenType = tokenResponse.TokenType,
+                ExpiresIn = tokenResponse.ExpiresIn
+            };
+
+            _logger.LogInformation("Token refresh successful, CorrelationId: {CorrelationId}", correlationId);
+            return Ok(new ApiSuccessResult<AuthResponse>(authResponse, "Token refreshed successfully"));
+        }
+        catch (HttpRequestException ex) when (ex.Message.Contains("400"))
+        {
+            _logger.LogWarning(ex, "Invalid refresh token provided, CorrelationId: {CorrelationId}", correlationId);
+            return Unauthorized(new ApiErrorResult<object>("Refresh token is invalid or expired"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Token refresh failed, CorrelationId: {CorrelationId}", correlationId);
+            return StatusCode(500, new ApiErrorResult<object>("Token refresh failed. Please login again."));
         }
     }
 
     /// <summary>
     /// POST /auth/logout
-    /// Logout user
+    /// Revoke tokens và xóa cache
     /// </summary>
     [HttpPost("logout")]
-    public async Task<IActionResult> Logout()
+    [ProducesResponseType(typeof(ApiSuccessResult<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResult<object>), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Logout([FromBody] LogoutRequest? request)
     {
+        var correlationId = Activity.Current?.Id ?? Guid.NewGuid().ToString();
+        using var scope = _logger.BeginScope("CorrelationId: {CorrelationId}", correlationId);
+        
         try
         {
-            if (!Request.Cookies.TryGetValue(CookieConstants.SessionIdCookieName, out var sessionId) ||
-                string.IsNullOrEmpty(sessionId))
+            if (request == null)
             {
-                return Ok(new { message = "No active session" });
+                _logger.LogWarning("Logout request is null, CorrelationId: {CorrelationId}", correlationId);
+                return BadRequest(new ApiErrorResult<object>("Request body is required"));
             }
 
-            var session = await _sessionManager.GetSessionAsync(sessionId);
+            _logger.LogInformation("Processing logout request, CorrelationId: {CorrelationId}", correlationId);
 
-            if (session != null)
+            // Parallel execution for independent operations
+            var tasks = new List<Task>();
+
+            if (!string.IsNullOrWhiteSpace(request.RefreshToken))
             {
-                try
-                {
-                    await _oauthClient.RevokeTokenAsync(session.RefreshToken);
-                    _logger.LogInformation("Tokens revoked for user: {Username}", session.Username);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Failed to revoke tokens, continuing logout");
-                }
+                tasks.Add(RevokeTokenSafelyAsync(request.RefreshToken, correlationId));
             }
 
-            await _sessionManager.RemoveSessionAsync(sessionId);
-
-            Response.Cookies.Delete(CookieConstants.SessionIdCookieName, new CookieOptions
+            if (!string.IsNullOrWhiteSpace(request.UserId))
             {
-                Path = CookieConstants.CookiePath
-            });
+                tasks.Add(_userClaimsCache.RemoveUserClaimsAsync(request.UserId));
+            }
 
-            _logger.LogInformation("User logged out successfully");
+            await Task.WhenAll(tasks);
 
-            return Ok(new { message = "Logged out successfully" });
+            _logger.LogInformation("User logout completed successfully, CorrelationId: {CorrelationId}", correlationId);
+            return Ok(new ApiSuccessResult<object>(new { success = true }, "Logged out successfully"));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during logout");
-            return StatusCode(500, new { error = "logout_failed", message = ex.Message });
+            _logger.LogError(ex, "Error during logout, CorrelationId: {CorrelationId}", correlationId);
+            return Ok(new ApiSuccessResult<object>(new { success = true }, "Logout completed with warnings"));
         }
     }
 
     /// <summary>
-    /// GET /auth/user
-    /// Lấy thông tin user hiện tại
+    /// GET /auth/user/{userId}
+    /// Lấy cached user claims
     /// </summary>
-    [HttpGet("user")]
-    public async Task<IActionResult> GetCurrentUser()
+    [HttpGet("user/{userId}")]
+    [ProducesResponseType(typeof(ApiSuccessResult<CachedUserClaims>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResult<object>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResult<object>), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetUserClaims([Required] string userId)
     {
+        var correlationId = Activity.Current?.Id ?? Guid.NewGuid().ToString();
+        using var scope = _logger.BeginScope("CorrelationId: {CorrelationId}", correlationId);
+        
         try
         {
-            if (!Request.Cookies.TryGetValue(CookieConstants.SessionIdCookieName, out var sessionId) ||
-                string.IsNullOrEmpty(sessionId))
+            if (string.IsNullOrWhiteSpace(userId))
             {
-                return Unauthorized(new { error = "no_session", message = "Not logged in" });
+                _logger.LogWarning("Empty userId provided, CorrelationId: {CorrelationId}", correlationId);
+                return BadRequest(new ApiErrorResult<object>("User ID is required"));
             }
 
-            var session = await _sessionManager.GetSessionAsync(sessionId);
+            _logger.LogInformation("Retrieving user claims for userId: {UserId}, CorrelationId: {CorrelationId}", userId, correlationId);
 
-            if (session == null)
+            var userClaims = await _userClaimsCache.GetUserClaimsAsync(userId);
+
+            if (userClaims == null)
             {
-                return Unauthorized(new { error = "session_expired", message = "Session expired" });
+                _logger.LogInformation("User claims not found for userId: {UserId}, CorrelationId: {CorrelationId}", userId, correlationId);
+                return NotFound(new ApiErrorResult<object>("User claims not found in cache"));
             }
 
-            return Ok(new UserInfoResponse
-            {
-                UserId = session.UserId,
-                Username = session.Username,
-                Email = session.Email,
-                Roles = session.Roles,
-                Claims = session.Claims
-            });
+            _logger.LogInformation("User claims retrieved successfully for userId: {UserId}, CorrelationId: {CorrelationId}", userId, correlationId);
+            return Ok(new ApiSuccessResult<CachedUserClaims>(userClaims, "User claims retrieved successfully"));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting current user");
-            return StatusCode(500, new { error = "get_user_failed", message = ex.Message });
+            _logger.LogError(ex, "Error retrieving user claims for userId: {UserId}, CorrelationId: {CorrelationId}", userId, correlationId);
+            return StatusCode(500, new ApiErrorResult<object>("Failed to retrieve user claims"));
         }
     }
 
@@ -282,20 +294,29 @@ public class AuthController : ControllerBase
     /// Health check endpoint
     /// </summary>
     [HttpGet("health")]
+    [ProducesResponseType(typeof(ApiSuccessResult<object>), StatusCodes.Status200OK)]
     public IActionResult Health()
     {
-        return Ok(new { status = "healthy", service = "auth-gateway" });
+        var healthData = new { status = "healthy", service = "auth-gateway", timestamp = DateTime.UtcNow };
+        return Ok(new ApiSuccessResult<object>(healthData, "Service is healthy"));
     }
 
-    #region DTOs
+    #region Private Helper Methods
 
-    private class UserInfoResponse
+    /// <summary>
+    /// Safely revoke refresh token with proper error handling
+    /// </summary>
+    private async Task RevokeTokenSafelyAsync(string refreshToken, string correlationId)
     {
-        public string UserId { get; set; } = string.Empty;
-        public string Username { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public List<string> Roles { get; set; } = new();
-        public Dictionary<string, string> Claims { get; set; } = new();
+        try
+        {
+            await _oauthClient.RevokeTokenAsync(refreshToken);
+            _logger.LogInformation("Refresh token revoked successfully, CorrelationId: {CorrelationId}", correlationId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to revoke refresh token, CorrelationId: {CorrelationId}", correlationId);
+        }
     }
 
     #endregion

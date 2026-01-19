@@ -72,9 +72,9 @@ try
 
     #region Auth Services
 
-    // Register authentication services
+    // Register JWT-only authentication services
     builder.Services.AddScoped<ApiGateway.Services.IPkceService, ApiGateway.Services.PkceService>();
-    builder.Services.AddScoped<ApiGateway.Services.ISessionManager, ApiGateway.Services.SessionManager>();
+    builder.Services.AddScoped<ApiGateway.Services.IUserClaimsCache, ApiGateway.Services.UserClaimsCache>();
     
     // Register enhanced security services
     builder.Services.AddScoped<ApiGateway.Services.IClientFingerprintService, ApiGateway.Services.ClientFingerprintService>();
@@ -155,14 +155,12 @@ try
     // Routing
     app.UseRouting();
 
-    // Session Validation Middleware
+    // JWT Token Validation Middleware - Thay thế SessionValidationMiddleware
     // Middleware này sẽ:
-    // 1. Validate session cookie
-    // 2. Load session từ Redis
-    // 3. Refresh token nếu cần
-    // 4. Set AccessToken vào HttpContext.Items
-    // 5. Parse JWT và set HttpContext.User (for RBAC)
-    app.UseSessionValidation();
+    // 1. Validate Bearer token trong Authorization header
+    // 2. Check token expiration
+    // 3. Set HttpContext.User từ JWT claims (for RBAC)
+    app.UseJwtValidation();
 
     // Logging Context Middleware - Thêm correlation ID và username vào logs
     // PHẢI đặt SAU UseSessionValidation để có thể lấy được username từ HttpContext.User

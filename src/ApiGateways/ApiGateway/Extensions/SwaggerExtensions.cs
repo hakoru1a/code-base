@@ -1,4 +1,4 @@
-using ApiGateway.Configurations;
+   using ApiGateway.Configurations;
 using Microsoft.OpenApi.Models;
 
 namespace ApiGateway.Extensions;
@@ -50,13 +50,30 @@ public static class SwaggerExtensions
                 "
             });
 
-            // Add security definition (informational only)
-            c.AddSecurityDefinition("Session", new OpenApiSecurityScheme
+            // Add JWT Bearer security definition for JWT-only approach
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                Description = "Session-based authentication using HttpOnly cookies",
-                Name = CookieConstants.SessionIdCookieName,
-                In = ParameterLocation.Cookie,
-                Type = SecuritySchemeType.ApiKey
+                Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                Name = "Authorization",
+                In = ParameterLocation.Header,
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT"
+            });
+
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
             });
         });
 

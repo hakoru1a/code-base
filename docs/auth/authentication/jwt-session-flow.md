@@ -1,53 +1,35 @@
-# JWT & Session Flow - Luồng Xác thực
+# JWT Authentication Flow - Deprecated
 
-Tài liệu này mô tả toàn bộ luồng hoạt động của quá trình xác thực, từ khi người dùng đăng nhập cho đến khi backend xác thực thành công và trả về dữ liệu được bảo vệ.
+⚠️ **DEPRECATED**: Tài liệu này đã lỗi thời. Hệ thống hiện tại đã chuyển sang **JWT-only approach**.
 
-## 🎯 Tổng quan
+**Xem tài liệu mới tại**: [jwt-authentication-flow.md](./jwt-authentication-flow.md)
 
-Luồng xác thực của chúng ta sử dụng tiêu chuẩn **OAuth 2.0** và **OpenID Connect (OIDC)**, với **Keycloak** làm Identity Provider. Kết quả của quá trình xác thực là một **JSON Web Token (JWT)**, đóng vai trò như một "giấy thông hành" mà client sử dụng để chứng minh danh tính khi gọi các API.
+---
 
-**Các thành phần tham gia:**
--   **User**: Người dùng cuối.
--   **Client (Browser/Frontend)**: Ứng dụng web mà người dùng tương tác (e.g., React, Angular).
--   **Keycloak**: Máy chủ xác thực, chịu trách nhiệm xác minh danh tính người dùng và cấp token.
--   **Backend API (BFF/API Gateway)**: Điểm cuối của hệ thống, nơi tiếp nhận và xác thực token.
+## ⚠️ Thông báo quan trọng
 
-## 🌊 Sơ đồ luồng (Authorization Code Flow with PKCE)
+Hệ thống authentication đã được **đơn giản hóa** từ session-based sang **JWT-only approach**:
 
-Đây là luồng được khuyến nghị cho các ứng dụng web và SPA vì tính bảo mật cao.
+### Thay đổi chính:
+- ❌ **Không còn session management** 
+- ❌ **Không còn cookie-based authentication**
+- ✅ **Trả trực tiếp JWT tokens** từ callback
+- ✅ **Cache user claims** thay vì session data
+- ✅ **Frontend quản lý tokens** (localStorage/sessionStorage)
 
-```
-+--------+   (1) Bấm nút "Đăng nhập"   +----------+
-|  User  | -------------------------> | Frontend |
-+--------+                            +----+-----+
-                                           | (2) Tạo code_verifier, code_challenge
-                                           |     Redirect đến Keycloak với code_challenge
-                                           v
-+--------+   (3) Nhập username/password   +----------+
-|  User  | -----------------------------> | Keycloak |
-+--------+   (4) Xác thực thành công      +----+-----+
-                                                | (5) Redirect về Frontend với "authorization_code"
-                                                v
-+------------------------------------------+---+
-|                 Frontend                 |
-+---------------------+--------------------+
-                      | (6) Gửi "authorization_code" + "code_verifier"
-                      |     đến Keycloak Token Endpoint
-                      v
-+---------------------+--------------------+
-|                    Keycloak              |
-+---------------------+--------------------+
-                      | (7) Xác minh code & verifier
-                      |     Trả về Access Token (JWT) + Refresh Token
-                      v
-+---------------------+--------------------+
-|                 Frontend                 |
-+---------------------+--------------------+
-                      | (8) Lưu trữ Tokens
-                      |     Gọi API Backend với Access Token
-                      v
-+---------------------+--------------------+
-|               Backend API                |
+### Migration Guide:
+1. **Frontend**: Store JWT tokens thay vì rely on cookies
+2. **API calls**: Sử dụng `Authorization: Bearer <token>` header
+3. **Token refresh**: Implement refresh token flow
+4. **Logout**: Revoke tokens và clear local storage
+
+---
+
+## 📋 Legacy Documentation (For Reference Only)
+
+Phần dưới đây là documentation cũ về JWT & Session Flow - chỉ để tham khảo. 
+
+**KHÔNG SỬ DỤNG** cho implementation mới.
 +---------------------+--------------------+
                       | (9) Xác thực JWT
                       |     Trả về dữ liệu được bảo vệ

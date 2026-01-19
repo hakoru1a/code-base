@@ -1,33 +1,36 @@
 # Mục lục tài liệu về Xác thực & Phân quyền (Authentication & Authorization)
 
-Chào mừng bạn đến với tài liệu hướng dẫn về các hệ thống xác thực và phân quyền. Tài liệu này cung cấp thông tin chi tiết về cách người dùng được xác định và cách quyền truy cập tài nguyên được quản lý trong hệ thống của chúng ta.
+Chào mừng bạn đến với tài liệu hướng dẫn về các hệ thống xác thực và phân quyền. Tài liệu này cung cấp thông tin chi tiết về JWT-only authentication approach và cách quyền truy cập tài nguyên được quản lý trong hệ thống của chúng ta.
 
 ---
 
 ## 🚀 Quick Start
 
-Bắt đầu nhanh với authentication tại API Gateway:
-*   **Quick Start Guide**: Hướng dẫn thiết lập và sử dụng authentication trong 10 phút.
+Bắt đầu nhanh với JWT authentication tại API Gateway:
+*   **Quick Start Guide**: Hướng dẫn thiết lập và sử dụng JWT authentication trong 10 phút.
     *   [QUICK-START.md](./QUICK-START.md)
 
 ---
 
-## 🔑 Xác thực (Authentication)
+## 🔑 Xác thực (Authentication) - JWT Only Approach
 
-Authentication hiện được xử lý **trực tiếp tại API Gateway** theo kiến trúc BFF (Backend-for-Frontend) đơn giản hóa.
+Authentication hiện được xử lý **trực tiếp tại API Gateway** với JWT-only approach, không sử dụng session hoặc cookie.
 
-*   **Gateway Authentication Flow**: Hướng dẫn chi tiết về authentication flow mới tại API Gateway.
-    *   [GATEWAY-AUTH-FLOW.md](./GATEWAY-AUTH-FLOW.md)
-*   **Keycloak Guide**: Hướng dẫn chi tiết về cách tích hợp và sử dụng Keycloak làm Identity Provider.
+*   **JWT Authentication Flow**: Hướng dẫn chi tiết về JWT authentication flow mới tại API Gateway.
+    *   [jwt-authentication-flow.md](./authentication/jwt-authentication-flow.md)
+*   **Keycloak Integration**: Hướng dẫn chi tiết về cách tích hợp và sử dụng Keycloak làm Identity Provider.
     *   [keycloak-guide.md](./authentication/keycloak-guide.md)
-*   **JWT & Session Flow**: Mô tả luồng xử lý JWT (JSON Web Token) và quản lý phiên (session) trong hệ thống.
-    *   [jwt-session-flow.md](./authentication/jwt-session-flow.md)
+*   **User Claims Caching**: Mô tả cách cache user claims từ JWT tokens thay vì session management.
+    *   [user-claims-caching.md](./authentication/user-claims-caching.md)
 
 ---
 
 ## 🔒 Phân quyền (Authorization)
 
 Phần này tập trung vào việc quản lý quyền truy cập của người dùng đến các tài nguyên và hành động khác nhau.
+
+*   **JWT Claims Authorization**: Cách sử dụng claims trong JWT token để phân quyền.
+    *   [jwt-claims.md](./authorization/jwt-claims.md)
 
 ### 🛡️ Policy-Based Access Control (PBAC)
 
