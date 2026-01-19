@@ -93,6 +93,45 @@
       ],
       "UpstreamPathTemplate": "/generate-api/health",
       "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5028
+        }
+      ],
+      "UpstreamPathTemplate": "/tlbiomass-api/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE", "PATCH" ],
+      "SwaggerKey": "tlbiomass",
+      "Priority": 0
+    },
+    {
+      "DownstreamPathTemplate": "/swagger/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5028
+        }
+      ],
+      "UpstreamPathTemplate": "/tlbiomass-api/swagger/{everything}",
+      "UpstreamHttpMethod": [ "GET" ],
+      "SwaggerKey": "tlbiomass"
+    },
+    {
+      "DownstreamPathTemplate": "/health",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 5028
+        }
+      ],
+      "UpstreamPathTemplate": "/tlbiomass-api/health",
+      "UpstreamHttpMethod": [ "GET" ]
     }
   ],
   "SwaggerEndPoints": [
@@ -113,6 +152,16 @@
           "Name": "Generate API",
           "Version": "v1",
           "Url": "http://localhost:5027/swagger/v1/swagger.json"
+        }
+      ]
+    },
+    {
+      "Key": "tlbiomass",
+      "Config": [
+        {
+          "Name": "TLBIOMASS API",
+          "Version": "v1",
+          "Url": "http://localhost:5028/swagger/v1/swagger.json"
         }
       ]
     }

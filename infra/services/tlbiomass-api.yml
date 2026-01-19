@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  tlbiomass-api:
+    build:
+      context: ../../src/Services/TLBIOMASS/TLBIOMASS.API
+      dockerfile: Dockerfile
+    container_name: codebase_tlbiomass_api
+    restart: unless-stopped
+    ports:
+      - "${TLBIOMASS_API_PORT}:8080"
+      - "${TLBIOMASS_API_HTTPS_PORT}:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - ASPNETCORE_URLS=http://+:8080;https://+:8081
+      - DatabaseSettings__DBProvider=${DATABASE_PROVIDER}
+      - DatabaseSettings__ConnectionStrings=${TLBIOMASS_DATABASE_CONNECTION_STRING}
+      - CacheSettings__ConnectionStrings=${REDIS_CONNECTION_STRING}
+      - ElasticConfiguration__Uri=${ELASTICSEARCH_URI}
+      - ElasticConfiguration__Username=elastic
+      - ElasticConfiguration__Password=${ELASTIC_PASSWORD}
+      - MassTransit__RabbitMQ__Host=${RABBITMQ_HOST}
+      - MassTransit__RabbitMQ__Username=${RABBITMQ_USER}
+      - MassTransit__RabbitMQ__Password=${RABBITMQ_PASSWORD}
+      - MassTransit__RabbitMQ__VirtualHost=${RABBITMQ_VHOST}
+    depends_on:
+      - redis
+      - rabbitmq
+      - elasticsearch
+    networks:
+      - codebase_network
+    volumes:
+      - ./logs:/app/logs
+      - ./temp:/app/temp
+
+networks:
+  codebase_network:
+    external: true
+
+volumes:
+  logs:
+  temp:

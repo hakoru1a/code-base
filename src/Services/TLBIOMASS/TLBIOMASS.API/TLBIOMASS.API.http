@@ -1,0 +1,6 @@
+@TLBIOMASS.API_HostAddress = http://localhost:5028
+
+GET {{TLBIOMASS.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
