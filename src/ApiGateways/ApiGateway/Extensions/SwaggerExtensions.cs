@@ -19,35 +19,7 @@ public static class SwaggerExtensions
             {
                 Title = "API Gateway",
                 Version = "v1",
-                Description = @"
-                    API Gateway - Simple Routing & Session Management
-                    
-                    Architecture:
-                    - Gateway chỉ đảm nhận routing và session validation đơn giản
-                    - Toàn bộ OAuth 2.0/OIDC logic được xử lý bởi Auth Service
-                    - RBAC/PBAC được thực thi tại Gateway và Backend Services
-                    
-                    Authentication Flow:
-                    1. GET /auth/login → Proxy tới Auth Service
-                    2. Auth Service xử lý OAuth 2.0 + PKCE với Keycloak
-                    3. GET /auth/signin-oidc → Proxy tới Auth Service
-                    4. Auth Service tạo session và lưu vào Redis
-                    5. Gateway nhận session_id và set HttpOnly cookie
-                    6. Các API calls được validate session qua Auth Service
-                    7. Gateway inject Bearer token vào requests tới downstream services
-                    
-                    API Versioning:
-                    - All downstream services now use header-based versioning
-                    - Send 'x-api-version' header (e.g., 1.0) instead of URL versioning
-                    - Default version: 1.0 if header is not provided
-                    
-                    Security Features:
-                    - Session-based authentication với HttpOnly cookies
-                    - Token management tại Auth Service (không ở Gateway)
-                    - Session validation middleware
-                    - Automatic Bearer token injection
-                    - RBAC/PBAC policy enforcement
-                "
+                Description = @"API Gateway"
             });
 
             // Add JWT Bearer security definition for JWT-only approach
