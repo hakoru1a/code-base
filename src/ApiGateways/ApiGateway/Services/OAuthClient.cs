@@ -226,12 +226,17 @@ public class OAuthClient : IOAuthClient
 
     public string BuildAuthorizationUrl(PkceData pkceData, string redirectUri)
     {
+        var scopes = (_oauthOptions.Scopes ?? Array.Empty<string>())
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s => s.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase);
+
         var queryParams = new Dictionary<string, string?>
         {
             ["response_type"] = _oauthOptions.ResponseType,
             ["client_id"] = _oauthOptions.ClientId,
             ["redirect_uri"] = redirectUri,
-            ["scope"] = string.Join(" ", _oauthOptions.Scopes),
+            ["scope"] = string.Join(" ", scopes),
             ["state"] = pkceData.State,
             ["code_challenge"] = pkceData.CodeChallenge,
             ["code_challenge_method"] = pkceData.CodeChallengeMethod

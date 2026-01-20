@@ -135,8 +135,8 @@ public class UserProfileResponse
     [JsonPropertyName("last_name")]
     public string? LastName { get; set; }
 
-    [JsonPropertyName("picture")]
-    public string? Picture { get; set; }
+    [JsonPropertyName("avatar_url")]
+    public string? AvatarUrl { get; set; }
 
     [JsonPropertyName("roles")]
     public List<string> Roles { get; set; } = new();
@@ -183,8 +183,8 @@ public class UserProfileResponse
         if (userContext.Claims.TryGetValue("family_name", out var lastName))
             profile.LastName = lastName;
 
-        if (userContext.Claims.TryGetValue("picture", out var picture))
-            profile.Picture = picture;
+        if (userContext.Claims.TryGetValue("avatar_url", out var avatarUrl))
+            profile.AvatarUrl = avatarUrl;
 
         if (userContext.Claims.TryGetValue("email_verified", out var emailVerifiedStr))
             profile.EmailVerified = bool.TryParse(emailVerifiedStr, out var emailVerified) && emailVerified;

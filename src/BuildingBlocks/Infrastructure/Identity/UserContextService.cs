@@ -22,7 +22,7 @@ namespace Infrastructure.Identity
         public UserClaimsContext GetCurrentUser()
         {
             var user = _httpContextAccessor.HttpContext?.User;
-            
+
             if (user == null || user.Identity?.IsAuthenticated != true)
             {
                 return CreateAnonymousContext();
@@ -151,6 +151,7 @@ namespace Infrastructure.Identity
             ExtractStringAttribute(user, attributes, "region");
             ExtractStringAttribute(user, attributes, "team");
             ExtractStringAttribute(user, attributes, "cost_center");
+            ExtractStringAttribute(user, attributes, "avatar_url");
 
             // Extract integer attributes
             ExtractIntAttribute(user, attributes, "clearance_level");
