@@ -167,6 +167,63 @@ public class OAuthClient : IOAuthClient
         }
     }
 
+    public async Task EndSessionAsync(string? idToken = null, string? postLogoutRedirectUri = null)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(_oauthOptions.EndSessionEndpoint))
+            {
+                _logger.LogWarning("End session endpoint is not configured, skipping end session call");
+                return;
+            }
+
+            _logger.LogInformation("Ending session at Keycloak");
+
+            var queryParams = new Dictionary<string, string?>
+            {
+                ["client_id"] = _oauthOptions.ClientId
+            };
+
+            // Thêm id_token_hint nếu có
+            if (!string.IsNullOrWhiteSpace(idToken))
+            {
+                queryParams["id_token_hint"] = idToken;
+            }
+
+            // Thêm post_logout_redirect_uri nếu có
+            if (!string.IsNullOrWhiteSpace(postLogoutRedirectUri))
+            {
+                queryParams["post_logout_redirect_uri"] = postLogoutRedirectUri;
+            }
+            else if (!string.IsNullOrWhiteSpace(_oauthOptions.PostLogoutRedirectUri))
+            {
+                queryParams["post_logout_redirect_uri"] = _oauthOptions.PostLogoutRedirectUri;
+            }
+
+            var endSessionUrl = QueryHelpers.AddQueryString(_oauthOptions.EndSessionEndpoint, queryParams);
+
+            var response = await _httpClient.GetAsync(endSessionUrl);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                _logger.LogWarning(
+                    "Failed to end session at Keycloak. Status: {Status}, Response: {Response}",
+                    response.StatusCode,
+                    content);
+            }
+            else
+            {
+                _logger.LogInformation("Successfully ended session at Keycloak");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error ending session at Keycloak");
+            // Không throw exception để không làm gián đoạn logout flow
+        }
+    }
+
     public string BuildAuthorizationUrl(PkceData pkceData, string redirectUri)
     {
         var queryParams = new Dictionary<string, string?>

@@ -75,6 +75,7 @@ try
     // Register JWT-only authentication services
     builder.Services.AddScoped<ApiGateway.Services.IPkceService, ApiGateway.Services.PkceService>();
     builder.Services.AddScoped<ApiGateway.Services.IUserClaimsCache, ApiGateway.Services.UserClaimsCache>();
+    builder.Services.AddScoped<ApiGateway.Services.ITemporaryTokenService, ApiGateway.Services.TemporaryTokenService>();
     
     // Register enhanced security services
     builder.Services.AddScoped<ApiGateway.Services.IClientFingerprintService, ApiGateway.Services.ClientFingerprintService>();

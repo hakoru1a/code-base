@@ -41,7 +41,8 @@ public class UserClaimsCache : IUserClaimsCache
                 Roles = ExtractRoles(jsonToken.Claims),
                 Claims = ExtractClaims(jsonToken.Claims),
                 CachedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes)
+                ExpiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes),
+                IdToken = idToken // Lưu id_token để dùng cho logout
             };
 
             var cacheKey = GetCacheKey(userId);
