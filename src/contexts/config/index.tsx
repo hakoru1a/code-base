@@ -4,7 +4,7 @@ import { createContext, type ReactElement } from 'react';
 import { CustomizationProps, DefaultConfigProps, MenuOrientation, ThemeDirection, ThemeMode } from './types';
 import { I18n } from '@locales';
 
-export * from './types'
+export * from './types';
 
 const defaultConfig: DefaultConfigProps = {
   fontFamily: `'Public Sans', sans-serif`,

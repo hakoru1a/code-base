@@ -23,7 +23,7 @@ i18n
     fallbackLng: 'vi',
     interpolation: {
       escapeValue: false
-    },
+    }
   });
 
 export default i18n;

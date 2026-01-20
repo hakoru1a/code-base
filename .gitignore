@@ -108,3 +108,7 @@ dist
 
 # wincompare file
 .bak
+/package-lock.json
+/pnpm-lock.yaml
+/.idea
+/.claude
