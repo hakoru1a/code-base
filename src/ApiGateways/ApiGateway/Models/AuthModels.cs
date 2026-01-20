@@ -47,44 +47,8 @@ public class LogoutRequest
     public string? UserId { get; set; }
 }
 
-/// <summary>
-/// User claims được cache trong Redis thay thế session
-/// Extracted từ JWT ID token
-/// </summary>
-public class CachedUserClaims
-{
-    [JsonPropertyName("user_id")]
-    public string UserId { get; set; } = string.Empty;
-
-    [JsonPropertyName("username")]
-    public string Username { get; set; } = string.Empty;
-
-    [JsonPropertyName("email")]
-    public string Email { get; set; } = string.Empty;
-
-    [JsonPropertyName("roles")]
-    public List<string> Roles { get; set; } = new();
-
-    [JsonPropertyName("claims")]
-    public Dictionary<string, string> Claims { get; set; } = new();
-
-    [JsonPropertyName("cached_at")]
-    public DateTime CachedAt { get; set; }
-
-    [JsonPropertyName("expires_at")]
-    public DateTime ExpiresAt { get; set; }
-
-    /// <summary>
-    /// ID token để dùng cho logout (end session ở Keycloak)
-    /// </summary>
-    [JsonPropertyName("id_token")]
-    public string? IdToken { get; set; }
-
-    /// <summary>
-    /// Kiểm tra cache đã hết hạn chưa
-    /// </summary>
-    public bool IsExpired() => DateTime.UtcNow >= ExpiresAt;
-}
+// CachedUserClaims class removed - no longer needed after refactor
+// User claims are now extracted directly from JWT tokens via UserContextService
 
 /// <summary>
 /// Temporary token code data - Lưu token tạm thời trong Redis
@@ -192,43 +156,46 @@ public class UserProfileResponse
     [JsonPropertyName("profile_updated_at")]
     public DateTime? ProfileUpdatedAt { get; set; }
 
+    // FromCachedUserClaims method removed - no longer needed after refactor
+    // Use FromUserClaimsContext instead
+
     /// <summary>
-    /// Convert từ CachedUserClaims sang UserProfileResponse
+    /// Convert từ UserClaimsContext sang UserProfileResponse
     /// </summary>
-    public static UserProfileResponse FromCachedUserClaims(CachedUserClaims userClaims)
+    public static UserProfileResponse FromUserClaimsContext(Shared.DTOs.Authorization.UserClaimsContext userContext)
     {
         var profile = new UserProfileResponse
         {
-            UserId = userClaims.UserId,
-            Username = userClaims.Username,
-            Email = userClaims.Email,
-            Roles = userClaims.Roles,
-            LastLogin = userClaims.CachedAt
+            UserId = userContext.UserId,
+            Username = userContext.Claims.TryGetValue("preferred_username", out var username) ? username : userContext.UserId,
+            Email = userContext.Claims.TryGetValue("email", out var email) ? email : "",
+            Roles = userContext.Roles,
+            LastLogin = DateTime.UtcNow // Current time since this is from active JWT
         };
 
         // Extract additional info từ claims
-        if (userClaims.Claims.TryGetValue("name", out var fullName))
+        if (userContext.Claims.TryGetValue("name", out var fullName))
             profile.FullName = fullName;
 
-        if (userClaims.Claims.TryGetValue("given_name", out var firstName))
+        if (userContext.Claims.TryGetValue("given_name", out var firstName))
             profile.FirstName = firstName;
 
-        if (userClaims.Claims.TryGetValue("family_name", out var lastName))
+        if (userContext.Claims.TryGetValue("family_name", out var lastName))
             profile.LastName = lastName;
 
-        if (userClaims.Claims.TryGetValue("picture", out var picture))
+        if (userContext.Claims.TryGetValue("picture", out var picture))
             profile.Picture = picture;
 
-        if (userClaims.Claims.TryGetValue("email_verified", out var emailVerifiedStr))
+        if (userContext.Claims.TryGetValue("email_verified", out var emailVerifiedStr))
             profile.EmailVerified = bool.TryParse(emailVerifiedStr, out var emailVerified) && emailVerified;
 
-        if (userClaims.Claims.TryGetValue("locale", out var locale))
+        if (userContext.Claims.TryGetValue("locale", out var locale))
             profile.Locale = locale;
 
-        if (userClaims.Claims.TryGetValue("zoneinfo", out var timezone))
+        if (userContext.Claims.TryGetValue("zoneinfo", out var timezone))
             profile.Timezone = timezone;
 
-        if (userClaims.Claims.TryGetValue("updated_at", out var updatedAtStr))
+        if (userContext.Claims.TryGetValue("updated_at", out var updatedAtStr))
         {
             if (long.TryParse(updatedAtStr, out var updatedAtTimestamp))
                 profile.ProfileUpdatedAt = DateTimeOffset.FromUnixTimeSeconds(updatedAtTimestamp).DateTime;

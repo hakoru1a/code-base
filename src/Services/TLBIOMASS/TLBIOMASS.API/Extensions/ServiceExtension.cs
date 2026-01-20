@@ -47,7 +47,8 @@ namespace TLBIOMASS.API.Extensions
                 .AddApiVersioningConfiguration()
                 .AddSwaggerConfiguration("TLBIOMASS API", "An ASP.NET Core Web API for managing TLBIOMASS entities", "TLBIOMASS API Team", "support@tlbiomass.com")
                 .AddCorsConfiguration()
-                .AddHealthCheckConfiguration();
+                .AddHealthCheckConfiguration()
+                .AddUserContextService(); // Add unified user context service
         }
 
         private static IServiceCollection AddCommonServices(this IServiceCollection services)

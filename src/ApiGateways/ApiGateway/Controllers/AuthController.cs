@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using ApiGateway.Configurations;
 using ApiGateway.Services;
 using ApiGateway.Models;
+using Contracts.Identity;
 using Shared.SeedWork;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
@@ -22,23 +23,23 @@ public class AuthController : ControllerBase
 {
     private readonly IPkceService _pkceService;
     private readonly IOAuthClient _oauthClient;
-    private readonly IUserClaimsCache _userClaimsCache;
     private readonly ITemporaryTokenService _temporaryTokenService;
+    private readonly IUserContextService _userContextService;
     private readonly OAuthOptions _oauthOptions;
     private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         IPkceService pkceService,
         IOAuthClient oauthClient,
-        IUserClaimsCache userClaimsCache,
         ITemporaryTokenService temporaryTokenService,
+        IUserContextService userContextService,
         IOptions<OAuthOptions> oauthOptions,
         ILogger<AuthController> logger)
     {
         _pkceService = pkceService;
         _oauthClient = oauthClient;
-        _userClaimsCache = userClaimsCache;
         _temporaryTokenService = temporaryTokenService;
+        _userContextService = userContextService;
         _oauthOptions = oauthOptions.Value;
         _logger = logger;
     }
@@ -144,11 +145,6 @@ public class AuthController : ControllerBase
             var callbackUri = $"{Request.Scheme}://{Request.Host}{_oauthOptions.RedirectUri}";
             var tokenResponse = await _oauthClient.ExchangeCodeForTokensAsync(code, pkceData.CodeVerifier, callbackUri);
 
-            // Cache user claims from ID token
-            if (!string.IsNullOrEmpty(tokenResponse.IdToken))
-            {
-                await _userClaimsCache.CacheUserClaimsAsync(tokenResponse.IdToken);
-            }
 
             // Tạo temporary code và lưu token vào Redis
             var temporaryCode = await _temporaryTokenService.CreateTemporaryCodeAsync(tokenResponse, pkceData.RedirectUri);
@@ -261,11 +257,6 @@ public class AuthController : ControllerBase
 
             var tokenResponse = await _oauthClient.RefreshTokenAsync(request.RefreshToken);
 
-            // Update cache if ID token available
-            if (!string.IsNullOrEmpty(tokenResponse.IdToken))
-            {
-                await _userClaimsCache.CacheUserClaimsAsync(tokenResponse.IdToken);
-            }
 
             var authResponse = new AuthResponse
             {
@@ -312,32 +303,19 @@ public class AuthController : ControllerBase
 
             _logger.LogInformation("Processing logout request, CorrelationId: {CorrelationId}", correlationId);
 
-            // Lấy id_token từ cache để end session ở Keycloak
-            string? idToken = null;
-            if (!string.IsNullOrWhiteSpace(request.UserId))
-            {
-                var userClaims = await _userClaimsCache.GetUserClaimsAsync(request.UserId);
-                idToken = userClaims?.IdToken;
-            }
-
             // Parallel execution for independent operations
             var tasks = new List<Task>();
 
-            // End session ở Keycloak (xóa session)
-            if (!string.IsNullOrWhiteSpace(idToken))
-            {
-                tasks.Add(EndSessionSafelyAsync(idToken, correlationId));
-            }
-
+            // Revoke refresh token if provided
             if (!string.IsNullOrWhiteSpace(request.RefreshToken))
             {
                 tasks.Add(RevokeTokenSafelyAsync(request.RefreshToken, correlationId));
             }
 
-            if (!string.IsNullOrWhiteSpace(request.UserId))
-            {
-                tasks.Add(_userClaimsCache.RemoveUserClaimsAsync(request.UserId));
-            }
+            // Note: ID token is not provided in LogoutRequest, so we can't end session at Keycloak
+            // Client should call Keycloak logout endpoint directly if needed
+            // Note: No need to remove cached claims since we're not using UserClaimsCache anymore
+            // JWT tokens are stateless and will expire naturally
 
             await Task.WhenAll(tasks);
 
@@ -356,7 +334,7 @@ public class AuthController : ControllerBase
     /// Lấy cached user claims
     /// </summary>
     [HttpGet("user/{userId}")]
-    [ProducesResponseType(typeof(ApiSuccessResult<CachedUserClaims>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiSuccessResult<object>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResult<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResult<object>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetUserClaims([Required] string userId)
@@ -372,18 +350,21 @@ public class AuthController : ControllerBase
                 return BadRequest(new ApiErrorResult<object>("User ID is required"));
             }
 
-            _logger.LogInformation("Retrieving user claims for userId: {UserId}, CorrelationId: {CorrelationId}", userId, correlationId);
-
-            var userClaims = await _userClaimsCache.GetUserClaimsAsync(userId);
-
-            if (userClaims == null)
+            // Check if requesting user's own data or has admin role
+            var currentUserId = _userContextService.GetCurrentUserId();
+            if (currentUserId != userId && !_userContextService.HasRole("admin"))
             {
-                _logger.LogInformation("User claims not found for userId: {UserId}, CorrelationId: {CorrelationId}", userId, correlationId);
-                return NotFound(new ApiErrorResult<object>("User claims not found in cache"));
+                _logger.LogWarning("User {CurrentUserId} attempted to access claims for {RequestedUserId}, CorrelationId: {CorrelationId}",
+                    currentUserId, userId, correlationId);
+                return Forbid();
             }
 
-            _logger.LogInformation("User claims retrieved successfully for userId: {UserId}, CorrelationId: {CorrelationId}", userId, correlationId);
-            return Ok(new ApiSuccessResult<CachedUserClaims>(userClaims, "User claims retrieved successfully"));
+            _logger.LogInformation("Retrieving user context for userId: {UserId}, CorrelationId: {CorrelationId}", userId, correlationId);
+
+            var userContext = _userContextService.GetCurrentUser();
+
+            _logger.LogInformation("User context retrieved successfully for userId: {UserId}, CorrelationId: {CorrelationId}", userId, correlationId);
+            return Ok(new ApiSuccessResult<object>(userContext, "User context retrieved successfully"));
         }
         catch (Exception ex)
         {
@@ -409,27 +390,21 @@ public class AuthController : ControllerBase
 
         try
         {
-            // Lấy user ID từ JWT token trong Authorization header
-            var userId = GetUserIdFromToken();
-            if (string.IsNullOrEmpty(userId))
+            // Get user context from JWT token
+            if (!_userContextService.IsAuthenticated())
             {
-                _logger.LogWarning("No user ID found in JWT token, CorrelationId: {CorrelationId}", correlationId);
+                _logger.LogWarning("User is not authenticated, CorrelationId: {CorrelationId}", correlationId);
                 return Unauthorized(new ApiErrorResult<object>("Invalid or missing authentication token"));
             }
 
+            var userId = _userContextService.GetCurrentUserId();
             _logger.LogInformation("Retrieving profile for current user: {UserId}, CorrelationId: {CorrelationId}", userId, correlationId);
 
-            // Lấy cached user claims
-            var userClaims = await _userClaimsCache.GetUserClaimsAsync(userId);
+            // Get user context from JWT token (no cache needed)
+            var userContext = _userContextService.GetCurrentUser();
 
-            if (userClaims == null)
-            {
-                _logger.LogInformation("User profile not found in cache for userId: {UserId}, CorrelationId: {CorrelationId}", userId, correlationId);
-                return NotFound(new ApiErrorResult<object>("User profile not found. Please login again to refresh your profile."));
-            }
-
-            // Convert sang UserProfileResponse với format đẹp hơn
-            var profileResponse = UserProfileResponse.FromCachedUserClaims(userClaims);
+            // Convert to UserProfileResponse format
+            var profileResponse = UserProfileResponse.FromUserClaimsContext(userContext);
 
             _logger.LogInformation("User profile retrieved successfully for userId: {UserId}, CorrelationId: {CorrelationId}", userId, correlationId);
             return Ok(new ApiSuccessResult<UserProfileResponse>(profileResponse, "User profile retrieved successfully"));

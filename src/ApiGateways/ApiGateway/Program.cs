@@ -74,7 +74,6 @@ try
 
     // Register JWT-only authentication services
     builder.Services.AddScoped<ApiGateway.Services.IPkceService, ApiGateway.Services.PkceService>();
-    builder.Services.AddScoped<ApiGateway.Services.IUserClaimsCache, ApiGateway.Services.UserClaimsCache>();
     builder.Services.AddScoped<ApiGateway.Services.ITemporaryTokenService, ApiGateway.Services.TemporaryTokenService>();
     
     // Register enhanced security services
@@ -92,6 +91,9 @@ try
     // Add Keycloak Authorization Policies (RBAC)
     // This registers policies like AdminOnly, ManagerOrAdmin, etc.
     builder.Services.AddKeycloakAuthorization();
+
+    // Add unified user context service (replaces UserClaimsCache + ClaimsPrincipalExtensions + UserContextAccessor)
+    builder.Services.AddUserContextService();
 
     #endregion
 

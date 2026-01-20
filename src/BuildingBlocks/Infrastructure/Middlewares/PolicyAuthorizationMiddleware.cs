@@ -1,5 +1,5 @@
 using Infrastructure.Authorization.Interfaces;
-using Infrastructure.Extensions;
+using Contracts.Identity;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -23,14 +23,14 @@ namespace Infrastructure.Middlewares
             _logger = logger;
         }
 
-        public async Task InvokeAsync(HttpContext context, IPolicyEvaluator policyEvaluator)
+        public async Task InvokeAsync(HttpContext context, IPolicyEvaluator policyEvaluator, IUserContextService userContextService)
         {
             // Check if policy is required for this endpoint
             // This is set by RequirePolicyAttribute or can be set manually
             if (context.Items.TryGetValue("RequiredPolicy", out var policyNameObj) && 
                 policyNameObj is string policyName)
             {
-                var userContext = context.User.ToUserClaimsContext();
+                var userContext = userContextService.GetCurrentUser();
                 var evaluationContext = ExtractEvaluationContext(context);
                 var startTime = DateTime.UtcNow;
 

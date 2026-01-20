@@ -47,7 +47,8 @@ namespace Generate.API.Extensions
                 .AddApiVersioningConfiguration()
                 .AddSwaggerConfiguration("Generate API", "An ASP.NET Core Web API for managing business entities", "Generate API Team", "support@generate.com")
                 .AddCorsConfiguration()
-                .AddHealthCheckConfiguration();
+                .AddHealthCheckConfiguration()
+                .AddUserContextService(); // Add unified user context service
         }
 
         private static IServiceCollection AddCommonServices(this IServiceCollection services)
