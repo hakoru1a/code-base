@@ -2,21 +2,15 @@
 import { Theme } from '@mui/material/styles';
 import { CheckboxProps } from '@mui/material/Checkbox';
 
-// project imports
-import getColors from 'utils/getColors';
-
 // assets
 import BorderOutlined from '@ant-design/icons/BorderOutlined';
 import CheckSquareFilled from '@ant-design/icons/CheckSquareFilled';
 import MinusSquareFilled from '@ant-design/icons/MinusSquareFilled';
-
-// types
-import { ExtendedStyleProps } from 'types/extended';
-
-// ==============================|| RADIO - COLORS ||============================== //
+import { themeHelper } from '@utils/helpers';
+import { ExtendedStyleProps } from '../types';
 
 function getColorStyle({ color, theme }: ExtendedStyleProps) {
-  const colors = getColors(theme, color);
+  const colors = themeHelper.getColors(theme, color);
   const { lighter, main, dark } = colors;
 
   return {

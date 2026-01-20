@@ -1,16 +1,7 @@
-// material-ui
-import { PaletteColorOptions } from '@mui/material/styles';
-
-//project-import
-import { ThemeMode } from 'config';
-
-//assets
-import { PalettesProps } from '@ant-design/colors';
-
-// types
-import { PaletteThemeProps } from 'types/theme';
-
-// ==============================|| PRESET THEME - TEAL THEME6 ||============================== //
+import type { PalettesProps } from '@ant-design/colors';
+import type { PaletteThemeProps } from '../types';
+import type { PaletteColorOptions } from '@mui/material';
+import { ThemeMode } from '@contexts/config';
 
 export default function Theme6(colors: PalettesProps, mode: ThemeMode): PaletteThemeProps {
   const { grey } = colors;

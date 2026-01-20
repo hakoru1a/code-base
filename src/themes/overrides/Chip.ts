@@ -1,16 +1,10 @@
 // material-ui
 import { Theme } from '@mui/material/styles';
-
-// project imports
-import getColors from 'utils/getColors';
-
-// types
-import { ExtendedStyleProps } from 'types/extended';
-
-// ==============================|| CHIP - COLORS ||============================== //
+import { themeHelper } from '@utils/helpers';
+import { ExtendedStyleProps } from '../types';
 
 function getColor({ color, theme }: ExtendedStyleProps) {
-  const colors = getColors(theme, color);
+  const colors = themeHelper.getColors(theme, color);
   const { dark } = colors;
 
   return {
@@ -22,7 +16,7 @@ function getColor({ color, theme }: ExtendedStyleProps) {
 }
 
 function getColorStyle({ color, theme }: ExtendedStyleProps) {
-  const colors = getColors(theme, color);
+  const colors = themeHelper.getColors(theme, color);
   const { light, lighter, main, darker } = colors;
 
   return {

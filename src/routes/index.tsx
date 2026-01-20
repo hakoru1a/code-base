@@ -1,11 +1,33 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { lazy } from 'react';
+import { routes } from './routing.ts';
+import { authRoutes, guestRoutes } from './children';
+import { AuthLayout, GuestLayout } from '@layout';
 
-// project imports
-import MainRoutes from './MainRoutes';
-import LoginRoutes from './LoginRoutes';
+const NotFoundPage = lazy(() => import('@pages/maintenance/404'));
 
-// ==============================|| ROUTING RENDER ||============================== //
+export * from './routing';
+export * from './components';
 
-const router = createBrowserRouter([LoginRoutes, MainRoutes], { basename: import.meta.env.VITE_APP_BASE_NAME });
-
-export default router;
+export const router = createBrowserRouter([
+  {
+    element: <GuestLayout />,
+    children: [...guestRoutes]
+  },
+  {
+    path: routes.notFound,
+    element: <NotFoundPage />
+  },
+  {
+    path: routes.base,
+    element: <Navigate to={routes.default} />
+  },
+  {
+    element: <AuthLayout />,
+    children: [...authRoutes]
+  },
+  {
+    path: '*',
+    element: <Navigate to={routes.notFound} />
+  }
+]);

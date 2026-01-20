@@ -1,16 +1,7 @@
-//material-ui
-import { PaletteColorOptions } from '@mui/material/styles';
-
-//project-import
-import { ThemeMode } from 'config';
-
-//assets
-import { PalettesProps } from '@ant-design/colors';
-
-// types
-import { PaletteThemeProps } from 'types/theme';
-
-// ==============================|| PRESET THEME - DEFAULT ||============================== //
+import type { PalettesProps } from '@ant-design/colors';
+import { ThemeMode } from '@contexts/config';
+import type { PaletteThemeProps } from '../types';
+import type { PaletteColorOptions } from '@mui/material';
 
 export default function Theme1(colors: PalettesProps, mode: ThemeMode): PaletteThemeProps {
   const { grey } = colors;

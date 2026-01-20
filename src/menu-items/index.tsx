@@ -1,15 +1,11 @@
-// project imports
-import samplePage from './sample-page';
-import other from './other';
-import pages from './pages';
+import { dashboardMenus, masterDataMenus } from './pages';
+import { NavItemType } from './types';
 
-// types
-import { NavItemType } from 'types/menu';
-
-// ==============================|| MENU ITEMS ||============================== //
+export * from './types';
+export * from './hook';
 
 const menuItems: { items: NavItemType[] } = {
-  items: [samplePage, pages, other]
+  items: [dashboardMenus, masterDataMenus]
 };
 
 export default menuItems;

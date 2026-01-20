@@ -1,12 +1,8 @@
-import { useEffect, Dispatch, SetStateAction } from 'react';
+import { useEffect, type Dispatch, type SetStateAction } from 'react';
 import { matchPath } from 'react-router-dom';
 
 // types
-import { NavItemType } from 'types/menu';
-
-// Type alias for setting state
-// Allows setting a state value or null
-// Used for managing selected menu and anchor element
+import { NavItemType } from '@types/menu';
 
 type SetState<T> = (value: T | null) => void;
 

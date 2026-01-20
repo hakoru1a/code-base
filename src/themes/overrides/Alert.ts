@@ -1,16 +1,9 @@
-// material-ui
 import { alpha, Theme } from '@mui/material/styles';
-
-// project imports
-import getColors from 'utils/getColors';
-
-// types
-import { ExtendedStyleProps } from 'types/extended';
-
-// ==============================|| ALERT - COLORS ||============================== //
+import { themeHelper } from '@utils/helpers';
+import { ExtendedStyleProps } from '../types';
 
 function getColorStyle({ color, theme }: ExtendedStyleProps) {
-  const colors = getColors(theme, color);
+  const colors = themeHelper.getColors(theme, color);
   const { lighter, light, main } = colors;
 
   return {

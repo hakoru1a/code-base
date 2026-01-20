@@ -1,10 +1,6 @@
 // material-ui
 import { TypographyVariantsOptions } from '@mui/material/styles';
-
-// types
-import { FontFamily } from 'types/config';
-
-// ==============================|| DEFAULT THEME - TYPOGRAPHY ||============================== //
+import { FontFamily } from './types';
 
 export default function Typography(fontFamily: FontFamily): TypographyVariantsOptions {
   return {

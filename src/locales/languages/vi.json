@@ -1,0 +1,40 @@
+{
+  "common": {
+    "button": {
+      "submit": "Submit",
+      "cancel": "Cancel"
+    },
+    "field": {
+      "name": "Name",
+      "email": "Email",
+      "password": "Password"
+    }
+  },
+  "validation": {
+    "required": "Field is required"
+  },
+  "page": {
+    "login": {
+      "title": "Login",
+      "description": "Login to your account"
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "Dashboard"
+    },
+    "error": {
+      "404": {
+        "title": "404 Not Found",
+        "description": "Page not found"
+      },
+      "403": {
+        "title": "403 Forbidden",
+        "description": "Forbidden"
+      },
+      "500": {
+        "title": "500 Internal Server Error",
+        "description": "Internal server error"
+      }
+    }
+  }
+}

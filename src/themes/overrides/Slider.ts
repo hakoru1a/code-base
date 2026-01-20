@@ -1,16 +1,10 @@
 // material-ui
 import { Theme } from '@mui/material/styles';
-
-// project imports
-import getColors from 'utils/getColors';
-
-// types
-import { ExtendedStyleProps } from 'types/extended';
-
-// ==============================|| OVERRIDES - TAB ||============================== //
+import { themeHelper } from '@utils/helpers';
+import { ExtendedStyleProps } from '../types';
 
 function getColorStyle({ color, theme }: ExtendedStyleProps) {
-  const colors = getColors(theme, color);
+  const colors = themeHelper.getColors(theme, color);
   const { main } = colors;
 
   return { border: '2px solid', borderColor: main };

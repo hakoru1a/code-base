@@ -1,8 +1,6 @@
 import { useState } from 'react';
 
-// ==============================|| CARD - PAGINATION ||============================== //
-
-export default function usePagination(data: any, itemsPerPage: number) {
+export default function usePagination(data: Dynamic, itemsPerPage: number) {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const maxPage = Math.ceil(data.length / itemsPerPage);
 

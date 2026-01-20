@@ -2,17 +2,12 @@
 import { alpha, createTheme } from '@mui/material/styles';
 
 // third-party
-import { presetDarkPalettes, presetPalettes, PalettesProps } from '@ant-design/colors';
+import { presetDarkPalettes, presetPalettes, type PalettesProps } from '@ant-design/colors';
 
 // project imports
-import ThemeOption from './theme';
-import { ThemeMode } from 'config';
-
-// types
-import { PaletteThemeProps } from 'types/theme';
-import { PresetColor } from 'types/config';
-
-// ==============================|| DEFAULT THEME - PALETTE ||============================== //
+import ThemeOption from './theme/index';
+import { ThemeMode } from '@contexts/config';
+import type { PaletteThemeProps, PresetColor } from './types';
 
 export default function Palette(mode: ThemeMode, presetColor: PresetColor) {
   const colors: PalettesProps = mode === ThemeMode.DARK ? presetDarkPalettes : presetPalettes;

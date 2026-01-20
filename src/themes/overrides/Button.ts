@@ -1,25 +1,18 @@
 // material-ui
 import { alpha, Theme } from '@mui/material/styles';
-
-// project imports
-import getColors from 'utils/getColors';
-import getShadow from 'utils/getShadow';
-
-// types
-import { ButtonVariantProps, ExtendedStyleProps } from 'types/extended';
-
-// ==============================|| BUTTON - COLORS ||============================== //
+import { ButtonVariantProps, ExtendedStyleProps } from '../types';
+import { themeHelper } from '@utils/helpers';
 
 interface ButtonStyleProps extends ExtendedStyleProps {
   variant: ButtonVariantProps;
 }
 
 function getColorStyle({ variant, color, theme }: ButtonStyleProps) {
-  const colors = getColors(theme, color);
+  const colors = themeHelper.getColors(theme, color);
   const { lighter, main, dark, darker, contrastText } = colors;
 
   const buttonShadow = `${color}Button`;
-  const shadows = getShadow(theme, buttonShadow);
+  const shadows = themeHelper.getShadow(theme, buttonShadow);
 
   const commonShadow = {
     '&::after': {

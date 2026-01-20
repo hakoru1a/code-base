@@ -1,21 +1,15 @@
 // material-ui
 import { Theme } from '@mui/material/styles';
 import { PaginationProps } from '@mui/material/Pagination';
-
-// project imports
-import getColors from 'utils/getColors';
-
-// types
-import { ExtendedStyleProps } from 'types/extended';
-
-// ==============================|| PAGINATION ITEM - COLORS ||============================== //
+import { themeHelper } from '@utils/helpers';
+import { ExtendedStyleProps } from '../types';
 
 interface PaginationStyleProps extends ExtendedStyleProps {
   variant: PaginationProps['variant'];
 }
 
 function getColorStyle({ variant, color, theme }: PaginationStyleProps) {
-  const colors = getColors(theme, color);
+  const colors = themeHelper.getColors(theme, color);
   const { lighter, light, dark, main, contrastText } = colors;
 
   const focusStyle = {

@@ -1,21 +1,13 @@
-// material-ui
 import { alpha, Theme } from '@mui/material/styles';
-
-// project imports
-import getColors from 'utils/getColors';
-import getShadow from 'utils/getShadow';
-
-// types
-import { ExtendedStyleProps } from 'types/extended';
-
-// ==============================|| BUTTON - COLORS ||============================== //
+import { themeHelper } from '@utils/helpers';
+import { ExtendedStyleProps } from '../types';
 
 function getColorStyle({ color, theme }: ExtendedStyleProps) {
-  const colors = getColors(theme, color);
+  const colors = themeHelper.getColors(theme, color);
   const { main, dark, contrastText } = colors;
 
   const buttonShadow = `${color}Button`;
-  const shadows = getShadow(theme, buttonShadow);
+  const shadows = themeHelper.getShadow(theme, buttonShadow);
 
   return {
     color: contrastText,

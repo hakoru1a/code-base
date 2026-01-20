@@ -8,14 +8,9 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
-// project imports
-import { APP_DEFAULT_PATH } from 'config';
-
-// assets
-import error404 from 'assets/images/maintenance/Error404.png';
-import TwoCone from 'assets/images/maintenance/TwoCone.png';
-
-// ==============================|| ERROR 404 - MAIN ||============================== //
+import error404 from '@assets/images/maintenance/Error404.png';
+import TwoCone from '@assets/images/maintenance/TwoCone.png';
+import { routes } from '@routes';
 
 export default function Error404() {
   return (
@@ -45,7 +40,7 @@ export default function Error404() {
           <Typography color="text.secondary" align="center" sx={{ width: { xs: '73%', sm: '61%' } }}>
             The page you are looking was moved, removed, renamed, or might never exist!
           </Typography>
-          <Button component={Link} to={APP_DEFAULT_PATH} variant="contained">
+          <Button component={Link} to={routes.default} variant="contained">
             Back To Home
           </Button>
         </Stack>

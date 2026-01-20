@@ -1,13 +1,8 @@
 // material-ui
 import { Theme } from '@mui/material/styles';
-
-// project imports
-import { ThemeMode } from 'config';
-import getColors from 'utils/getColors';
-import getShadow from 'utils/getShadow';
-
-// types
-import { ColorProps } from 'types/extended';
+import { ThemeMode } from '@contexts/config';
+import { themeHelper } from '@utils/helpers';
+import { ColorProps } from '../types';
 
 interface Props {
   variant: ColorProps;
@@ -17,10 +12,10 @@ interface Props {
 // ==============================|| OVERRIDES - INPUT BORDER & SHADOWS ||============================== //
 
 function getColor({ variant, theme }: Props) {
-  const colors = getColors(theme, variant);
+  const colors = themeHelper.getColors(theme, variant);
   const { light } = colors;
 
-  const shadows = getShadow(theme, `${variant}`);
+  const shadows = themeHelper.getShadow(theme, `${variant}`);
 
   return {
     '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: light },
