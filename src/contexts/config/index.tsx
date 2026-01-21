@@ -11,7 +11,7 @@ const defaultConfig: DefaultConfigProps = {
   i18n: 'en',
   menuOrientation: MenuOrientation.VERTICAL,
   miniDrawer: false,
-  container: true,
+  container: false,
   mode: ThemeMode.LIGHT,
   presetColor: 'default',
   themeDirection: ThemeDirection.LTR
@@ -29,8 +29,6 @@ const initialState: CustomizationProps = {
   onChangeMenuOrientation: () => {},
   onChangeFontFamily: () => {}
 };
-
-// ==============================|| CONFIG CONTEXT & PROVIDER ||============================== //
 
 const ConfigContext = createContext(initialState);
 

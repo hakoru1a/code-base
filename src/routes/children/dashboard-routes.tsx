@@ -3,11 +3,11 @@ import { lazy } from 'react';
 
 const DashboardPage = lazy(() => import('@pages/dashboard'));
 
-const authRoutes = [
+const dashboardRoutes = [
   {
     path: routes.dashboard,
     element: <DashboardPage />
   }
 ];
 
-export default authRoutes;
+export default dashboardRoutes;

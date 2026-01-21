@@ -9,7 +9,7 @@ import { useAuth, useRouter, useToast } from '@hooks';
 import { routes } from '@routes';
 
 const DEFAULT_USERNAME = 'admin';
-const DEFAULT_PASSWORD = '123456';
+const DEFAULT_PASSWORD = 'lp0zjzint58yt9evieyz6zzlu80vx06z';
 
 const Login = () => {
   const toast = useToast();

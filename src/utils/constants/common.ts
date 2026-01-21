@@ -1,4 +1,5 @@
 export const DEFAULT_PAGE_SIZE = 10;
+export const DEFAULT_PAGE = 0;
 
 export const CURRENCIES: Record<string, { name: string; symbol: string; locale: string }> = {
   USD: { name: 'Đô la Mỹ', symbol: '$', locale: 'en-US' },

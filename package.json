@@ -26,12 +26,14 @@
     "@fontsource/poppins": "5.2.5",
     "@fontsource/public-sans": "5.2.5",
     "@fontsource/roboto": "5.2.5",
+    "@hookform/resolvers": "5.2.2",
     "@mui/base": "5.0.0-beta.70",
     "@mui/lab": "7.0.0-beta.10",
     "@mui/material": "7.0.2",
     "@mui/system": "7.0.2",
     "@mui/x-date-pickers": "8.18.0",
     "@supabase/supabase-js": "2.49.4",
+    "@tanstack/react-table": "8.21.3",
     "@vitejs/plugin-react": "4.4.1",
     "axios": "1.12.0",
     "chance": "1.1.12",
@@ -62,8 +64,7 @@
     "vite": "7.1.11",
     "vite-tsconfig-paths": "5.1.4",
     "web-vitals": "4.2.4",
-    "zod": "4.1.12",
-    "@hookform/resolvers": "5.2.2"
+    "zod": "4.1.12"
   },
   "devDependencies": {
     "@eslint/compat": "1.2.8",
@@ -87,11 +88,11 @@
     "husky": "9.1.7",
     "immutable": "5.1.1",
     "knip": "5.50.5",
+    "lint-staged": "16.2.7",
     "prettier": "3.5.3",
     "prettier-eslint-cli": "8.0.1",
     "typescript": "5.8.3",
-    "typescript-eslint": "8.46.3",
-    "lint-staged": "16.2.7"
+    "typescript-eslint": "8.46.3"
   },
   "pnpm": {
     "overrides": {

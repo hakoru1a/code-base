@@ -15,3 +15,6 @@ export * from './loader';
 
 export * from './fields';
 export * from './fields/types';
+
+export { default as DataTable } from './data-table';
+export * from './data-table/types';

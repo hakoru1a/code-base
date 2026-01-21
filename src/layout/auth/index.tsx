@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 
 import { Theme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -14,11 +14,10 @@ import HorizontalBar from './Drawer/HorizontalBar';
 import { handlerDrawerOpen, useGetMenuMaster } from '@menus';
 import { useConfig } from '@hooks';
 import { MenuOrientation } from '@contexts/config';
-import { Breadcrumbs, LinearLoader } from '@components';
+import { LinearLoader } from '@components';
 import { AuthGuard } from '@routes';
 
 const AuthLayout = () => {
-  const { pathname } = useLocation();
   const { menuMasterLoading } = useGetMenuMaster();
   const downXL = useMediaQuery((theme: Theme) => theme.breakpoints.down('xl'));
   const downLG = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'));
@@ -55,7 +54,6 @@ const AuthLayout = () => {
               flexDirection: 'column'
             }}
           >
-            {pathname !== '#!' && <Breadcrumbs />}
             <Outlet />
             <Footer />
           </Container>
