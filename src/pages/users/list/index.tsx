@@ -4,6 +4,7 @@ import { routes } from '@routes';
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { PaginationResult } from '@services/core';
+import { locales } from '@locales';
 
 type MockUser = {
   id: number;
@@ -53,27 +54,21 @@ const ListUser = () => {
     setData(data as PaginationResult<MockUser>);
   };
 
-  const breadcrumbLinks = [
-    { title: 'Trang chủ', to: routes.default },
-    { title: 'Users', to: routes.masterData.user.base },
-    { title: 'Danh sách' }
-  ];
-
   const columns: ColumnDef<MockUser>[] = [
     {
-      header: 'ID',
+      header: locales.tables.columns.id,
       accessorKey: 'id'
     },
     {
-      header: 'Name',
+      header: locales.tables.columns.name,
       accessorKey: 'name'
     },
     {
-      header: 'Email',
+      header: locales.tables.columns.email,
       accessorKey: 'email'
     },
     {
-      header: 'Role',
+      header: locales.tables.columns.role,
       accessorKey: 'role',
       cell: (cell) => {
         const value = cell.getValue();
@@ -82,9 +77,15 @@ const ListUser = () => {
     }
   ];
 
+  const breadcrumbLinks = [
+    { title: locales.breadcrumbs.home, to: routes.default },
+    { title: locales.breadcrumbs.users, to: routes.masterData.user.base },
+    { title: locales.breadcrumbs.list }
+  ];
+
   return (
     <>
-      <Breadcrumbs custom heading="Danh sách" links={breadcrumbLinks} />
+      <Breadcrumbs heading={locales.breadcrumbs.list} links={breadcrumbLinks} />
 
       <Grid container spacing={2}>
         <Grid size={12}>

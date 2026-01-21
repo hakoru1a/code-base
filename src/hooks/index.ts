@@ -6,3 +6,5 @@ export { default as useScriptRef } from './useScriptRef';
 export { default as usePagination } from './usePagination';
 export { default as useRouter } from './useRouter';
 export { default as useToast } from './useToast';
+export { default as useBoolean } from './useBoolean';
+export { default as useDialog } from './useDialog';

@@ -1,8 +1,12 @@
 {
   "common": {
     "button": {
-      "submit": "Submit",
-      "cancel": "Cancel"
+      "save": "Save",
+      "cancel": "Cancel",
+      "reject": "Reject",
+      "approve": "Approve",
+      "accept": "Accept",
+      "viewAll": "View All"
     },
     "field": {
       "name": "Name",
@@ -12,6 +16,14 @@
   },
   "validation": {
     "required": "Field is required"
+  },
+  "menus": {
+    "dashboard": {
+      "title": "Dashboard"
+    },
+    "masterData": {
+      "title": "Master Data"
+    }
   },
   "page": {
     "login": {
@@ -36,5 +48,16 @@
         "description": "Internal server error"
       }
     }
+  },
+  "notifications": {
+    "submitSuccess": "Submission successful.",
+    "submitError": "Submission failed. Please try again."
+  },
+  "errors": {
+    "network": "Lỗi mạng. Vui lòng kiểm tra kết nối internet của bạn.",
+    "unauthorized": "Không được phép truy cập. Vui lòng đăng nhập lại.",
+    "forbidden": "Bạn không có quyền truy cập tài nguyên này.",
+    "notFound": "Tài nguyên không tồn tại.",
+    "internalServerError": "Lỗi máy chủ nội bộ. Vui lòng thử lại sau."
   }
 }

@@ -1,6 +1,5 @@
 import { Link, useLocation, matchPath } from 'react-router-dom';
 
-// material-ui
 import useMediaQuery from '@mui/material/useMediaQuery';
 import Avatar from '@mui/material/Avatar';
 import Chip from '@mui/material/Chip';
@@ -10,12 +9,12 @@ import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
-import { FormattedMessage } from 'react-intl';
 import React from 'react';
 import { handlerDrawerOpen, LinkTarget, NavItemType, useGetMenuMaster } from '@menus';
 import { useConfig } from '@hooks';
 import { MenuOrientation, NavActionType, ThemeMode } from '@contexts/config';
 import { Button, Dot } from '@components';
+import { useTranslate } from '@locales';
 
 interface Props {
   item: NavItemType;
@@ -24,9 +23,8 @@ interface Props {
   setSelectedID?: React.Dispatch<React.SetStateAction<string | undefined>>;
 }
 
-// ==============================|| NAVIGATION - LIST ITEM ||============================== //
-
 export default function NavItem({ item, level, isParents = false, setSelectedID }: Props) {
+  const { t } = useTranslate();
   const { menuMaster } = useGetMenuMaster();
   const drawerOpen = menuMaster.isDashboardDrawerOpened;
 
@@ -124,7 +122,7 @@ export default function NavItem({ item, level, isParents = false, setSelectedID 
               <ListItemText
                 primary={
                   <Typography variant="h6" sx={{ color: isSelected ? iconSelectedColor : textColor }}>
-                    <FormattedMessage id={item.title as string} />
+                    {t(item.title as string)}
                   </Typography>
                 }
               />
@@ -230,7 +228,7 @@ export default function NavItem({ item, level, isParents = false, setSelectedID 
           <ListItemText
             primary={
               <Typography variant="h6" color={isSelected ? 'primary.main' : 'secondary.dark'}>
-                <FormattedMessage id={item.title as string} />
+                {t(item.title as string)}
               </Typography>
             }
           />

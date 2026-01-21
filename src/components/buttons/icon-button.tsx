@@ -170,12 +170,12 @@ interface Props extends IconButtonProps {
   children: ReactNode;
 }
 
-function IconButton({ variant = 'text', shape = 'square', children, color = 'primary', ref, ...others }: Props) {
+const IconButton = ({ variant = 'text', shape = 'square', children, color = 'primary', ref, ...others }: Props) => {
   return (
     <IconButtonStyle ref={ref} disableRipple variant={variant} shape={shape} color={color} {...others}>
       {children}
     </IconButtonStyle>
   );
-}
+};
 
 export default IconButton;

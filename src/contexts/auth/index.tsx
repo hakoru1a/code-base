@@ -9,6 +9,8 @@ import authReducer from './authReducer';
 import { LinearLoader } from '@components';
 import { authService } from '@services/auth';
 import { accountService } from '@services/account';
+import { localStorageHelper } from '@utils/helpers';
+import { LocalStorageKey } from '@utils/constants';
 
 const chance = new Chance();
 
@@ -32,10 +34,10 @@ const verifyToken: (st: string) => boolean = (serviceToken) => {
 
 const setSession = (serviceToken?: string | null) => {
   if (serviceToken) {
-    localStorage.setItem('serviceToken', serviceToken);
+    localStorageHelper.set(LocalStorageKey.ServiceToken, serviceToken);
     axios.defaults.headers.common.Authorization = `Bearer ${serviceToken}`;
   } else {
-    localStorage.removeItem('serviceToken');
+    localStorageHelper.remove(LocalStorageKey.ServiceToken);
     delete axios.defaults.headers.common.Authorization;
   }
 };
@@ -50,7 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactElement }) => 
   useEffect(() => {
     const init = async () => {
       try {
-        const serviceToken = window.localStorage.getItem('serviceToken');
+        const serviceToken = localStorageHelper.get(LocalStorageKey.ServiceToken);
         if (serviceToken && verifyToken(serviceToken)) {
           setSession(serviceToken);
           const response = await accountService.getProfile();

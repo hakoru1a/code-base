@@ -1,24 +1,27 @@
 import { RouterProvider } from 'react-router-dom';
 import { ThemeCustomization } from '@themes';
-import { RtlLayout, ScrollTop, SnackBar } from '@components';
+import { RtlLayout, ScrollToTop, SnackBar } from '@components';
 import { AuthProvider } from '@contexts/auth';
 import { router } from '@routes';
 import { ToastProvider } from '@contexts/toast';
-import { LocalProvider } from '@locales';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DialogProvider } from '@contexts/dialog';
 
 const App = () => (
   <ThemeCustomization>
     <RtlLayout>
       <SnackBar>
-        <LocalProvider>
-          <ToastProvider>
+        <ToastProvider>
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="vi">
             <AuthProvider>
-              <ScrollTop>
+              <DialogProvider>
                 <RouterProvider router={router} />
-              </ScrollTop>
+                <ScrollToTop />
+              </DialogProvider>
             </AuthProvider>
-          </ToastProvider>
-        </LocalProvider>
+          </LocalizationProvider>
+        </ToastProvider>
       </SnackBar>
     </RtlLayout>
   </ThemeCustomization>

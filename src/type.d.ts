@@ -8,3 +8,5 @@ type ApiResultEmpty = DynamicObject;
 type KeyedObject = {
   [key: string]: string | number | KeyedObject | any;
 };
+
+type AsyncVoidFunction = () => Promise<void>;

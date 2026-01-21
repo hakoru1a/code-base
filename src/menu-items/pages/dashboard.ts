@@ -1,30 +1,32 @@
 import { NavItemType } from '../types';
 import { DashboardOutlined, LineChartOutlined, ShopOutlined } from '@ant-design/icons';
+import { locales } from '@locales';
+import { routes } from '@routes';
 
 const dashboardMenus: NavItemType = {
   id: 'group-dashboard',
-  title: 'Dashboard',
+  title: locales.menus.dashboard.title,
   type: 'group',
   children: [
     {
-      id: 'dashboard-page-1',
-      title: 'Bảng điều khiển',
+      id: 'dashboard-page-collapse',
+      title: locales.menus.dashboard.title,
       type: 'collapse',
-      url: '/dashboard',
+      url: routes.dashboard.base,
       icon: DashboardOutlined,
       children: [
         {
           id: 'dashboard-analytics',
-          title: 'Tổng quan',
+          title: locales.menus.dashboard.subMenus.overview,
           type: 'item',
-          url: '/dashboard/analytics',
+          url: routes.dashboard.overview,
           icon: LineChartOutlined
         },
         {
           id: 'dashboard-sales',
-          title: 'Bán hàng',
+          title: locales.menus.dashboard.subMenus.sale,
           type: 'item',
-          url: '/dashboard/sales',
+          url: routes.dashboard.sales,
           icon: ShopOutlined
         }
       ]

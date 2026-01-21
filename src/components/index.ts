@@ -1,7 +1,7 @@
 export { default as SimpleBar } from './simple-bar';
 export { default as SnackBar } from './snack-bar';
 export { default as RtlLayout } from './rtl-layout';
-export { default as ScrollTop } from './scroll-top';
+export { default as ScrollToTop } from './scroll-to-top';
 export { default as Button } from './buttons';
 export { default as Avatar } from './avatar';
 export { default as Transitions } from './transitions';
@@ -18,3 +18,7 @@ export * from './fields/types';
 
 export { default as DataTable } from './data-table';
 export * from './data-table/types';
+
+export * from './dialog';
+
+export { default as Text } from './text';

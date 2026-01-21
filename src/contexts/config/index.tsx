@@ -8,7 +8,7 @@ export * from './types';
 
 const defaultConfig: DefaultConfigProps = {
   fontFamily: `'Public Sans', sans-serif`,
-  i18n: 'en',
+  locale: 'vi',
   menuOrientation: MenuOrientation.VERTICAL,
   miniDrawer: false,
   container: false,
@@ -49,7 +49,7 @@ function ConfigProvider({ children }: ConfigProviderProps) {
   const onChangeLocalization = (lang: I18n) => {
     setConfig({
       ...config,
-      i18n: lang
+      locale: lang
     });
   };
 

@@ -12,6 +12,8 @@ type NavActionProps = {
   icon: GenericCardProps['iconPrimary'] | string;
 };
 
+export type ItemType = 'item' | 'collapse' | 'group';
+
 export type NavItemType = {
   breadcrumbs?: boolean;
   caption?: ReactNode | string;
@@ -28,7 +30,7 @@ export type NavItemType = {
   search?: string;
   target?: boolean;
   title?: ReactNode | string;
-  type?: 'item' | 'collapse' | 'group';
+  type?: ItemType;
   url?: string | undefined;
   actions?: NavActionProps[];
 };

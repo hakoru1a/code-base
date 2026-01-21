@@ -2,7 +2,6 @@ export const routes = {
   base: '/',
   default: '/dashboard',
   login: '/login',
-  dashboard: '/dashboard',
   demo: {
     base: '/demo'
   },
@@ -17,5 +16,10 @@ export const routes = {
     user: {
       base: '/master-data/user'
     }
+  },
+  dashboard: {
+    base: '/dashboard',
+    overview: '/dashboard/overview',
+    sales: '/dashboard/sales'
   }
 };

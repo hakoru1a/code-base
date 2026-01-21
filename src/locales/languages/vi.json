@@ -1,22 +1,52 @@
 {
   "common": {
     "button": {
-      "submit": "Submit",
-      "cancel": "Cancel"
+      "save": "Lưu",
+      "cancel": "Hủy bỏ",
+      "reject": "Từ chối",
+      "approve": "Phê duyệt",
+      "accept": "Chấp nhận",
+      "viewAll": "Xem tất cả"
     },
     "field": {
-      "name": "Name",
+      "name": "Tên",
       "email": "Email",
-      "password": "Password"
+      "password": "Mật khẩu"
     }
   },
   "validation": {
-    "required": "Field is required"
+    "required": "Trường bắt buộc"
+  },
+  "menus": {
+    "dashboard": {
+      "title": "Bảng điều khiển",
+      "subMenus": {
+        "overview": "Tổng quan",
+        "sale": "Bán hàng"
+      }
+    },
+    "masterData": {
+      "title": "Dữ liệu chính",
+      "subMenus": {
+        "users": "Người dùng"
+      }
+    }
+  },
+  "breadcrumbs": {
+    "home": "Trang chủ",
+    "dashboard": "Bảng điều khiển",
+    "masterData": "Dữ liệu chính",
+    "users": "Người dùng",
+    "list": "Danh sách",
+    "details": "Chi tiết"
   },
   "page": {
     "login": {
-      "title": "Login",
-      "description": "Login to your account"
+      "title": "Đăng nhập",
+      "description": "Login to your account",
+      "buttons": {
+        "login": "Đăng nhập"
+      }
     },
     "dashboard": {
       "title": "Dashboard",
@@ -35,6 +65,34 @@
         "title": "500 Internal Server Error",
         "description": "Internal server error"
       }
+    }
+  },
+  "notifications": {
+    "submitSuccess": "Gửi thành công.",
+    "submitError": "Gửi không thành công. Vui lòng thử lại."
+  },
+  "errors": {
+    "network": "Lỗi mạng. Vui lòng kiểm tra kết nối internet của bạn.",
+    "unauthorized": "Không được phép truy cập. Vui lòng đăng nhập lại.",
+    "forbidden": "Bạn không có quyền truy cập tài nguyên này.",
+    "notFound": "Tài nguyên không tồn tại.",
+    "internalServerError": "Lỗi máy chủ nội bộ. Vui lòng thử lại sau."
+  },
+  "tables": {
+    "noData": "Không có dữ liệu để hiển thị.",
+    "loading": "Đang tải dữ liệu...",
+    "pagination": {
+      "rowsPerPage": "Số hàng mỗi trang",
+      "of": "của",
+      "goToPage": "Đi đến trang"
+    },
+    "columns": {
+      "id": "ID",
+      "name": "Tên",
+      "email": "Email",
+      "createdAt": "Ngày tạo",
+      "actions": "Hành động",
+      "role": "Vai trò"
     }
   }
 }

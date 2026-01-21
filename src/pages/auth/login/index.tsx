@@ -1,14 +1,14 @@
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
 import { AuthContainer } from './components';
 import { Form, FormField, useFormResolver } from '@forms';
 import { schema, FormProps } from './schema';
-import Button from '@mui/material/Button';
 import { useAuth, useRouter, useToast } from '@hooks';
 import { routes } from '@routes';
+import { locales } from '@locales';
+import { Button, Text } from '@components';
 
-const DEFAULT_USERNAME = 'admin';
+const DEFAULT_USERNAME = 'admin@biomass.com';
 const DEFAULT_PASSWORD = 'lp0zjzint58yt9evieyz6zzlu80vx06z';
 
 const Login = () => {
@@ -42,19 +42,25 @@ const Login = () => {
       <Grid container spacing={3}>
         <Grid size={12}>
           <Stack direction="row" sx={{ alignItems: 'baseline', justifyContent: 'space-between', mb: { xs: -0.5, sm: 0.5 } }}>
-            <Typography variant="h3">Đăng nhập</Typography>
+            <Text.Typography variant="h3" label={locales.page.login.title} />
           </Stack>
         </Grid>
         <Grid size={12}>
           <Form onSubmit={handleSubmit} methods={form}>
             <Stack spacing={2}>
-              <FormField.Text name="username" label="Tài khoản" required />
+              <FormField.Text name="username" label={locales.common.field.email} required />
 
-              <FormField.Text name="password" label="Mật khẩu" required type="password" />
+              <FormField.Text name="password" label={locales.common.field.password} required type="password" />
 
-              <Button variant="contained" color="primary" type="submit" disabled={isSubmitting} fullWidth sx={{ mt: 2 }}>
-                {isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}
-              </Button>
+              <Button.Base
+                variant="contained"
+                color="primary"
+                type="submit"
+                disabled={isSubmitting}
+                fullWidth
+                sx={{ mt: 2 }}
+                label={locales.page.login.buttons.login}
+              />
             </Stack>
           </Form>
         </Grid>

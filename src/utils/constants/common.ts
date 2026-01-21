@@ -1,3 +1,5 @@
+import { I18n } from '@locales';
+
 export const DEFAULT_PAGE_SIZE = 10;
 export const DEFAULT_PAGE = 0;
 
@@ -16,3 +18,14 @@ export const CURRENCIES: Record<string, { name: string; symbol: string; locale: 
 export const HORIZONTAL_MAX_ITEM = 7;
 export const DRAWER_WIDTH = 260;
 export const MINI_DRAWER_WIDTH = 60;
+
+export const LANGUAGES: { code: I18n; name: string }[] = [
+  {
+    code: 'vi',
+    name: 'Tiếng Việt'
+  },
+  {
+    code: 'en',
+    name: 'English'
+  }
+];

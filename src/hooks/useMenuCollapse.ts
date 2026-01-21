@@ -1,12 +1,8 @@
+import { NavItemType } from '@menus';
 import { useEffect, type Dispatch, type SetStateAction } from 'react';
 import { matchPath } from 'react-router-dom';
 
-// types
-import { NavItemType } from '@types/menu';
-
 type SetState<T> = (value: T | null) => void;
-
-// ==============================|| MENU COLLAPSED - RECURSIVE FUNCTION ||============================== //
 
 /**
  * Recursively traverses menu items to find and open the correct parent menu.

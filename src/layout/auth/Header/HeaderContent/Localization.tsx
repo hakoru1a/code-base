@@ -13,14 +13,16 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
 import TranslationOutlined from '@ant-design/icons/TranslationOutlined';
-import { I18n } from '@locales';
+import { I18n, useTranslate } from '@locales';
 import { Button, Transitions } from '@components';
 import { useConfig } from '@hooks';
+import { LANGUAGES } from '@utils/constants';
 
 export default function Localization() {
+  const { i18n } = useTranslate();
   const downMD = useMediaQuery((theme) => theme.breakpoints.down('md'));
 
-  const { i18n, onChangeLocalization } = useConfig();
+  const { locale, onChangeLocalization } = useConfig();
 
   const anchorRef = useRef<Dynamic>(null);
   const [open, setOpen] = useState(false);
@@ -35,9 +37,10 @@ export default function Localization() {
     setOpen(false);
   };
 
-  const handleListItemClick = (lang: I18n) => {
+  const handleListItemClick = async (lang: I18n) => {
     onChangeLocalization(lang);
     setOpen(false);
+    await i18n.changeLanguage(lang);
   };
 
   return (
@@ -82,30 +85,24 @@ export default function Localization() {
                     borderRadius: 0.5
                   }}
                 >
-                  <ListItemButton selected={i18n === 'en'} onClick={() => handleListItemClick('en')}>
-                    <ListItemText
-                      primary={
-                        <Grid container>
-                          <Typography color="text.primary">English</Typography>
-                          <Typography variant="caption" color="text.secondary" sx={{ ml: '8px' }}>
-                            (EN)
-                          </Typography>
-                        </Grid>
-                      }
-                    />
-                  </ListItemButton>
-                  <ListItemButton selected={i18n === 'fr'} onClick={() => handleListItemClick('vi')}>
-                    <ListItemText
-                      primary={
-                        <Grid container>
-                          <Typography color="text.primary">Tiếng Việt</Typography>
-                          <Typography variant="caption" color="text.secondary" sx={{ ml: '8px' }}>
-                            (VI)
-                          </Typography>
-                        </Grid>
-                      }
-                    />
-                  </ListItemButton>
+                  {LANGUAGES.map((language) => (
+                    <ListItemButton
+                      key={language.code}
+                      selected={locale === language.code}
+                      onClick={() => handleListItemClick(language.code)}
+                    >
+                      <ListItemText
+                        primary={
+                          <Grid container>
+                            <Typography color="text.primary">{language.name}</Typography>
+                            <Typography variant="caption" color="text.secondary" sx={{ ml: '8px' }}>
+                              ({language.code.toUpperCase()})
+                            </Typography>
+                          </Grid>
+                        }
+                      />
+                    </ListItemButton>
+                  ))}
                 </List>
               </ClickAwayListener>
             </Paper>

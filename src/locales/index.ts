@@ -1,9 +1,8 @@
 import { extractObjectPath } from './utils';
-import en from './languages/en.json';
+import vi from './languages/vi.json';
 
 export * from './i18n';
 export * from './hook';
 export * from './types';
-export * from './context';
 
-export const locales = extractObjectPath({ ...en });
+export const locales = extractObjectPath({ ...vi });

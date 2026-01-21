@@ -19,9 +19,6 @@ import Box from '@mui/material/Box';
 // project imports
 import NavItem from './NavItem';
 
-// third-party
-import { FormattedMessage } from 'react-intl';
-
 import BorderOutlined from '@ant-design/icons/BorderOutlined';
 import DownOutlined from '@ant-design/icons/DownOutlined';
 import UpOutlined from '@ant-design/icons/UpOutlined';
@@ -31,6 +28,7 @@ import { useConfig, useMenuCollapse } from '@hooks';
 import { MenuOrientation, ThemeMode } from '@contexts/config';
 import { Dot, SimpleBar, Transitions } from '@components';
 import { IconButton } from '@mui/material';
+import { useTranslate } from '@locales';
 
 type VirtualElement = {
   getBoundingClientRect: () => DOMRect;
@@ -92,6 +90,7 @@ interface Props {
 }
 
 export default function NavCollapse({ menu, level, parentId, setSelectedItems, selectedItems, setSelectedLevel, selectedLevel }: Props) {
+  const { t } = useTranslate();
   const { menuMaster } = useGetMenuMaster();
   const drawerOpen = menuMaster.isDashboardDrawerOpened;
 
@@ -286,13 +285,13 @@ export default function NavCollapse({ menu, level, parentId, setSelectedItems, s
               <ListItemText
                 primary={
                   <Typography variant="h6" color={selected === menu.id || anchorEl ? 'primary' : textColor}>
-                    <FormattedMessage id={menu.title as string} />
+                    {t(menu.title as string)}
                   </Typography>
                 }
                 secondary={
                   menu.caption && (
                     <Typography variant="caption" color="secondary">
-                      <FormattedMessage id={menu.caption as string} />
+                      {t(menu.caption as string)}
                     </Typography>
                   )
                 }
@@ -399,7 +398,7 @@ export default function NavCollapse({ menu, level, parentId, setSelectedItems, s
             <ListItemText
               primary={
                 <Typography variant="body1" color="inherit" sx={{ my: 'auto' }}>
-                  <FormattedMessage id={menu.title as string} />
+                  {t(menu.title as string)}
                 </Typography>
               }
             />

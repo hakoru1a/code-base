@@ -8,9 +8,10 @@ import Pagination from '@mui/material/Pagination';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
 
 import { TableState, Updater } from '@tanstack/react-table';
+import Text from '../text';
+import { locales } from '@locales';
 
 interface TablePaginationProps {
   setPageSize: (updater: Updater<number>) => void;
@@ -56,9 +57,7 @@ const TablePagination = ({ getPageCount, setPageIndex, setPageSize, getState, in
       <Grid>
         <Stack direction="row" sx={{ gap: 1, alignItems: 'center' }}>
           <Stack direction="row" sx={{ gap: 1, alignItems: 'center' }}>
-            <Typography variant="caption" color="secondary">
-              Số dòng mỗi trang
-            </Typography>
+            <Text.Typography variant="caption" color="secondary" label={locales.tables.pagination.rowsPerPage} />
             <FormControl>
               <Select
                 id="demo-controlled-open-select"
@@ -78,9 +77,7 @@ const TablePagination = ({ getPageCount, setPageIndex, setPageSize, getState, in
               </Select>
             </FormControl>
           </Stack>
-          <Typography variant="caption" color="secondary">
-            Đi đến
-          </Typography>
+          <Text.Typography variant="caption" color="secondary" label={locales.tables.pagination.goToPage} />
           <TextField
             size="small"
             type="number"

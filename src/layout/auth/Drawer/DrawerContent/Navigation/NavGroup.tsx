@@ -1,7 +1,6 @@
 import React, { Fragment, useEffect, useState } from 'react';
 import { matchPath, useLocation } from 'react-router-dom';
 
-// material-ui
 import { styled } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
@@ -15,20 +14,17 @@ import Popper from '@mui/material/Popper';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 
-// third-party
-import { FormattedMessage } from 'react-intl';
-
-// project imports
 import NavItem from './NavItem';
 import NavCollapse from './NavCollapse';
 
 import DownOutlined from '@ant-design/icons/DownOutlined';
 import GroupOutlined from '@ant-design/icons/GroupOutlined';
 import RightOutlined from '@ant-design/icons/RightOutlined';
-import { NavItemType } from '@menus';
+import { NavItemType, useGetMenuMaster } from '@menus';
 import { SimpleBar, Transitions } from '@components';
 import { MenuOrientation } from '@contexts/config';
 import { useConfig } from '@hooks';
+import { useTranslate } from '@locales';
 
 interface Props {
   item: NavItemType;
@@ -80,10 +76,11 @@ export default function NavGroup({
   setSelectedLevel,
   selectedLevel
 }: Props) {
+  const { t } = useTranslate();
   const { pathname } = useLocation();
   const { menuOrientation } = useConfig();
-
-  const drawerOpen = false;
+  const { menuMaster } = useGetMenuMaster();
+  const drawerOpen = menuMaster.isDashboardDrawerOpened;
 
   const downLG = useMediaQuery((theme) => theme.breakpoints.down('lg'));
 
@@ -257,11 +254,11 @@ export default function NavGroup({
                 drawerOpen && (
                   <Box sx={{ pl: 3, mb: 1.5 }}>
                     <Typography variant="subtitle2" color="text.secondary">
-                      <FormattedMessage id={item.title as string} />
+                      {t(item.title as string)}
                     </Typography>
                     {item.caption && (
                       <Typography variant="caption" color="secondary">
-                        <FormattedMessage id={item.caption as string} />
+                        {t(item.caption as string)}
                       </Typography>
                     )}
                   </Box>
@@ -295,7 +292,7 @@ export default function NavGroup({
               sx={{ mr: 1 }}
               primary={
                 <Typography variant="body1" color={isSelected || anchorEl ? 'primary.main' : 'secondary.dark'}>
-                  <FormattedMessage id={currentItem.id === lastItemId ? 'more-items' : (currentItem.title as string)} />
+                  {t(currentItem.id === lastItemId ? 'more-items' : (currentItem.title as string))}
                 </Typography>
               }
             />

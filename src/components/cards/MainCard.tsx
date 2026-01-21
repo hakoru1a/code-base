@@ -8,15 +8,16 @@ import {
   type CardContentProps
 } from '@mui/material';
 import Divider from '@mui/material/Divider';
-import Typography from '@mui/material/Typography';
 import type { ReactNode, Ref } from 'react';
+import Text from '../text';
+import { useTranslate } from '@locales';
 
 const headerSX = {
   p: 2.5,
   '& .MuiCardHeader-action': { m: '0px auto', alignSelf: 'center' }
 };
 
-export interface MainCardProps {
+export type MainCardProps = {
   border?: boolean;
   boxShadow?: boolean;
   children?: ReactNode;
@@ -36,7 +37,7 @@ export interface MainCardProps {
   modal?: boolean;
   onClick?: () => void;
   ref?: Ref<HTMLDivElement>;
-}
+};
 
 export default function MainCard({
   border = true,
@@ -57,6 +58,7 @@ export default function MainCard({
   ref,
   ...others
 }: MainCardProps) {
+  const { t } = useTranslate();
   return (
     <Card
       elevation={elevation || 0}
@@ -91,9 +93,15 @@ export default function MainCard({
     >
       {/* card header and action */}
       {!darkTitle && title && (
-        <CardHeader sx={headerSX} slotProps={{ title: { variant: 'subtitle1' } }} title={title} action={secondary} subheader={subheader} />
+        <CardHeader
+          sx={headerSX}
+          slotProps={{ title: { variant: 'subtitle1' } }}
+          title={typeof title === 'string' ? t(title) : title}
+          action={secondary}
+          subheader={subheader}
+        />
       )}
-      {darkTitle && title && <CardHeader sx={headerSX} title={<Typography variant="h4">{title}</Typography>} action={secondary} />}
+      {darkTitle && title && <CardHeader sx={headerSX} title={<Text.Typography variant="h4" label={title} />} action={secondary} />}
 
       {/* content & header divider */}
       {title && divider && <Divider />}
