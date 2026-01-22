@@ -23,11 +23,12 @@ try
     // Add Serilog Configuration
     builder.Host.UseSerilog(SeriLogger.Configure);
 
-    // Substitute environment variables in configuration (${VARIABLE} syntax)
-    builder.Configuration.SubstituteEnvironmentVariables();
-
     // Add Ocelot configuration file FIRST - before any other configuration
     builder.Configuration.AddJsonFile("ocelot.json", optional: false, reloadOnChange: true);
+
+    // Substitute environment variables in configuration (${VARIABLE} syntax)
+    // MUST be called AFTER adding ocelot.json to substitute variables in Ocelot config
+    builder.Configuration.SubstituteEnvironmentVariables();
 
     #region Configuration Settings
 
@@ -43,6 +44,19 @@ try
     var servicesOptions = builder.Configuration.GetOptions<ServicesOptions>(ServicesOptions.SectionName);
     var oAuthOptions = builder.Configuration.GetOptions<OAuthOptions>(OAuthOptions.SectionName);
 
+    // Log services configuration for debugging
+    if (servicesOptions?.TLBIOMASS != null)
+    {
+        Log.Information("TLBIOMASS Service configured - Url: {Url}, Name: {Name}, IncludeInSwagger: {IncludeInSwagger}",
+            servicesOptions.TLBIOMASS.Url,
+            servicesOptions.TLBIOMASS.Name,
+            servicesOptions.TLBIOMASS.IncludeInSwagger);
+    }
+    else
+    {
+        Log.Warning("TLBIOMASS Service configuration is null or not found!");
+    }
+
     #endregion
 
     #region HTTP Client
@@ -51,12 +65,8 @@ try
     builder.Services.AddHttpContextAccessor();
 
     // Configure named HttpClients with logging and resilience policies using Infrastructure extension
-    var httpClients = new Dictionary<string, string>
-{
-    { "BaseAPI", servicesOptions.BaseAPI.Url },
-    { "GenerateAPI", servicesOptions.GenerateAPI.Url }
-};
-    builder.Services.AddMultipleHttpClientsWithResilience(httpClients, timeoutSeconds: 30, retryCount: 3, circuitBreakerEvents: 5, circuitBreakerDuration: 30);
+    // var httpClients = new Dictionary<string, string>();
+    // builder.Services.AddMultipleHttpClientsWithResilience(httpClients, timeoutSeconds: 30, retryCount: 3, circuitBreakerEvents: 5, circuitBreakerDuration: 30);
 
     // Add HttpClient for Keycloak OAuth
     builder.Services.AddHttpClient<ApiGateway.Services.IOAuthClient, ApiGateway.Services.OAuthClient>();
@@ -67,7 +77,7 @@ try
 
     // Configure Redis connection for caching and storage
     builder.Services.AddRedisInfrastructure(builder.Configuration);
-    
+
     #endregion
 
     #region Auth Services
@@ -75,7 +85,7 @@ try
     // Register JWT-only authentication services
     builder.Services.AddScoped<ApiGateway.Services.IPkceService, ApiGateway.Services.PkceService>();
     builder.Services.AddScoped<ApiGateway.Services.ITemporaryTokenService, ApiGateway.Services.TemporaryTokenService>();
-    
+
     // Register enhanced security services
     builder.Services.AddScoped<ApiGateway.Services.IClientFingerprintService, ApiGateway.Services.ClientFingerprintService>();
     builder.Services.AddScoped<Infrastructure.Identity.IJwtClaimsCache, Infrastructure.Identity.JwtClaimsCache>();

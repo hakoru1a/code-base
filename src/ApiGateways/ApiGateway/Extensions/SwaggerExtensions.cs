@@ -1,4 +1,4 @@
-   using ApiGateway.Configurations;
+using ApiGateway.Configurations;
 using Microsoft.OpenApi.Models;
 
 namespace ApiGateway.Extensions;
@@ -62,50 +62,28 @@ public static class SwaggerExtensions
     {
         app.UseSwagger();
 
-        if (environment.IsDevelopment())
+        app.UseSwaggerUI(c =>
         {
-            app.UseSwaggerUI(c =>
+            // API Gateway endpoint
+            c.SwaggerEndpoint(SwaggerOptions.ApiGatewayEndpoint, SwaggerOptions.ApiGatewayTitle);
+
+            // Add TLBIOMASS API if configured
+            if (servicesOptions?.TLBIOMASS != null && servicesOptions.TLBIOMASS.IncludeInSwagger && !string.IsNullOrEmpty(servicesOptions.TLBIOMASS.Url))
             {
-                // API Gateway endpoint
-                c.SwaggerEndpoint(SwaggerOptions.ApiGatewayEndpoint, SwaggerOptions.ApiGatewayTitle);
+                var swaggerUrl = $"{servicesOptions.TLBIOMASS.Url}/swagger/v1/swagger.json";
+                c.SwaggerEndpoint(swaggerUrl, servicesOptions.TLBIOMASS.Name);
+            }
 
+            c.RoutePrefix = SwaggerOptions.RoutePrefix;
 
-                if (servicesOptions.AuthAPI.IncludeInSwagger)
-                {
-                    c.SwaggerEndpoint(
-                        $"{servicesOptions.AuthAPI.Url}/swagger/v1/swagger.json",
-                        servicesOptions.AuthAPI.Name);
-                }
-
-                if (servicesOptions.GenerateAPI.IncludeInSwagger)
-                {
-                    c.SwaggerEndpoint(
-                        $"{servicesOptions.GenerateAPI.Url}/swagger/v1/swagger.json",
-                        servicesOptions.GenerateAPI.Name);
-                }
-
-                if (servicesOptions.AuthAPI.IncludeInSwagger)
-                {
-                    c.SwaggerEndpoint(
-                        $"{servicesOptions.AuthAPI.Url}/swagger/v1/swagger.json",
-                        servicesOptions.AuthAPI.Name);
-                }
-
-                c.RoutePrefix = SwaggerOptions.RoutePrefix;
+            if (environment.IsDevelopment())
+            {
                 c.DisplayRequestDuration();
                 c.EnableDeepLinking();
                 c.EnableFilter();
                 c.EnableValidator();
-            });
-        }
-        else
-        {
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint(SwaggerOptions.ApiGatewayEndpoint, SwaggerOptions.ApiGatewayTitle);
-                c.RoutePrefix = SwaggerOptions.RoutePrefix;
-            });
-        }
+            }
+        });
 
         return app;
     }
