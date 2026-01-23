@@ -1,5 +1,8 @@
 export enum LocalStorageKey {
-  ServiceToken = 'serviceToken'
+  ServiceToken = 'serviceToken',
+  RefreshToken = 'refreshToken',
+  TokenType = 'tokenType',
+  UserId = 'userId'
 }
 
 export enum HttpStatusCode {

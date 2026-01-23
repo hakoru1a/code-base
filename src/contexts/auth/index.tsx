@@ -1,18 +1,13 @@
 import React, { createContext, useEffect, useReducer } from 'react';
 
-import { Chance } from 'chance';
-import { jwtDecode } from 'jwt-decode';
-import type { AuthContextType, AuthProps } from './types';
 import axios from '@libs/axios';
+import { authService } from '@services/auth';
+import { LocalStorageKey } from '@utils/constants';
+import { localStorageHelper } from '@utils/helpers';
+import { jwtDecode } from 'jwt-decode';
 import { LOGIN, LOGOUT } from './actions';
 import authReducer from './authReducer';
-import { LinearLoader } from '@components';
-import { authService } from '@services/auth';
-import { accountService } from '@services/account';
-import { localStorageHelper } from '@utils/helpers';
-import { LocalStorageKey } from '@utils/constants';
-
-const chance = new Chance();
+import type { AuthContextType, AuthProps } from './types';
 
 // constant
 const initialState: AuthProps = {
@@ -25,19 +20,26 @@ const verifyToken: (st: string) => boolean = (serviceToken) => {
   if (!serviceToken) {
     return false;
   }
-  const decoded: KeyedObject = jwtDecode(serviceToken);
-  /**
-   * Property 'exp' does not exist on type '<T = unknown>(token: string, options?: JwtDecodeOptions | undefined) => T'.
-   */
-  return decoded.exp > Date.now() / 1000;
+  try {
+    const decoded: KeyedObject = jwtDecode(serviceToken);
+    /**
+     * Property 'exp' does not exist on type '<T = unknown>(token: string, options?: JwtDecodeOptions | undefined) => T'.
+     */
+    return decoded.exp > Date.now() / 1000;
+  } catch (error) {
+    return false;
+  }
 };
 
 const setSession = (serviceToken?: string | null) => {
   if (serviceToken) {
+    const tokenType = localStorageHelper.get(LocalStorageKey.TokenType) || 'Bearer';
     localStorageHelper.set(LocalStorageKey.ServiceToken, serviceToken);
-    axios.defaults.headers.common.Authorization = `Bearer ${serviceToken}`;
+    axios.defaults.headers.common.Authorization = `${tokenType} ${serviceToken}`;
   } else {
     localStorageHelper.remove(LocalStorageKey.ServiceToken);
+    localStorageHelper.remove(LocalStorageKey.RefreshToken);
+    localStorageHelper.remove(LocalStorageKey.TokenType);
     delete axios.defaults.headers.common.Authorization;
   }
 };
@@ -55,15 +57,27 @@ export const AuthProvider = ({ children }: { children: React.ReactElement }) => 
         const serviceToken = localStorageHelper.get(LocalStorageKey.ServiceToken);
         if (serviceToken && verifyToken(serviceToken)) {
           setSession(serviceToken);
-          const response = await accountService.getProfile();
-          const user = response.data;
-          dispatch({
-            type: LOGIN,
-            payload: {
-              isLoggedIn: true,
-              user
+          // Get user profile from API
+          const { data: user } = await authService.getProfile();
+
+          if (user) {
+            // Save userId if available
+            if (user.id) {
+              localStorageHelper.set(LocalStorageKey.UserId, String(user.id));
             }
-          });
+
+            dispatch({
+              type: LOGIN,
+              payload: {
+                isLoggedIn: true,
+                user
+              }
+            });
+          } else {
+            dispatch({
+              type: LOGOUT
+            });
+          }
         } else {
           dispatch({
             type: LOGOUT
@@ -71,6 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactElement }) => 
         }
       } catch (err) {
         console.error(err);
+        authService.clearTokens();
         dispatch({
           type: LOGOUT
         });
@@ -80,43 +95,23 @@ export const AuthProvider = ({ children }: { children: React.ReactElement }) => 
     init();
   }, []);
 
-  const trustLogin = async () => {
-    const fakeToken = chance.string({ length: 32, pool: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' });
-    setSession(fakeToken);
-    dispatch({
-      type: LOGIN,
-      payload: {
-        isLoggedIn: true,
-        user: {
-          id: 'trusted-user',
-          name: 'Trusted User',
-          email: ''
-        }
-      }
-    });
-  };
-
-  const login = async (email: string, password: string) => {
-    const response = await authService.logIn({ username: email, password });
-    setSession(response.data?.token?.accessToken || '');
-    dispatch({
-      type: LOGIN,
-      payload: {
-        isLoggedIn: true
-      }
-    });
+  const login = () => {
+    authService.login();
   };
 
   const logout = async () => {
-    setSession(null);
-    dispatch({ type: LOGOUT });
+    try {
+      // Service logout will handle API call, clear tokens, and redirect
+      await authService.logout();
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Even if API fails, clear local state and redirect
+      authService.clearTokens();
+      setSession(null);
+      dispatch({ type: LOGOUT });
+      window.location.href = '/';
+    }
   };
 
-  const updateProfile = () => {};
-
-  if (state.isInitialized !== undefined && !state.isInitialized) {
-    return <LinearLoader />;
-  }
-
-  return <AuthContext value={{ ...state, login, logout, updateProfile, trustLogin }}>{children}</AuthContext>;
+  return <AuthContext value={{ ...state, login, logout }}>{children}</AuthContext>;
 };

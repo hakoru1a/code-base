@@ -2,7 +2,8 @@ export type ApiResult<TData> = {
   success: boolean;
   status: number;
   data?: TData;
-  error?: string;
+  errors?: string[];
+  metaData?: DynamicObject;
 };
 
 export enum ApiVersion {
@@ -35,16 +36,16 @@ export type SortRequest = {
 
 export type QueryRequest = PaginationRequest & SearchRequest & SortRequest;
 
-export type PagingResponse = {
-  canPrevious: boolean;
-  canNext: boolean;
-  page: number;
-  size: number;
-  total: number;
+export type PaginationMetadata = {
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
   totalPages: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
 };
 
-export type PaginationResult<TData> = {
-  data: TData[];
-  meta?: PagingResponse & DynamicObject;
+export type PagedResult<TData> = {
+  items: TData[];
+  pagination?: PaginationMetadata;
 };

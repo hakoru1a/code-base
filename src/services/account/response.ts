@@ -2,6 +2,7 @@ import { EntityWithName } from '../core';
 
 export type UserProfile = EntityWithName<string> & {
   email?: string;
-  avatar?: string;
-  image?: string;
+  avatarUrl?: string;
+  fullName?: string;
+  roles?: string[];
 };

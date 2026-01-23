@@ -3,7 +3,7 @@ import { Chip, Grid } from '@mui/material';
 import { routes } from '@routes';
 import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { PaginationResult } from '@services/core';
+import { PagedResult } from '@services/core';
 import { locales } from '@locales';
 
 type MockUser = {
@@ -20,38 +20,45 @@ const mockUsers: MockUser[] = [
 ];
 
 const ListUser = () => {
-  const [data, setData] = useState<PaginationResult<MockUser>>({
-    data: [],
-    meta: {
-      page: 1,
+  const [data, setData] = useState<PagedResult<MockUser>>({
+    items: [],
+    pagination: {
+      totalCount: mockUsers.length,
+      currentPage: 1,
       pageSize: 10,
       totalPages: 1,
-      size: mockUsers.length,
-      total: mockUsers.length,
-      canNext: false,
-      canPrevious: false
+      hasNext: false,
+      hasPrevious: false
     }
   });
 
-  const handleFetchData = async (params: TableFetchParams) => {
-    const mockApi = new Promise((resolve) => {
+  const handleFetchData = async (params: TableFetchParams): Promise<void> => {
+    const mockApi = new Promise<PagedResult<MockUser>>((resolve) => {
       setTimeout(() => {
+        const currentPage = params.page + 1;
+        const totalCount = mockUsers.length;
+        const pageSize = params.pageSize;
+        const totalPages = Math.ceil(totalCount / pageSize);
+        const startIndex = params.page * pageSize;
+        const endIndex = startIndex + pageSize;
+        const paginatedItems = mockUsers.slice(startIndex, endIndex);
+
         resolve({
-          data: mockUsers,
-          meta: {
-            page: params.page + 1,
-            pageSize: params.pageSize,
-            totalPages: 1,
-            size: mockUsers.length,
-            total: mockUsers.length,
-            canNext: false,
-            canPrevious: false
+          items: paginatedItems,
+          pagination: {
+            totalCount,
+            currentPage,
+            pageSize,
+            totalPages,
+            hasNext: currentPage < totalPages,
+            hasPrevious: currentPage > 1
           }
         });
-      });
+      }, 300);
     });
-    const data = await mockApi;
-    setData(data as PaginationResult<MockUser>);
+
+    const result = await mockApi;
+    setData(result);
   };
 
   const columns: ColumnDef<MockUser>[] = [
@@ -70,9 +77,9 @@ const ListUser = () => {
     {
       header: locales.tables.columns.role,
       accessorKey: 'role',
-      cell: (cell) => {
-        const value = cell.getValue();
-        return <Chip label={<>{value || ''}</>} color="primary" size="small" />;
+      cell: (info: { getValue: () => unknown }) => {
+        const value = (info.getValue() as string) || '';
+        return <Chip label={value} color="primary" size="small" />;
       }
     }
   ];
@@ -90,7 +97,7 @@ const ListUser = () => {
       <Grid container spacing={2}>
         <Grid size={12}>
           <MainCard>
-            <DataTable data={data.data} columns={columns} totalPage={data.meta!.totalPages} onLoad={handleFetchData} />
+            <DataTable data={data.items} columns={columns} totalPage={data.pagination?.totalPages || 1} onLoad={handleFetchData} />
           </MainCard>
         </Grid>
       </Grid>
