@@ -40,23 +40,28 @@ RUN pnpm build
 # Stage 4: Runner – serve static bằng nginx
 # ---
 FROM nginx:alpine AS runner
-RUN apk add --no-cache curl
+RUN apk add --no-cache curl gettext
 
-# Xóa config mặc định, dùng config custom
+# Xóa config mặc định
 RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf
 
+# Copy static files
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# SPA fallback: mọi route -> index.html
-RUN echo 'server { \
-    listen 80; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-    location /health { return 200; add_header Content-Type text/plain; } \
-}' > /etc/nginx/conf.d/default.conf
+# Copy nginx template và entrypoint script
+COPY nginx/nginx.conf /etc/nginx/templates/nginx.conf.template
+COPY nginx/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh && \
+    # Fix line endings (CRLF -> LF) for entrypoint script
+    sed -i 's/\r$//' /usr/local/bin/entrypoint.sh && \
+    # Verify file exists and is executable
+    ls -la /usr/local/bin/entrypoint.sh
+
+# Runtime environment variables (sẽ được set từ docker-compose)
+ENV VITE_APP_API_URL=""
+ENV VITE_APP_FRONTEND_URL=""
 
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+
+# Use sh to run the entrypoint script (more compatible)
+CMD ["/bin/sh", "/usr/local/bin/entrypoint.sh"]
