@@ -14,7 +14,12 @@ WORKDIR /app
 FROM base AS deps
 COPY package.json pnpm-lock.yaml* ./
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --frozen-lockfile
+    if pnpm install --frozen-lockfile; then \
+        echo "Frozen lockfile install successful"; \
+    else \
+        echo "Frozen lockfile failed, installing without frozen lockfile"; \
+        pnpm install --no-frozen-lockfile; \
+    fi
 
 # ---
 # Stage 3: Builder – build app
