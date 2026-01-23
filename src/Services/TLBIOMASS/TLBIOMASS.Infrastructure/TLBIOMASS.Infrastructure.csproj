@@ -18,6 +18,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\..\..\BuildingBlocks\Contracts\Contracts.csproj" />
 	  <ProjectReference Include="..\..\..\BuildingBlocks\Infrastructure\Infrastructure.csproj" />
+	  <ProjectReference Include="..\TLBIOMASS.Domain\TLBIOMASS.Domain.csproj" />
 	</ItemGroup>
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>

@@ -70,18 +70,25 @@ public static class SwaggerExtensions
                 c.SwaggerEndpoint(SwaggerOptions.ApiGatewayEndpoint, SwaggerOptions.ApiGatewayTitle);
 
 
-                if (servicesOptions.AuthAPI.IncludeInSwagger)
+                if (servicesOptions.BaseAPI.IncludeInSwagger)
                 {
                     c.SwaggerEndpoint(
-                        $"{servicesOptions.AuthAPI.Url}/swagger/v1/swagger.json",
-                        servicesOptions.AuthAPI.Name);
+                        $"{servicesOptions.BaseAPI.Url}/swagger/v1/swagger.json",
+                        servicesOptions.BaseAPI.Name);
                 }
-
+                
                 if (servicesOptions.GenerateAPI.IncludeInSwagger)
                 {
                     c.SwaggerEndpoint(
                         $"{servicesOptions.GenerateAPI.Url}/swagger/v1/swagger.json",
                         servicesOptions.GenerateAPI.Name);
+                }
+
+                if (servicesOptions.TLBIOMASSAPI.IncludeInSwagger)
+                {
+                    c.SwaggerEndpoint(
+                        $"{servicesOptions.TLBIOMASSAPI.Url}/swagger/v1/swagger.json",
+                        servicesOptions.TLBIOMASSAPI.Name);
                 }
 
                 if (servicesOptions.AuthAPI.IncludeInSwagger)
