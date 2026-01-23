@@ -24,6 +24,7 @@ public class OAuthOptions
     public int RefreshTokenBeforeExpirationSeconds { get; set; } = 60;
     public string InstanceName { get; set; } = "ApiGateway_";
     public int PkceExpirationMinutes { get; set; } = 10;
+    public string[] CorsAllowedOrigins { get; set; } = Array.Empty<string>();
 }
 
 

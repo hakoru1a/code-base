@@ -136,9 +136,11 @@ try
 
     #region CORS
 
-    // Add CORS policy for web application using Infrastructure extension
+    // Add CORS policy - đọc từ appsettings.json
     builder.Services.AddCorsForProduction(
-        allowedOrigins: new[] { oAuthOptions.WebAppUrl },
+        allowedOrigins: oAuthOptions.CorsAllowedOrigins
+            .Where(origin => !string.IsNullOrWhiteSpace(origin))
+            .ToArray(),
         policyName: "AllowWebApp");
 
     #endregion
