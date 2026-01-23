@@ -22,9 +22,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     fi
 
 # ---
-# Stage 3: Production – serve with Vite preview
+# Stage 3: Builder – build app
 # ---
-FROM base AS runner
+FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -34,21 +34,28 @@ ARG VITE_APP_FRONTEND_URL
 ENV VITE_APP_API_URL=${VITE_APP_API_URL}
 ENV VITE_APP_FRONTEND_URL=${VITE_APP_FRONTEND_URL}
 
-# Build the application
 RUN pnpm build
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+# ---
+# Stage 4: Production – serve with nginx
+# ---
+FROM nginx:alpine AS runner
+RUN apk add --no-cache curl gettext
 
-# Runtime environment variables (sẽ được set từ docker-compose)
-ENV VITE_HOST=0.0.0.0
-ENV VITE_PORT=3000
+# Remove default nginx config
+RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf
 
-EXPOSE 3000
+# Copy built static files
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Health check endpoint
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+# Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:3000/dashboard || exit 1
+  CMD curl -f http://localhost/health || exit 1
 
-# Use Vite preview to serve the built application
-CMD ["pnpm", "preview"]
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
