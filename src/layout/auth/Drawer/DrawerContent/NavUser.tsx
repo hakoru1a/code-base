@@ -1,7 +1,8 @@
-import { useState, MouseEvent } from 'react';
+import { MouseEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { styled } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import IconButton, { IconButtonProps } from '@mui/material/IconButton';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -9,16 +10,14 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemText from '@mui/material/ListItemText';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Chip from '@mui/material/Chip';
+import { styled } from '@mui/material/styles';
 
 import RightOutlined from '@ant-design/icons/RightOutlined';
 import avatar1 from '@assets/images/users/avatar-1.png';
-import { useAuth, useRouter } from '@hooks';
-import Avatar from '@mui/material/Avatar';
-import { routes } from '@routes';
+import { useAuth } from '@hooks';
 import { locales } from '@locales';
+import Avatar from '@mui/material/Avatar';
 
 interface ExpandMoreProps extends IconButtonProps {
   expand: boolean;
@@ -49,8 +48,6 @@ const ExpandMore = styled(IconButton, {
 const drawerOpen = true;
 
 export default function NavUser() {
-  const router = useRouter();
-
   const { logout, user } = useAuth();
   const handleLogout = async () => {
     try {

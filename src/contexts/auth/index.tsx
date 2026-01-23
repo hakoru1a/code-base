@@ -27,6 +27,7 @@ const verifyToken: (st: string) => boolean = (serviceToken) => {
      */
     return decoded.exp > Date.now() / 1000;
   } catch (error) {
+    console.error(error);
     return false;
   }
 };
