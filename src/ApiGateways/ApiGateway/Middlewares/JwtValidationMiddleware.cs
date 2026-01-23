@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using ApiGateway.Configurations;
 using Shared.SeedWork;
+using System.Net;
 
 namespace ApiGateway.Middlewares;
 
@@ -107,7 +108,7 @@ public class JwtValidationMiddleware
         context.Response.StatusCode = 401;
         context.Response.ContentType = "application/json";
 
-        var errorResponse = new ApiErrorResult<object>(message);
+        var errorResponse = new ApiErrorResult<object>(message, HttpStatusCode.Unauthorized);
         await context.Response.WriteAsJsonAsync(errorResponse);
     }
 

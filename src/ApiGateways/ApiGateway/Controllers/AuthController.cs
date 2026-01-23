@@ -8,6 +8,7 @@ using Contracts.Identity;
 using Shared.SeedWork;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.Net;
 
 namespace ApiGateway.Controllers;
 
@@ -71,7 +72,7 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Login initiation failed, CorrelationId: {CorrelationId}", correlationId);
-            return StatusCode(500, new ApiErrorResult<object>("Authentication service temporarily unavailable. Please try again."));
+            return StatusCode(500, new ApiErrorResult<object>("Authentication service temporarily unavailable. Please try again.", HttpStatusCode.InternalServerError));
         }
     }
 
@@ -186,13 +187,13 @@ public class AuthController : ControllerBase
             if (request == null)
             {
                 _logger.LogWarning("Exchange token request is null, CorrelationId: {CorrelationId}", correlationId);
-                return BadRequest(new ApiErrorResult<object>("Request body is required"));
+                return BadRequest(new ApiErrorResult<object>("Request body is required", HttpStatusCode.BadRequest));
             }
 
             if (string.IsNullOrWhiteSpace(request.Code))
             {
                 _logger.LogWarning("Empty temporary code provided, CorrelationId: {CorrelationId}", correlationId);
-                return BadRequest(new ApiErrorResult<object>("Temporary code is required"));
+                return BadRequest(new ApiErrorResult<object>("Temporary code is required", HttpStatusCode.BadRequest));
             }
 
             _logger.LogInformation("Processing token exchange request, CorrelationId: {CorrelationId}", correlationId);
@@ -202,7 +203,7 @@ public class AuthController : ControllerBase
             if (tempTokenData == null)
             {
                 _logger.LogWarning("Invalid or expired temporary code: {Code}, CorrelationId: {CorrelationId}", request.Code, correlationId);
-                return NotFound(new ApiErrorResult<object>("Invalid or expired temporary code"));
+                return NotFound(new ApiErrorResult<object>("Invalid or expired temporary code", HttpStatusCode.NotFound));
             }
 
             var authResponse = new AuthResponse
@@ -220,7 +221,7 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Token exchange failed, CorrelationId: {CorrelationId}", correlationId);
-            return StatusCode(500, new ApiErrorResult<object>("Token exchange failed. Please try again."));
+            return StatusCode(500, new ApiErrorResult<object>("Token exchange failed. Please try again.", HttpStatusCode.InternalServerError));
         }
     }
 
@@ -244,13 +245,13 @@ public class AuthController : ControllerBase
             if (request == null)
             {
                 _logger.LogWarning("Refresh token request is null, CorrelationId: {CorrelationId}", correlationId);
-                return BadRequest(new ApiErrorResult<object>("Request body is required"));
+                return BadRequest(new ApiErrorResult<object>("Request body is required", HttpStatusCode.BadRequest));
             }
 
             if (string.IsNullOrWhiteSpace(request.RefreshToken))
             {
                 _logger.LogWarning("Empty refresh token provided, CorrelationId: {CorrelationId}", correlationId);
-                return BadRequest(new ApiErrorResult<object>("Refresh token is required"));
+                return BadRequest(new ApiErrorResult<object>("Refresh token is required", HttpStatusCode.BadRequest));
             }
 
             _logger.LogInformation("Processing token refresh request, CorrelationId: {CorrelationId}", correlationId);
@@ -272,12 +273,12 @@ public class AuthController : ControllerBase
         catch (HttpRequestException ex) when (ex.Message.Contains("400"))
         {
             _logger.LogWarning(ex, "Invalid refresh token provided, CorrelationId: {CorrelationId}", correlationId);
-            return Unauthorized(new ApiErrorResult<object>("Refresh token is invalid or expired"));
+            return Unauthorized(new ApiErrorResult<object>("Refresh token is invalid or expired", HttpStatusCode.Unauthorized));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Token refresh failed, CorrelationId: {CorrelationId}", correlationId);
-            return StatusCode(500, new ApiErrorResult<object>("Token refresh failed. Please login again."));
+            return StatusCode(500, new ApiErrorResult<object>("Token refresh failed. Please login again.", HttpStatusCode.InternalServerError));
         }
     }
 
@@ -298,7 +299,7 @@ public class AuthController : ControllerBase
             if (request == null)
             {
                 _logger.LogWarning("Logout request is null, CorrelationId: {CorrelationId}", correlationId);
-                return BadRequest(new ApiErrorResult<object>("Request body is required"));
+                return BadRequest(new ApiErrorResult<object>("Request body is required", HttpStatusCode.BadRequest));
             }
 
             _logger.LogInformation("Processing logout request, CorrelationId: {CorrelationId}", correlationId);
@@ -347,7 +348,7 @@ public class AuthController : ControllerBase
             if (string.IsNullOrWhiteSpace(userId))
             {
                 _logger.LogWarning("Empty userId provided, CorrelationId: {CorrelationId}", correlationId);
-                return BadRequest(new ApiErrorResult<object>("User ID is required"));
+                return BadRequest(new ApiErrorResult<object>("User ID is required", HttpStatusCode.BadRequest));
             }
 
             // Check if requesting user's own data or has admin role
@@ -369,7 +370,7 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving user claims for userId: {UserId}, CorrelationId: {CorrelationId}", userId, correlationId);
-            return StatusCode(500, new ApiErrorResult<object>("Failed to retrieve user claims"));
+            return StatusCode(500, new ApiErrorResult<object>("Failed to retrieve user claims", HttpStatusCode.InternalServerError));
         }
     }
 
@@ -394,7 +395,7 @@ public class AuthController : ControllerBase
             if (!_userContextService.IsAuthenticated())
             {
                 _logger.LogWarning("User is not authenticated, CorrelationId: {CorrelationId}", correlationId);
-                return Unauthorized(new ApiErrorResult<object>("Invalid or missing authentication token"));
+                return Unauthorized(new ApiErrorResult<object>("Invalid or missing authentication token", HttpStatusCode.Unauthorized));
             }
 
             var userId = _userContextService.GetCurrentUserId();
@@ -412,7 +413,7 @@ public class AuthController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving current user profile, CorrelationId: {CorrelationId}", correlationId);
-            return StatusCode(500, new ApiErrorResult<object>("Failed to retrieve user profile"));
+            return StatusCode(500, new ApiErrorResult<object>("Failed to retrieve user profile", HttpStatusCode.InternalServerError));
         }
     }
 

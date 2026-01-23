@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Shared.SeedWork;
+using System.Net;
 
 namespace Infrastructure.Common;
 
@@ -46,18 +47,18 @@ public static class ApiControllerExtensions
     /// <param name="message">Error message</param>
     /// <param name="statusCode">HTTP status code</param>
     /// <returns>Error result with standardized response</returns>
-    public static IActionResult CreateErrorResponse<T>(this ControllerBase controller, string message, int statusCode = 400)
+    public static IActionResult CreateErrorResponse<T>(this ControllerBase controller, string message, HttpStatusCode statusCode = HttpStatusCode.BadRequest)
     {
-        var result = new ApiErrorResult<T>(message);
+        var result = new ApiErrorResult<T>(message, statusCode);
         return statusCode switch
         {
-            400 => controller.BadRequest(result),
-            401 => controller.Unauthorized(result),
-            403 => controller.Forbid(),
-            404 => controller.NotFound(result),
-            409 => controller.Conflict(result),
-            422 => controller.UnprocessableEntity(result),
-            500 => controller.StatusCode(500, result),
+            HttpStatusCode.BadRequest => controller.BadRequest(result),
+            HttpStatusCode.Unauthorized => controller.Unauthorized(result),
+            HttpStatusCode.Forbidden => controller.Forbid(),
+            HttpStatusCode.NotFound => controller.NotFound(result),
+            HttpStatusCode.Conflict => controller.Conflict(result),
+            HttpStatusCode.UnprocessableEntity => controller.UnprocessableEntity(result),
+            HttpStatusCode.InternalServerError => controller.StatusCode(500, result),
             _ => controller.BadRequest(result)
         };
     }
@@ -75,7 +76,7 @@ public static class ApiControllerExtensions
     {
         logger.LogWarning("{EntityName} with ID: {Id} not found", entityName, id);
         return controller.NotFound(new ApiErrorResult<T>(
-            ResponseMessages.ItemNotFound(entityName, id)));
+            ResponseMessages.ItemNotFound(entityName, id), HttpStatusCode.NotFound));
     }
 
     /// <summary>
@@ -89,6 +90,6 @@ public static class ApiControllerExtensions
     public static IActionResult CreateValidationErrorResponse<T>(this ControllerBase controller, ILogger logger, string message)
     {
         logger.LogWarning("Validation error: {Message}", message);
-        return controller.BadRequest(new ApiErrorResult<T>(message));
+        return controller.BadRequest(new ApiErrorResult<T>(message, HttpStatusCode.BadRequest));
     }
 }

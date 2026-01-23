@@ -44,8 +44,14 @@ try
     var servicesOptions = builder.Configuration.GetOptions<ServicesOptions>(ServicesOptions.SectionName);
     var oAuthOptions = builder.Configuration.GetOptions<OAuthOptions>(OAuthOptions.SectionName);
 
+    // Validate servicesOptions is not null (GetOptions always returns non-null, but compiler needs assurance)
+    if (servicesOptions == null)
+    {
+        throw new InvalidOperationException($"ServicesOptions configuration section '{ServicesOptions.SectionName}' is required but not found.");
+    }
+
     // Log services configuration for debugging
-    if (servicesOptions?.TLBIOMASS != null)
+    if (servicesOptions.TLBIOMASS != null)
     {
         Log.Information("TLBIOMASS Service configured - Url: {Url}, Name: {Name}, IncludeInSwagger: {IncludeInSwagger}",
             servicesOptions.TLBIOMASS.Url,

@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json.Serialization;
 
 namespace Shared.SeedWork
@@ -8,25 +9,29 @@ namespace Shared.SeedWork
     /// <typeparam name="T">Type of data being returned</typeparam>
     public class ApiErrorResult<T> : ApiResult<T>
     {
-        public ApiErrorResult()
-            : base(ResponseMessages.InternalError)
+        public ApiErrorResult(HttpStatusCode status = HttpStatusCode.InternalServerError)
+            : base(ResponseMessages.InternalError, status)
         {
+            Success = false;
         }
 
-        public ApiErrorResult(string message)
-            : base(message)
+        public ApiErrorResult(string message, HttpStatusCode status = HttpStatusCode.BadRequest)
+            : base(message, status)
         {
+            Success = false;
         }
 
-        public ApiErrorResult(List<string> errors)
-            : base(ResponseMessages.ValidationFailed)
+        public ApiErrorResult(List<string> errors, HttpStatusCode status = HttpStatusCode.BadRequest)
+            : base(ResponseMessages.ValidationFailed, status)
         {
+            Success = false;
             Errors = errors;
         }
 
-        public ApiErrorResult(string message, List<string> errors)
-            : base(message)
+        public ApiErrorResult(string message, List<string> errors, HttpStatusCode status = HttpStatusCode.BadRequest)
+            : base(message, status)
         {
+            Success = false;
             Errors = errors;
         }
 

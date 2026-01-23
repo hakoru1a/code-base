@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json.Serialization;
 
 namespace Shared.SeedWork
@@ -10,18 +11,21 @@ namespace Shared.SeedWork
     {
         [JsonConstructor]
         public ApiSuccessResult(T data)
-            : base(data, ResponseMessages.RetrieveSuccess)
+            : base(data, ResponseMessages.RetrieveSuccess, HttpStatusCode.OK)
         {
+            Success = true;
         }
 
-        public ApiSuccessResult(T data, string message)
-            : base(data, message)
+        public ApiSuccessResult(T data, string message, HttpStatusCode status = HttpStatusCode.OK)
+            : base(data, message, status)
         {
+            Success = true;
         }
 
-        public ApiSuccessResult(T data, string message, object metadata)
-            : base(data, message, metadata)
+        public ApiSuccessResult(T data, string message, object metadata, HttpStatusCode status = HttpStatusCode.OK)
+            : base(data, message, metadata, status)
         {
+            Success = true;
         }
 
         /// <summary>
@@ -32,7 +36,8 @@ namespace Shared.SeedWork
             return new ApiSuccessResult<T>(
                 data,
                 message ?? ResponseMessages.RetrieveItemsSuccess,
-                paginationMetadata
+                paginationMetadata,
+                HttpStatusCode.OK
             );
         }
     }

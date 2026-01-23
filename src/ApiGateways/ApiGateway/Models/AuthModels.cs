@@ -160,6 +160,30 @@ public class UserProfileResponse
     // Use FromUserClaimsContext instead
 
     /// <summary>
+    /// Filter system roles khỏi danh sách roles
+    /// Loại bỏ các role hệ thống như default-roles-base-realm, offline_access, uma_authorization, guest
+    /// và các role bắt đầu bằng "account:"
+    /// </summary>
+    private static List<string> FilterSystemRoles(List<string> allRoles)
+    {
+        // Define system roles cần loại bỏ
+        var systemRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "uma_authorization",
+            "account:manage-account",
+            "account:manage-account-links",
+            "account:view-profile",
+            "default-roles-base-realm",
+            "offline_access",
+        };
+
+        return allRoles
+            .Where(role => !role.StartsWith("account:", StringComparison.OrdinalIgnoreCase))
+            .Where(role => !systemRoles.Contains(role))
+            .ToList();
+    }
+
+    /// <summary>
     /// Convert từ UserClaimsContext sang UserProfileResponse
     /// </summary>
     public static UserProfileResponse FromUserClaimsContext(Shared.DTOs.Authorization.UserClaimsContext userContext)
@@ -169,7 +193,7 @@ public class UserProfileResponse
             UserId = userContext.UserId,
             Username = userContext.Claims.TryGetValue("preferred_username", out var username) ? username : userContext.UserId,
             Email = userContext.Claims.TryGetValue("email", out var email) ? email : "",
-            Roles = userContext.Roles,
+            Roles = FilterSystemRoles(userContext.Roles),
             LastLogin = DateTime.UtcNow // Current time since this is from active JWT
         };
 

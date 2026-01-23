@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Shared.SeedWork;
+using System.Net;
 
 namespace Infrastructure.Common;
 
@@ -94,7 +95,7 @@ public abstract class ApiControllerBase<T> : ControllerBase where T : class
         {
             Logger.LogWarning("{EntityName} with ID: {Id} not found", entityName, id);
             return NotFound(new ApiErrorResult<TResponse>(
-                ResponseMessages.ItemNotFound(entityName, id)));
+                ResponseMessages.ItemNotFound(entityName, id), HttpStatusCode.NotFound));
         }
 
         return Ok(new ApiSuccessResult<TResponse>(result, ResponseMessages.RetrieveItemSuccess));
@@ -149,7 +150,7 @@ public abstract class ApiControllerBase<T> : ControllerBase where T : class
         if (id != dtoId)
         {
             Logger.LogWarning("ID mismatch - URL ID: {UrlId}, Body ID: {BodyId}", id, dtoId);
-            return BadRequest(new ApiErrorResult<bool>("ID in URL does not match ID in body"));
+            return BadRequest(new ApiErrorResult<bool>("ID in URL does not match ID in body", HttpStatusCode.BadRequest));
         }
 
         var result = await Mediator.Send(command);
@@ -158,7 +159,7 @@ public abstract class ApiControllerBase<T> : ControllerBase where T : class
         {
             Logger.LogWarning("{EntityName} with ID: {Id} not found for update", entityName, id);
             return NotFound(new ApiErrorResult<bool>(
-                ResponseMessages.ItemNotFound(entityName, id)));
+                ResponseMessages.ItemNotFound(entityName, id), HttpStatusCode.NotFound));
         }
 
         Logger.LogInformation("{EntityName} with ID: {Id} updated successfully", entityName, id);
@@ -187,7 +188,7 @@ public abstract class ApiControllerBase<T> : ControllerBase where T : class
         {
             Logger.LogWarning("{EntityName} with ID: {Id} not found for deletion", entityName, id);
             return NotFound(new ApiErrorResult<bool>(
-                ResponseMessages.ItemNotFound(entityName, id)));
+                ResponseMessages.ItemNotFound(entityName, id), HttpStatusCode.NotFound));
         }
 
         Logger.LogInformation("{EntityName} with ID: {Id} deleted successfully", entityName, id);
@@ -218,7 +219,7 @@ public abstract class ApiControllerBase<T> : ControllerBase where T : class
     /// <returns>BadRequest result</returns>
     protected IActionResult CreateIdMismatchResponse()
     {
-        return BadRequest(new ApiErrorResult<bool>("ID in URL does not match ID in body"));
+        return BadRequest(new ApiErrorResult<bool>("ID in URL does not match ID in body", HttpStatusCode.BadRequest));
     }
 
     /// <summary>
@@ -231,6 +232,6 @@ public abstract class ApiControllerBase<T> : ControllerBase where T : class
     protected IActionResult CreateNotFoundResponse<TResult>(string entityName, long id)
     {
         return NotFound(new ApiErrorResult<TResult>(
-            ResponseMessages.ItemNotFound(entityName, id)));
+            ResponseMessages.ItemNotFound(entityName, id), HttpStatusCode.NotFound));
     }
 }
