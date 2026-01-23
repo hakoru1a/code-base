@@ -7,14 +7,16 @@ services:
         VITE_APP_API_URL: ${VITE_APP_API_URL:-http://20.195.15.250:5238}
         VITE_APP_FRONTEND_URL: ${VITE_APP_FRONTEND_URL:-http://localhost:3000}
     ports:
-      - "3000:80"
+      - "3000:3000"
     restart: unless-stopped
     environment:
-      # Runtime env vars cho nginx entrypoint script
+      # Runtime env vars cho Vite
       - VITE_APP_API_URL=${VITE_APP_API_URL:-http://20.195.15.250:5238}
       - VITE_APP_FRONTEND_URL=${VITE_APP_FRONTEND_URL:-http://localhost:3000}
+      - VITE_HOST=0.0.0.0
+      - VITE_PORT=3000
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:3000/dashboard"]
       interval: 30s
       timeout: 5s
       retries: 3

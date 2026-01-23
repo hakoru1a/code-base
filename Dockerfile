@@ -22,9 +22,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     fi
 
 # ---
-# Stage 3: Builder – build app
+# Stage 3: Production – serve with Vite preview
 # ---
-FROM base AS builder
+FROM base AS runner
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -34,34 +34,21 @@ ARG VITE_APP_FRONTEND_URL
 ENV VITE_APP_API_URL=${VITE_APP_API_URL}
 ENV VITE_APP_FRONTEND_URL=${VITE_APP_FRONTEND_URL}
 
+# Build the application
 RUN pnpm build
 
-# ---
-# Stage 4: Runner – serve static bằng nginx
-# ---
-FROM nginx:alpine AS runner
-RUN apk add --no-cache curl gettext
-
-# Xóa config mặc định
-RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf
-
-# Copy static files
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy nginx template và entrypoint script
-COPY nginx/nginx.conf /etc/nginx/templates/nginx.conf.template
-COPY nginx/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh && \
-    # Fix line endings (CRLF -> LF) for entrypoint script
-    sed -i 's/\r$//' /usr/local/bin/entrypoint.sh && \
-    # Verify file exists and is executable
-    ls -la /usr/local/bin/entrypoint.sh
+# Install curl for health checks
+RUN apk add --no-cache curl
 
 # Runtime environment variables (sẽ được set từ docker-compose)
-ENV VITE_APP_API_URL=""
-ENV VITE_APP_FRONTEND_URL=""
+ENV VITE_HOST=0.0.0.0
+ENV VITE_PORT=3000
 
-EXPOSE 80
+EXPOSE 3000
 
-# Use sh to run the entrypoint script (more compatible)
-CMD ["/bin/sh", "/usr/local/bin/entrypoint.sh"]
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:3000/dashboard || exit 1
+
+# Use Vite preview to serve the built application
+CMD ["pnpm", "preview"]
