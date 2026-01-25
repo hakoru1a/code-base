@@ -1,7 +1,8 @@
-import { useState, MouseEvent } from 'react';
+import { MouseEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { styled } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import IconButton, { IconButtonProps } from '@mui/material/IconButton';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -9,13 +10,14 @@ import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemText from '@mui/material/ListItemText';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
+import { styled } from '@mui/material/styles';
 
 import RightOutlined from '@ant-design/icons/RightOutlined';
 import avatar1 from '@assets/images/users/avatar-1.png';
-import { useAuth, useRouter } from '@hooks';
+import { useAuth } from '@hooks';
+import { locales } from '@locales';
 import Avatar from '@mui/material/Avatar';
-import { routes } from '@routes';
 
 interface ExpandMoreProps extends IconButtonProps {
   expand: boolean;
@@ -46,15 +48,11 @@ const ExpandMore = styled(IconButton, {
 const drawerOpen = true;
 
 export default function NavUser() {
-  const router = useRouter();
-
   const { logout, user } = useAuth();
   const handleLogout = async () => {
     try {
       await logout();
-      router.push(routes.login, {
-        from: ''
-      });
+      // Service logout already handles redirect to base
     } catch (err) {
       console.error(err);
     }
@@ -92,9 +90,44 @@ export default function NavUser() {
           sx={{ '& .MuiListItemSecondaryAction-root': { right: !drawerOpen ? -20 : -16 } }}
         >
           <ListItemAvatar>
-            <Avatar alt="Avatar" src={avatar1} sx={{ ...(drawerOpen && { width: 46, height: 46 }) }} />
+            <Avatar alt="Avatar" src={user?.avatarUrl || avatar1} sx={{ ...(drawerOpen && { width: 46, height: 46 }) }} />
           </ListItemAvatar>
-          <ListItemText primary={user?.name} secondary="UI/UX Designer" />
+          <ListItemText
+            primary={user?.fullName}
+            secondary={
+              <Stack spacing={0.5} sx={{ mt: 0.5 }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {user?.roles && user.roles.length > 0 ? (
+                    user.roles.map((role, index) => (
+                      <Chip
+                        key={index}
+                        label={role}
+                        size="small"
+                        variant="outlined"
+                        sx={{
+                          fontSize: '0.75rem',
+                          height: 20,
+                          '& .MuiChip-label': { px: 1 }
+                        }}
+                      />
+                    ))
+                  ) : (
+                    <Chip
+                      label={locales.user.noRole}
+                      size="small"
+                      variant="outlined"
+                      color="default"
+                      sx={{
+                        fontSize: '0.75rem',
+                        height: 20,
+                        '& .MuiChip-label': { px: 1 }
+                      }}
+                    />
+                  )}
+                </Box>
+              </Stack>
+            }
+          />
         </ListItem>
       </List>
       <Menu

@@ -2,6 +2,9 @@ export const routes = {
   base: '/',
   default: '/dashboard',
   login: '/login',
+  auth: {
+    callback: '/auth/callback'
+  },
   demo: {
     base: '/demo'
   },

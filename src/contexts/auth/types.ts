@@ -1,3 +1,4 @@
+import { UserProfile } from '@services/account';
 import type { ReactElement } from 'react';
 
 export type GuardProps = {
@@ -5,7 +6,6 @@ export type GuardProps = {
 };
 
 type CanRemove = {
-  login?: (email: string, password: string) => Promise<void>;
   register?: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
   codeVerification?: (verificationCode: string) => Promise<void>;
   resendConfirmationCode?: () => Promise<void>;
@@ -15,16 +15,6 @@ type CanRemove = {
   newPassword?: (email: string, code: string, password: string) => Promise<void>;
   updatePassword?: (password: string) => Promise<void>;
   resetPassword?: (email: string) => Promise<void>;
-};
-
-type UserProfile = {
-  id?: string;
-  email?: string;
-  avatar?: string;
-  image?: string;
-  name?: string;
-  role?: string;
-  tier?: string;
 };
 
 export interface AuthProps {
@@ -39,12 +29,10 @@ export interface AuthActionProps {
   payload?: AuthProps;
 }
 
-export type AuthContextType = CanRemove & {
+export type AuthContextType = Omit<CanRemove, 'login'> & {
   isLoggedIn: boolean;
   isInitialized?: boolean;
   user?: UserProfile | null | undefined;
+  login: () => void;
   logout: () => Promise<void>;
-  login: (email: string, password: string) => Promise<void>;
-  trustLogin: () => Promise<void>;
-  updateProfile: VoidFunction;
 };

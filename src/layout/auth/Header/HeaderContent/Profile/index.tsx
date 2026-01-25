@@ -1,20 +1,20 @@
-import { useRef, useState, ReactNode } from 'react';
-import { useNavigate } from 'react-router';
+import { ReactNode, useRef, useState } from 'react';
 
 // material-ui
-import { useTheme } from '@mui/material/styles';
+import Box from '@mui/material/Box';
 import ButtonBase from '@mui/material/ButtonBase';
 import CardContent from '@mui/material/CardContent';
+import Chip from '@mui/material/Chip';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Popper from '@mui/material/Popper';
 import Stack from '@mui/material/Stack';
+import { useTheme } from '@mui/material/styles';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
 
 // project imports
 import ProfileTab from './ProfileTab';
@@ -24,8 +24,8 @@ import LogoutOutlined from '@ant-design/icons/LogoutOutlined';
 import SettingOutlined from '@ant-design/icons/SettingOutlined';
 import UserOutlined from '@ant-design/icons/UserOutlined';
 import avatar1 from '@assets/images/users/avatar-1.png';
-import { useAuth } from '@hooks';
 import { Avatar, Button, MainCard, Transitions } from '@components';
+import { useAuth } from '@hooks';
 
 interface TabPanelProps {
   children?: ReactNode;
@@ -54,17 +54,12 @@ function a11yProps(index: number) {
 
 export default function Profile() {
   const theme = useTheme();
-  const navigate = useNavigate();
 
   const { logout, user } = useAuth();
   const handleLogout = async () => {
     try {
       await logout();
-      navigate(`/login`, {
-        state: {
-          from: ''
-        }
-      });
+      // Service logout already handles redirect to base
     } catch (err) {
       console.error(err);
     }
@@ -107,9 +102,9 @@ export default function Profile() {
         onClick={handleToggle}
       >
         <Stack direction="row" sx={{ gap: 1.25, alignItems: 'center', p: 0.5 }}>
-          <Avatar alt="profile user" src={avatar1} size="sm" />
+          <Avatar alt="profile user" src={user?.avatarUrl || avatar1} size="sm" />
           <Typography variant="subtitle1" sx={{ textTransform: 'capitalize' }}>
-            {user?.name}
+            {user?.fullName}
           </Typography>
         </Stack>
       </ButtonBase>
@@ -140,12 +135,38 @@ export default function Profile() {
                     <Grid container justifyContent="space-between" alignItems="center">
                       <Grid>
                         <Stack direction="row" sx={{ gap: 1.25, alignItems: 'center' }}>
-                          <Avatar alt="profile user" src={avatar1} sx={{ width: 32, height: 32 }} />
+                          <Avatar alt="profile user" src={user?.avatarUrl || avatar1} sx={{ width: 32, height: 32 }} />
                           <Stack>
-                            <Typography variant="h6">{user?.name}</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              UI/UX Designer
-                            </Typography>
+                            <Typography variant="h6">{user?.fullName}</Typography>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 0.5 }}>
+                              {user?.roles && user.roles.length > 0 ? (
+                                user.roles.map((role, index) => (
+                                  <Chip
+                                    key={index}
+                                    label={role}
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{
+                                      fontSize: '0.7rem',
+                                      height: 18,
+                                      '& .MuiChip-label': { px: 0.75 }
+                                    }}
+                                  />
+                                ))
+                              ) : (
+                                <Chip
+                                  label="Chưa có vai trò"
+                                  size="small"
+                                  variant="outlined"
+                                  color="default"
+                                  sx={{
+                                    fontSize: '0.7rem',
+                                    height: 18,
+                                    '& .MuiChip-label': { px: 0.75 }
+                                  }}
+                                />
+                              )}
+                            </Box>
                           </Stack>
                         </Stack>
                       </Grid>

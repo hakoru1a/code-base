@@ -94,5 +94,8 @@
       "actions": "Hành động",
       "role": "Vai trò"
     }
+  },
+  "user": {
+    "noRole": "Chưa có vai trò"
   }
 }

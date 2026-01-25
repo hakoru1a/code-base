@@ -1,8 +1,25 @@
-import { UserProfile } from '@services/account';
-
 export type LoginResponse = {
-  token?: {
-    accessToken: string;
-  };
-  user?: UserProfile;
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+};
+
+export type TokenExchangeResponse = {
+  accessToken?: string;
+  refreshToken?: string;
+  tokenType?: string;
+};
+
+export type RefreshTokenResponse = {
+  accessToken?: string;
+  refreshToken?: string;
+  tokenType?: string;
+};
+
+export type ExchangeCodeRequest = {
+  code: string;
+};
+
+export type RefreshTokenRequest = {
+  refreshToken: string;
 };

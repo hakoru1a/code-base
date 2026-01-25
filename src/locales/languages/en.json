@@ -54,10 +54,13 @@
     "submitError": "Submission failed. Please try again."
   },
   "errors": {
-    "network": "Lỗi mạng. Vui lòng kiểm tra kết nối internet của bạn.",
-    "unauthorized": "Không được phép truy cập. Vui lòng đăng nhập lại.",
-    "forbidden": "Bạn không có quyền truy cập tài nguyên này.",
-    "notFound": "Tài nguyên không tồn tại.",
-    "internalServerError": "Lỗi máy chủ nội bộ. Vui lòng thử lại sau."
+    "network": "Network error. Please check your internet connection.",
+    "unauthorized": "Unauthorized access. Please login again.",
+    "forbidden": "You don't have permission to access this resource.",
+    "notFound": "Resource not found.",
+    "internalServerError": "Internal server error. Please try again later."
+  },
+  "user": {
+    "noRole": "No role assigned"
   }
 }

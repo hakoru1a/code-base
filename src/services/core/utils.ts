@@ -25,7 +25,8 @@ export const callApi = async <TResponse>(callback: Promise<AxiosResponse<ApiResu
     if (response.status >= BAD_REQUEST_ERROR_CODE) {
       return {
         status: response.status,
-        error: response.data.error,
+        errors: response.data.errors,
+        metaData: response.data.metaData,
         success: false
       };
     }
