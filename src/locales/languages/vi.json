@@ -21,9 +21,24 @@
     "dashboard": {
       "title": "Bảng điều khiển",
       "subMenus": {
-        "overview": "Tổng quan",
+        "overview": "Tổng quan"
+      }
+    },
+    "contracts": {
+      "title": "Hợp đồng",
+      "subMenus": {
         "sale": "Bán hàng",
         "businessPlans": "Phương án kinh doanh"
+      }
+    },
+    "factory": {
+      "title": "Nhà máy",
+      "subMenus": {
+        "materials": "Nguyên liệu",
+        "weighTickets": "Phiếu cân",
+        "productionAssignments": "Theo dõi phân công",
+        "productionAssignVehicles": "Phân công sản xuất",
+        "productionAssignStaff": "Phân công nhân viên"
       }
     },
     "masterData": {
@@ -38,10 +53,15 @@
     "dashboard": "Bảng điều khiển",
     "salesContracts": "Hợp đồng bán",
     "businessPlans": "Phương án kinh doanh",
+    "weighTickets": "Phiếu cân",
+    "productionAssignments": "Phân công sản xuất",
     "masterData": "Dữ liệu chính",
     "users": "Người dùng",
     "list": "Danh sách",
-    "details": "Chi tiết"
+    "details": "Chi tiết",
+    "qc": "Đánh giá (QC)",
+    "assignVehicles": "Phân công xe vào chuyền",
+    "assignStaff": "Phân công nhân viên vào chuyền"
   },
   "page": {
     "login": {

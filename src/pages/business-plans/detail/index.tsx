@@ -146,7 +146,7 @@ const BusinessPlanDetailPage = () => {
   const sectionParams = useToggle(true);
   const sectionComputed = useToggle(true);
 
-  const selectedLines = plan?.selectedLines ?? [];
+  const selectedLines = useMemo(() => plan?.selectedLines ?? [], [plan?.selectedLines]);
 
   const [lineData, setLineData] = useState<PagedResult<ProductionLineMaster>>({
     items: [],

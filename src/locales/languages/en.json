@@ -21,9 +21,24 @@
     "dashboard": {
       "title": "Dashboard",
       "subMenus": {
-        "overview": "Overview",
+        "overview": "Overview"
+      }
+    },
+    "contracts": {
+      "title": "Contracts",
+      "subMenus": {
         "sale": "Sales",
         "businessPlans": "Business plans"
+      }
+    },
+    "factory": {
+      "title": "Factory",
+      "subMenus": {
+        "materials": "Materials",
+        "weighTickets": "Weigh tickets",
+        "productionAssignments": "Assignment monitor",
+        "productionAssignVehicles": "Production assignment",
+        "productionAssignStaff": "Staff assignment"
       }
     },
     "masterData": {
@@ -35,10 +50,15 @@
     "dashboard": "Dashboard",
     "salesContracts": "Sales contracts",
     "businessPlans": "Business plans",
+    "weighTickets": "Weigh tickets",
+    "productionAssignments": "Production assignments",
     "masterData": "Master Data",
     "users": "Users",
     "list": "List",
-    "details": "Details"
+    "details": "Details",
+    "qc": "QC",
+    "assignVehicles": "Assign vehicles",
+    "assignStaff": "Assign staff"
   },
   "page": {
     "login": {

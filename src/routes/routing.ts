@@ -34,6 +34,16 @@ export const routes = {
       create: '/dashboard/business-plans/create',
       detail: '/dashboard/business-plans/:id',
       edit: '/dashboard/business-plans/:id/edit'
+    },
+    weighTickets: '/dashboard/weigh-tickets',
+    weighTicket: {
+      detail: '/dashboard/weigh-tickets/:id',
+      qc: '/dashboard/weigh-tickets/:id/qc'
+    },
+    productionAssignments: {
+      list: '/dashboard/production-assignments/list',
+      vehicles: '/dashboard/production-assignments/vehicles',
+      staff: '/dashboard/production-assignments/staff'
     }
   }
 };
