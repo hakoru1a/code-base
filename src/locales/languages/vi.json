@@ -22,7 +22,8 @@
       "title": "Bảng điều khiển",
       "subMenus": {
         "overview": "Tổng quan",
-        "sale": "Bán hàng"
+        "sale": "Bán hàng",
+        "businessPlans": "Phương án kinh doanh"
       }
     },
     "masterData": {
@@ -35,6 +36,8 @@
   "breadcrumbs": {
     "home": "Trang chủ",
     "dashboard": "Bảng điều khiển",
+    "salesContracts": "Hợp đồng bán",
+    "businessPlans": "Phương án kinh doanh",
     "masterData": "Dữ liệu chính",
     "users": "Người dùng",
     "list": "Danh sách",

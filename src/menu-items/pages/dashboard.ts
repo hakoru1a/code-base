@@ -1,5 +1,5 @@
 import { NavItemType } from '../types';
-import { DashboardOutlined, LineChartOutlined, ShopOutlined } from '@ant-design/icons';
+import { DashboardOutlined, LineChartOutlined, ShopOutlined, ProfileOutlined } from '@ant-design/icons';
 import { locales } from '@locales';
 import { routes } from '@routes';
 
@@ -28,6 +28,13 @@ const dashboardMenus: NavItemType = {
           type: 'item',
           url: routes.dashboard.sales,
           icon: ShopOutlined
+        },
+        {
+          id: 'dashboard-business-plans',
+          title: locales.menus.dashboard.subMenus.businessPlans,
+          type: 'item',
+          url: routes.dashboard.businessPlans,
+          icon: ProfileOutlined
         }
       ]
     }

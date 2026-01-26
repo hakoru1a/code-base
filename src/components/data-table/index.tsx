@@ -22,6 +22,8 @@ const DataTable = <TEntity,>({ data = [], columns, totalPage, onLoad, slots = {}
     pageSize: DEFAULT_PAGE_SIZE
   });
 
+  const hasExpandSlot = typeof slots.expand !== 'undefined';
+
   useEffect(() => {
     onLoad({
       page: pagination.pageIndex,
@@ -38,6 +40,8 @@ const DataTable = <TEntity,>({ data = [], columns, totalPage, onLoad, slots = {}
     manualPagination: true,
     pageCount: totalPage,
     enableRowSelection: true,
+    enableExpanding: hasExpandSlot,
+    getRowCanExpand: hasExpandSlot ? () => true : undefined,
     getFilteredRowModel: getFilteredRowModel(),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),

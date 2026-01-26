@@ -144,7 +144,6 @@ export default function Profile() {
                                   <Chip
                                     key={index}
                                     label={role}
-                                    size="small"
                                     variant="outlined"
                                     sx={{
                                       fontSize: '0.7rem',
@@ -156,7 +155,6 @@ export default function Profile() {
                               ) : (
                                 <Chip
                                   label="Chưa có vai trò"
-                                  size="small"
                                   variant="outlined"
                                   color="default"
                                   sx={{

@@ -23,6 +23,17 @@ export const routes = {
   dashboard: {
     base: '/dashboard',
     overview: '/dashboard/overview',
-    sales: '/dashboard/sales'
+    sales: '/dashboard/sales',
+    salesContract: {
+      create: '/dashboard/sales/create',
+      detail: '/dashboard/sales/:id',
+      edit: '/dashboard/sales/:id/edit'
+    },
+    businessPlans: '/dashboard/business-plans',
+    businessPlan: {
+      create: '/dashboard/business-plans/create',
+      detail: '/dashboard/business-plans/:id',
+      edit: '/dashboard/business-plans/:id/edit'
+    }
   }
 };

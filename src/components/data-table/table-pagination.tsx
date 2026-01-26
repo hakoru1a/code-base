@@ -66,7 +66,6 @@ const TablePagination = ({ getPageCount, setPageIndex, setPageSize, getState, in
                 onOpen={handleOpen}
                 value={getState().pagination.pageSize}
                 onChange={handleChange}
-                size="small"
                 sx={{ '& .MuiSelect-select': { py: 0.75, px: 1.25 } }}
               >
                 {options.map((option: number) => (
@@ -79,7 +78,6 @@ const TablePagination = ({ getPageCount, setPageIndex, setPageSize, getState, in
           </Stack>
           <Text.Typography variant="caption" color="secondary" label={locales.tables.pagination.goToPage} />
           <TextField
-            size="small"
             type="number"
             value={getState().pagination.pageIndex + 1}
             onChange={(e) => {

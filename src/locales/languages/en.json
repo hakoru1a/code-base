@@ -19,11 +19,26 @@
   },
   "menus": {
     "dashboard": {
-      "title": "Dashboard"
+      "title": "Dashboard",
+      "subMenus": {
+        "overview": "Overview",
+        "sale": "Sales",
+        "businessPlans": "Business plans"
+      }
     },
     "masterData": {
       "title": "Master Data"
     }
+  },
+  "breadcrumbs": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "salesContracts": "Sales contracts",
+    "businessPlans": "Business plans",
+    "masterData": "Master Data",
+    "users": "Users",
+    "list": "List",
+    "details": "Details"
   },
   "page": {
     "login": {

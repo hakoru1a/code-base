@@ -79,7 +79,7 @@ const ListUser = () => {
       accessorKey: 'role',
       cell: (info: { getValue: () => unknown }) => {
         const value = (info.getValue() as string) || '';
-        return <Chip label={value} color="primary" size="small" />;
+        return <Chip label={value} color="primary" />;
       }
     }
   ];

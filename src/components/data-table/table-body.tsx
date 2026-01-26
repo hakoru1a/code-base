@@ -1,4 +1,5 @@
 import { alpha, TableCell, TableRow, TableBody as MuiTableBody } from '@mui/material';
+import type { Row } from '@tanstack/react-table';
 import { flexRender, RowModel } from '@tanstack/react-table';
 import { Fragment } from 'react/jsx-runtime';
 import { locales, useTranslate } from '@locales';
@@ -7,12 +8,13 @@ type Props<TEntity> = {
   rows: RowModel<TEntity>;
   columnLength: number;
   slots?: {
-    expand?: React.ReactNode;
+    expand?: React.ReactNode | ((row: Row<TEntity>) => React.ReactNode);
   };
 };
 
 const TableBody = <TEntity,>({ rows, columnLength, slots = {} }: Props<TEntity>) => {
   const { t } = useTranslate();
+  const hasExpand = typeof slots.expand !== 'undefined';
 
   return (
     <>
@@ -20,7 +22,7 @@ const TableBody = <TEntity,>({ rows, columnLength, slots = {} }: Props<TEntity>)
         <MuiTableBody>
           {rows.rows.map((row) => (
             <Fragment key={row.id}>
-              <TableRow sx={{ cursor: 'pointer' }}>
+              <TableRow sx={{ cursor: hasExpand ? 'pointer' : 'default' }} onClick={hasExpand ? row.getToggleExpandedHandler() : undefined}>
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id} {...cell.column.columnDef.meta}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -34,7 +36,9 @@ const TableBody = <TEntity,>({ rows, columnLength, slots = {} }: Props<TEntity>)
                     '&:hover': { bgcolor: `${alpha(theme.palette.primary.lighter, 0.1)} !important` }
                   })}
                 >
-                  <TableCell colSpan={row.getVisibleCells().length}>{slots?.expand}</TableCell>
+                  <TableCell colSpan={row.getVisibleCells().length}>
+                    {typeof slots.expand === 'function' ? slots.expand(row as Row<TEntity>) : slots.expand}
+                  </TableCell>
                 </TableRow>
               )}
             </Fragment>

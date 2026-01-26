@@ -102,7 +102,6 @@ export default function NavUser() {
                       <Chip
                         key={index}
                         label={role}
-                        size="small"
                         variant="outlined"
                         sx={{
                           fontSize: '0.75rem',
@@ -114,7 +113,6 @@ export default function NavUser() {
                   ) : (
                     <Chip
                       label={locales.user.noRole}
-                      size="small"
                       variant="outlined"
                       color="default"
                       sx={{

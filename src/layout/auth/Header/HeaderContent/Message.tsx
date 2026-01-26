@@ -94,7 +94,7 @@ export default function Message() {
                   border={false}
                   content={false}
                   secondary={
-                    <Button.Icon size="small" onClick={handleToggle}>
+                    <Button.Icon onClick={handleToggle}>
                       <CloseOutlined />
                     </Button.Icon>
                   }

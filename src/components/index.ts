@@ -22,3 +22,6 @@ export * from './data-table/types';
 export * from './dialog';
 
 export { default as Text } from './text';
+
+export { default as TabFilter } from './tab-filter';
+export * from './tab-filter';

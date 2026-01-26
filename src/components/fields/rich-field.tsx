@@ -17,7 +17,6 @@ const RichField = React.forwardRef(
       >
         <TextField
           fullWidth={fullWidth}
-          size="small"
           variant="outlined"
           inputRef={ref}
           inputProps={{ maxLength: maxLength, ...inputProps }}

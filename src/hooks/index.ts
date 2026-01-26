@@ -8,3 +8,4 @@ export { default as useRouter } from './useRouter';
 export { default as useToast } from './useToast';
 export { default as useBoolean } from './useBoolean';
 export { default as useDialog } from './useDialog';
+export { default as useToggle } from './useToggle';

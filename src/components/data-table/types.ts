@@ -1,5 +1,5 @@
-import { ColumnDef } from '@tanstack/react-table';
-import { ReactNode } from 'react';
+import type { ColumnDef, Row } from '@tanstack/react-table';
+import type { ReactNode } from 'react';
 
 export type TableFetchParams = {
   page: number;
@@ -13,6 +13,6 @@ export type DataTableProps<TEntity> = {
   onLoad: (params: TableFetchParams) => void;
   counts?: Record<string, number>;
   slots?: {
-    expand?: ReactNode;
+    expand?: ReactNode | ((row: Row<TEntity>) => ReactNode);
   };
 };

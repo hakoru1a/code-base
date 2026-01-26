@@ -101,7 +101,7 @@ export default function Notification() {
                     <>
                       {read > 0 && (
                         <Tooltip title="Mark as all read">
-                          <Button.Icon color="success" size="small" onClick={() => setRead(0)}>
+                          <Button.Icon color="success" onClick={() => setRead(0)}>
                             <CheckCircleOutlined style={{ fontSize: '1.15rem' }} />
                           </Button.Icon>
                         </Tooltip>
