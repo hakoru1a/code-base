@@ -18,20 +18,20 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .ValueGeneratedOnAdd();
 
         // Properties
-        builder.Property(c => c.TenKhachHang)
+        builder.Property(c => c.Name)
             .HasColumnName("ten_khach_hang")
             .HasMaxLength(200)
             .IsRequired();
 
-        builder.Property(c => c.DienThoai)
+        builder.Property(c => c.Phone)
             .HasColumnName("dien_thoai")
             .HasMaxLength(20);
 
-        builder.Property(c => c.DiaChi)
+        builder.Property(c => c.Address)
             .HasColumnName("dia_chi")
             .HasMaxLength(500);
 
-        builder.Property(c => c.GhiChu)
+        builder.Property(c => c.Note)
             .HasColumnName("ghi_chu")
             .HasColumnType("text");
 
@@ -39,7 +39,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasColumnName("email")
             .HasMaxLength(100);
 
-        builder.Property(c => c.MaSoThue)
+        builder.Property(c => c.TaxCode)
             .HasColumnName("ma_so_thue")
             .HasMaxLength(50);
 
@@ -56,10 +56,10 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasColumnType("timestamp");
 
         // Indexes
-        builder.HasIndex(c => c.TenKhachHang)
+        builder.HasIndex(c => c.Name)
             .HasDatabaseName("idx_khachhang_ten");
 
-        builder.HasIndex(c => c.MaSoThue)
+        builder.HasIndex(c => c.TaxCode)
             .HasDatabaseName("idx_khachhang_mst");
 
         builder.HasIndex(c => c.IsActive)

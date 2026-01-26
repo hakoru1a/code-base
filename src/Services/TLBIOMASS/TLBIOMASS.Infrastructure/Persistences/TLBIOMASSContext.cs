@@ -74,7 +74,11 @@ namespace TLBIOMASS.Infrastructure.Persistences
                     case EntityState.Modified:
                         if (item.Entity is not Customer)
                         {
-                            Entry(item.Entity).Property("Id").IsModified = false;
+                            var idProperty = item.Entity.GetType().GetProperty("Id");
+                            if (idProperty != null)
+                            {
+                                Entry(item.Entity).Property(idProperty.Name).IsModified = false;
+                            }
                         }
 
                         if (item.Entity is IDateTracking modifiedEntity)

@@ -16,7 +16,7 @@ public class CustomerCreatedEventHandler : INotificationHandler<CustomerCreatedE
     public Task Handle(CustomerCreatedEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Customer Created: {CustomerId} - {Name}", 
-            notification.CustomerId, notification.TenKhachHang);
+            notification.CustomerId, notification.Name);
 
         return Task.CompletedTask;
     }

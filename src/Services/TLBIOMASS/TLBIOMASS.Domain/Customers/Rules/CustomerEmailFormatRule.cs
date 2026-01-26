@@ -20,6 +20,6 @@ public class CustomerEmailFormatRule : IBusinessRule
         return !regex.IsMatch(_email);
     }
 
-    public string Message => "Email không đúng định dạng";
+    public string Message => "Invalid email format";
     public string Code => "Customer.EmailInvalid";
 }

@@ -18,27 +18,27 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
 
     public async Task<bool> Handle(UpdateCustomerCommand request, CancellationToken cancellationToken)
     {
-        // Lấy customer từ database
+        // Get customer from database
         var customer = await _customerRepository.GetByIdAsync(request.Id, cancellationToken);
         if (customer == null)
         {
             return false;
         }
 
-        // Sử dụng Domain method để update
+        // Use Domain method to update
         customer.Update(
-            request.TenKhachHang,
-            request.DienThoai,
-            request.DiaChi,
+            request.Name,
+            request.Phone,
+            request.Address,
             request.Email,
-            request.MaSoThue,
-            request.GhiChu
+            request.TaxCode,
+            request.Note
         );
 
-        // Kiểm tra mã số thuế thông qua Domain Rule
-        customer.CheckMaSoThueUnique(_customerRepository);
+        // Check tax code uniqueness via Domain Rule
+        customer.CheckTaxCodeUnique(_customerRepository);
 
-        // Cập nhật trạng thái Active
+        // Update Active status
         if (request.IsActive)
             customer.Activate();
         else
@@ -51,7 +51,7 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
         await _mediator.Publish(new CustomerUpdatedEvent
         {
             CustomerId = customer.Id,
-            TenKhachHang = customer.TenKhachHang
+            Name = customer.Name
         }, cancellationToken);
 
         return true;

@@ -16,7 +16,7 @@ public class CustomerUpdatedEventHandler : INotificationHandler<CustomerUpdatedE
     public Task Handle(CustomerUpdatedEvent notification, CancellationToken cancellationToken)
     {
         _logger.LogInformation("Customer Updated: {CustomerId} - {Name}", 
-            notification.CustomerId, notification.TenKhachHang);
+            notification.CustomerId, notification.Name);
 
         return Task.CompletedTask;
     }

@@ -4,15 +4,15 @@ namespace TLBIOMASS.Domain.Customers;
 
 public static class CustomerError
 {
-    public static BusinessException TenKhachHangCannotBeEmpty()
-        => new("Tên khách hàng không được để trống");
+    public static BusinessException NameCannotBeEmpty()
+        => new("Customer name cannot be empty");
 
-    public static BusinessException TenKhachHangTooLong(int maxLength = 200)
-        => new($"Tên khách hàng không được vượt quá {maxLength} ký tự");
+    public static BusinessException NameTooLong(int maxLength = 200)
+        => new($"Customer name cannot exceed {maxLength} characters");
 
     public static BusinessException EmailInvalidFormat()
-        => new("Email không đúng định dạng");
+        => new("Invalid email format");
 
-    public static BusinessException MaSoThueAlreadyExists(string maSoThue)
-        => new($"Mã số thuế '{maSoThue}' đã tồn tại");
+    public static BusinessException TaxCodeAlreadyExists(string taxCode)
+        => new($"Tax code '{taxCode}' already exists");
 }

@@ -13,6 +13,6 @@ public class CustomerNameRequiredRule : IBusinessRule
 
     public bool IsBroken() => string.IsNullOrWhiteSpace(_name);
 
-    public string Message => "Tên khách hàng không được để trống";
+    public string Message => "Customer name is required";
     public string Code => "Customer.NameRequired";
 }

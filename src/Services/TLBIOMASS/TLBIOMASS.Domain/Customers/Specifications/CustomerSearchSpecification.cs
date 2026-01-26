@@ -24,9 +24,9 @@ public class CustomerSearchSpecification : ISpecification<Customer>
         if (string.IsNullOrEmpty(_searchTerm))
             return c => true;
 
-        return c => c.TenKhachHang.ToLower().Contains(_searchTerm) ||
-                   (c.DienThoai != null && c.DienThoai.Contains(_searchTerm)) ||
+        return c => c.Name.ToLower().Contains(_searchTerm) ||
+                   (c.Phone != null && c.Phone.Contains(_searchTerm)) ||
                    (c.Email != null && c.Email.ToLower().Contains(_searchTerm)) ||
-                   (c.MaSoThue != null && c.MaSoThue.Contains(_searchTerm));
+                   (c.TaxCode != null && c.TaxCode.Contains(_searchTerm));
     }
 }

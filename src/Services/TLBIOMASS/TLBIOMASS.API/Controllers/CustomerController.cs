@@ -12,11 +12,11 @@ using TLBIOMASS.Application.Features.Customers.DTOs;
 using TLBIOMASS.Application.Features.Customers.Queries.GetAllCustomers;
 using TLBIOMASS.Application.Features.Customers.Queries.GetCustomerById;
 using TLBIOMASS.Application.Features.Customers.Queries.GetCustomers;
+using Mapster;
 
 namespace TLBIOMASS.API.Controllers;
 
 [ApiVersion("1.0")]
-// [Authorize]
 public class CustomerController : ApiControllerBase<CustomerController>
 {
     private const string EntityName = "Customer";
@@ -27,7 +27,6 @@ public class CustomerController : ApiControllerBase<CustomerController>
     }
 
     [HttpGet]
-    // [Authorize(Policy = PolicyNames.TLBIOMASS.Customer.CanView)]
     [ProducesResponseType(typeof(ApiSuccessResult<PagedList<CustomerResponseDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetList(
@@ -52,15 +51,13 @@ public class CustomerController : ApiControllerBase<CustomerController>
             query, EntityName, page, size);
     }
 
-  
     [HttpGet("all")]
-    // [Authorize(Policy = PolicyNames.TLBIOMASS.Customer.CanView)]
     [ProducesResponseType(typeof(ApiSuccessResult<List<CustomerResponseDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? search = null,
         [FromQuery] bool? isActive = null,
-        [FromQuery] string? sortBy = "CreatedAt",
+        [FromQuery] string? sortBy ="CreatedAt",
         [FromQuery] string? sortDirection = "desc")
     {
         var query = new GetAllCustomersQuery
@@ -75,7 +72,6 @@ public class CustomerController : ApiControllerBase<CustomerController>
     }
 
     [HttpGet("{id}")]
-    // [Authorize(Policy = PolicyNames.TLBIOMASS.Customer.CanView)]
     [ProducesResponseType(typeof(ApiSuccessResult<CustomerResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResult<CustomerResponseDto>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -86,50 +82,28 @@ public class CustomerController : ApiControllerBase<CustomerController>
     }
 
     [HttpPost]
-    // [Authorize(Policy = PolicyNames.TLBIOMASS.Customer.CanCreate)]
     [ProducesResponseType(typeof(ApiSuccessResult<int>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Create([FromBody] CustomerCreateDto dto)
     {
-        var command = new CreateCustomerCommand
-        {
-            TenKhachHang = dto.TenKhachHang,
-            DienThoai = dto.DienThoai,
-            DiaChi = dto.DiaChi,
-            Email = dto.Email,
-            MaSoThue = dto.MaSoThue,
-            GhiChu = dto.GhiChu
-        };
-
-        return await HandleCreateAsync(command, EntityName, dto.TenKhachHang);
+        var command = dto.Adapt<CreateCustomerCommand>();
+        return await HandleCreateAsync(command, EntityName, dto.Name);
     }
 
     [HttpPut("{id}")]
-    // [Authorize(Policy = PolicyNames.TLBIOMASS.Customer.CanUpdate)]
     [ProducesResponseType(typeof(ApiSuccessResult<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResult<bool>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiErrorResult<bool>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Update(int id, [FromBody] CustomerUpdateDto dto)
     {
-        var command = new UpdateCustomerCommand
-        {
-            Id = dto.Id,
-            TenKhachHang = dto.TenKhachHang,
-            DienThoai = dto.DienThoai,
-            DiaChi = dto.DiaChi,
-            Email = dto.Email,
-            MaSoThue = dto.MaSoThue,
-            GhiChu = dto.GhiChu,
-            IsActive = dto.IsActive
-        };
-
+        var command = dto.Adapt<UpdateCustomerCommand>();
+        command.Id = id; // Ensure ID from route is used
         return await HandleUpdateAsync(command, id, dto.Id, EntityName);
     }
 
     [HttpDelete("{id}")]
-    // [Authorize(Policy = PolicyNames.TLBIOMASS.Customer.CanDelete)]
     [ProducesResponseType(typeof(ApiSuccessResult<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResult<bool>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -140,7 +114,6 @@ public class CustomerController : ApiControllerBase<CustomerController>
     }
 
     [HttpPatch("{id}/status")]
-    // [Authorize(Policy = PolicyNames.TLBIOMASS.Customer.CanUpdate)]
     [ProducesResponseType(typeof(ApiSuccessResult<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiErrorResult<bool>), StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -149,30 +122,19 @@ public class CustomerController : ApiControllerBase<CustomerController>
         Logger.LogInformation("Updating status of {EntityName} with ID: {Id} to {IsActive}", 
             EntityName, id, isActive);
 
-        // Get current customer to populate the command correctly
         var getQuery = new GetCustomerByIdQuery { Id = id };
         var customer = await Mediator.Send(getQuery);
 
         if (customer == null)
         {
-            return NotFound(new ApiErrorResult<bool>($"Không tìm thấy {EntityName} với ID: {id}"));
+            return NotFound(new ApiErrorResult<bool>(ResponseMessages.ItemNotFound(EntityName, id)));
         }
 
-        var command = new UpdateCustomerCommand
-        {
-            Id = id,
-            TenKhachHang = customer.TenKhachHang,
-            DienThoai = customer.DienThoai,
-            DiaChi = customer.DiaChi,
-            Email = customer.Email,
-            MaSoThue = customer.MaSoThue,
-            GhiChu = customer.GhiChu,
-            IsActive = isActive
-        };
+        var command = customer.Adapt<UpdateCustomerCommand>();
+        command.IsActive = isActive;
 
         var result = await Mediator.Send(command);
-        var statusText = isActive ? "kích hoạt" : "vô hiệu hóa";
         
-        return Ok(new ApiSuccessResult<bool>(result, $"{EntityName} đã được {statusText} thành công"));
+        return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.UpdateSuccess));
     }
 }

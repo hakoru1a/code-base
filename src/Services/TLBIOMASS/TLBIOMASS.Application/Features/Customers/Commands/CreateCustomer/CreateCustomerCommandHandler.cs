@@ -20,16 +20,16 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
     public async Task<int> Handle(CreateCustomerCommand request, CancellationToken cancellationToken)
     {
         var customer = Customer.Create(
-            request.TenKhachHang,
-            request.DienThoai,
-            request.DiaChi,
+            request.Name,
+            request.Phone,
+            request.Address,
             request.Email,
-            request.MaSoThue,
-            request.GhiChu
+            request.TaxCode,
+            request.Note
         );
 
-        // Kiểm tra mã số thuế thông qua Domain Rule
-        customer.CheckMaSoThueUnique(_customerRepository);
+        // Check tax code uniqueness via Domain Rule
+        customer.CheckTaxCodeUnique(_customerRepository);
 
         var result = await _customerRepository.CreateAsync(customer, cancellationToken);
         await _customerRepository.SaveChangesAsync(cancellationToken);
@@ -38,7 +38,7 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
         await _mediator.Publish(new CustomerCreatedEvent
         {
             CustomerId = result,
-            TenKhachHang = customer.TenKhachHang
+            Name = customer.Name
         }, cancellationToken);
 
         return result;

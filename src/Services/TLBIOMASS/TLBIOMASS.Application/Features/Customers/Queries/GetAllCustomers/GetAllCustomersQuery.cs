@@ -7,6 +7,6 @@ public class GetAllCustomersQuery : IRequest<List<CustomerResponseDto>>
 {
     public string? Search { get; set; }
     public bool? IsActive { get; set; }
-    public string? SortBy { get; set; } = "CreatedAt";
-    public string? SortDirection { get; set; } = "desc";
+    public string? SortBy { get; set; }
+    public string? SortDirection { get; set; } 
 }

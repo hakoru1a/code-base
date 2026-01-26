@@ -7,12 +7,12 @@ namespace TLBIOMASS.Domain.Customers;
 
 public class Customer : EntityBase<int>
 {
-    public string TenKhachHang { get; private set; } = string.Empty;
-    public string? DienThoai { get; private set; }
-    public string? DiaChi { get; private set; }
-    public string? GhiChu { get; private set; }
+    public string Name { get; private set; } = string.Empty;
+    public string? Phone { get; private set; }
+    public string? Address { get; private set; }
+    public string? Note { get; private set; }
     public string? Email { get; private set; }
-    public string? MaSoThue { get; private set; }
+    public string? TaxCode { get; private set; }
     public bool IsActive { get; private set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
@@ -22,58 +22,58 @@ public class Customer : EntityBase<int>
 
     // Domain constructor
     public Customer(
-        string tenKhachHang,
-        string? dienThoai = null,
-        string? diaChi = null,
+        string name,
+        string? phone = null,
+        string? address = null,
         string? email = null,
-        string? maSoThue = null,
-        string? ghiChu = null)
+        string? taxCode = null,
+        string? note = null)
     {
-        TenKhachHang = tenKhachHang;
-        DienThoai = dienThoai;
-        DiaChi = diaChi;
+        Name = name;
+        Phone = phone;
+        Address = address;
         Email = email;
-        MaSoThue = maSoThue;
-        GhiChu = ghiChu;
+        TaxCode = taxCode;
+        Note = note;
         IsActive = true;
     }
 
     public static Customer Create(
-        string tenKhachHang,
-        string? dienThoai = null,
-        string? diaChi = null,
+        string name,
+        string? phone = null,
+        string? address = null,
         string? email = null,
-        string? maSoThue = null,
-        string? ghiChu = null)
+        string? taxCode = null,
+        string? note = null)
     {
-        CheckRule(new CustomerNameRequiredRule(tenKhachHang));
+        CheckRule(new CustomerNameRequiredRule(name));
         CheckRule(new CustomerEmailFormatRule(email));
 
-        return new Customer(tenKhachHang, dienThoai, diaChi, email, maSoThue, ghiChu);
+        return new Customer(name, phone, address, email, taxCode, note);
     }
 
-    public void CheckMaSoThueUnique(ICustomerRepository repository)
+    public void CheckTaxCodeUnique(ICustomerRepository repository)
     {
-        CheckRule(new CustomerMaSoThueUniqueRule(repository, MaSoThue, Id == 0 ? null : Id));
+        CheckRule(new CustomerTaxCodeUniqueRule(repository, TaxCode, Id == 0 ? null : Id));
     }
 
     public void Update(
-        string tenKhachHang,
-        string? dienThoai,
-        string? diaChi,
+        string name,
+        string? phone,
+        string? address,
         string? email,
-        string? maSoThue,
-        string? ghiChu)
+        string? taxCode,
+        string? note)
     {
-        CheckRule(new CustomerNameRequiredRule(tenKhachHang));
+        CheckRule(new CustomerNameRequiredRule(name));
         CheckRule(new CustomerEmailFormatRule(email));
 
-        TenKhachHang = tenKhachHang;
-        DienThoai = dienThoai;
-        DiaChi = diaChi;
+        Name = name;
+        Phone = phone;
+        Address = address;
         Email = email;
-        MaSoThue = maSoThue;
-        GhiChu = ghiChu;
+        TaxCode = taxCode;
+        Note = note;
     }
 
     public void Activate()

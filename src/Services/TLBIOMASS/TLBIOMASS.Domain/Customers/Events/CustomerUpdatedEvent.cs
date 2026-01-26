@@ -5,5 +5,5 @@ namespace TLBIOMASS.Domain.Customers.Events;
 public record CustomerUpdatedEvent : BaseEvent
 {
     public int CustomerId { get; set; }
-    public string TenKhachHang { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
 }
