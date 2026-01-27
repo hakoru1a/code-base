@@ -22,6 +22,7 @@ public class ServicesOptions
     public ServiceOptions AuthAPI { get; set; } = new();
     public ServiceOptions BaseAPI { get; set; } = new();
     public ServiceOptions GenerateAPI { get; set; } = new();
+    public ServiceOptions TLBIOMASSAPI { get; set; } = new();
 }
 
 

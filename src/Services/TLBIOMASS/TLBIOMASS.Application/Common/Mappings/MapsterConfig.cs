@@ -1,24 +1,33 @@
 using Mapster;
+using TLBIOMASS.Application.Features.Receivers.DTOs;
+using TLBIOMASS.Domain.Receivers;
+using TLBIOMASS.Application.Features.Receivers.Commands.CreateReceiver;
+using TLBIOMASS.Application.Features.Receivers.Commands.UpdateReceiver;
 
 namespace TLBIOMASS.Application.Common.Mappings;
 
-/// <summary>
-/// Optimized Mapster configuration for TLBIOMASS service
-/// Follows DDD principles with clean mapping logic
-/// </summary>
 public static class MapsterConfig
 {
-    /// <summary>
-    /// Configure all mappings for the TLBIOMASS service
-    /// </summary>
     public static void ConfigureMappings()
     {
-        // Configure global settings for better performance
         TypeAdapterConfig.GlobalSettings.Default.PreserveReference(true);
         TypeAdapterConfig.GlobalSettings.Default.IgnoreNullValues(false);
 
-        // TODO: Add specific mappings as needed
-        // ConfigureEntityMappings();
+        ConfigureReceiverMappings();
     }
 
+    private static void ConfigureReceiverMappings()
+    {
+        // ReceiverCreateDto -> ReceiverCreateCommand
+        TypeAdapterConfig<ReceiverCreateDto, CreateReceiverCommand>
+            .NewConfig();
+
+        // ReceiverUpdateDto -> ReceiverUpdateCommand
+        TypeAdapterConfig<ReceiverUpdateDto, UpdateReceiverCommand>
+            .NewConfig();
+
+        // Receiver -> ReceiverResponseDto
+        TypeAdapterConfig<Receiver, ReceiverResponseDto>
+            .NewConfig();
+    }
 }

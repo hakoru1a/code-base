@@ -12,8 +12,11 @@ namespace TLBIOMASS.Infrastructure
             // Add common infrastructure (Database + Redis)
             services.AddCommonInfrastructure<TLBIOMASSContext>(configuration);
 
-            // TODO: Register service-specific repositories as features are developed
-            // services.AddScoped<IEntityRepository, EntityRepository>();
+            services.AddScoped<TLBIOMASS.Domain.Receivers.Interfaces.IReceiverRepository, TLBIOMASS.Infrastructure.Repositories.ReceiverRepository>();
+            services.AddScoped<TLBIOMASS.Domain.Agencies.Interfaces.IAgencyRepository, TLBIOMASS.Infrastructure.Repositories.AgencyRepository>();
+            services.AddScoped<TLBIOMASS.Domain.Materials.Interfaces.IMaterialRepository, TLBIOMASS.Infrastructure.Repositories.MaterialRepository>();
+            services.AddScoped<TLBIOMASS.Domain.Landowners.Interfaces.ILandownerRepository, TLBIOMASS.Infrastructure.Repositories.LandownerRepository>();
+            services.AddScoped<TLBIOMASS.Domain.MaterialRegions.Interfaces.IMaterialRegionRepository, TLBIOMASS.Infrastructure.Repositories.MaterialRegionRepository>();
 
             // Configure MassTransit with RabbitMQ (optional - uncomment if needed)
             // services.AddMassTransit(x =>
