@@ -1,6 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.Landowners.Interfaces;
-using TLBIOMASS.Application.Features.Landowners.DTOs;
+using Shared.DTOs.Landowner;
 using TLBIOMASS.Domain.Landowners.Specifications;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
@@ -22,15 +22,15 @@ public class GetAllLandownersQueryHandler : IRequestHandler<GetAllLandownersQuer
     {
         var query = _repository.FindAll();
 
-        if (!string.IsNullOrEmpty(request.Search))
+        if (!string.IsNullOrEmpty(request.Filter.Search))
         {
-            var spec = new LandownerSearchSpecification(request.Search);
+            var spec = new LandownerSearchSpecification(request.Filter.Search);
             query = query.Where(spec.ToExpression());
         }
 
-        if (request.IsActive.HasValue)
+        if (request.Filter.IsActive.HasValue)
         {
-            var spec = new LandownerIsActiveSpecification(request.IsActive.Value);
+            var spec = new LandownerIsActiveSpecification(request.Filter.IsActive.Value);
             query = query.Where(spec.ToExpression());
         }
 

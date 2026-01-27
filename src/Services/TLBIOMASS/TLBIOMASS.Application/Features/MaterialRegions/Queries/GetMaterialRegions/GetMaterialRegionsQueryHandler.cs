@@ -1,6 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.MaterialRegions.Interfaces;
-using TLBIOMASS.Application.Features.MaterialRegions.DTOs;
+using Shared.DTOs.MaterialRegion;
 using Shared.SeedWork;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
@@ -25,26 +25,27 @@ public class GetMaterialRegionsQueryHandler : IRequestHandler<GetMaterialRegions
             .ThenInclude(x => x.Material)
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(request.Search))
+        if (!string.IsNullOrEmpty(request.Filter.Search))
         {
-            var spec = new MaterialRegionSearchSpecification(request.Search);
+            var spec = new MaterialRegionSearchSpecification(request.Filter.Search);
             query = query.Where(spec.ToExpression());
         }
 
-        if (request.OwnerId.HasValue)
+        if (request.Filter.OwnerId.HasValue)
         {
-            query = query.Where(x => x.OwnerId == request.OwnerId.Value);
+            query = query.Where(x => x.OwnerId == request.Filter.OwnerId.Value);
         }
 
         // Apply sorting
-        query = ApplySorting(query, request.SortBy, request.SortDirection);
+        query = ApplySorting(query, request.Filter.SortBy, request.Filter.SortDirection);
 
-        var pagedItems = await _repository.GetPageAsync(query, request.Page, request.Size, cancellationToken);
+        var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
 
         return new PagedList<MaterialRegionResponseDto>(
             pagedItems.Adapt<List<MaterialRegionResponseDto>>(),
             pagedItems.GetMetaData().TotalItems,
-            request.Page, request.Size);
+            request.Filter.PageNumber, request.Filter.PageSize);
+
     }
 
     private IQueryable<MaterialRegion> ApplySorting(IQueryable<MaterialRegion> query, string? sortBy, string? sortDirection)

@@ -1,6 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.Agencies.Interfaces;
-using TLBIOMASS.Application.Features.Agencies.DTOs;
+using Shared.DTOs.Agency;
 using Shared.SeedWork;
 using Mapster;
 using System.Linq.Expressions;
@@ -25,29 +25,30 @@ public class GetAgenciesQueryHandler : IRequestHandler<GetAgenciesQuery, PagedLi
         var query = _repository.FindAll();
 
         // Apply filters using Specifications as per Architecture Guide
-        if (!string.IsNullOrEmpty(request.Search))
+        if (!string.IsNullOrEmpty(request.Filter.Search))
         {
-            var spec = new AgencySearchSpecification(request.Search);
+            var spec = new AgencySearchSpecification(request.Filter.Search);
             query = query.Where(spec.ToExpression());
         }
 
-        if (request.IsActive.HasValue)
+        if (request.Filter.IsActive.HasValue)
         {
-            var spec = new AgencyIsActiveSpecification(request.IsActive.Value);
+            var spec = new AgencyIsActiveSpecification(request.Filter.IsActive.Value);
             query = query.Where(spec.ToExpression());
         }
 
         // Apply sorting
-        query = ApplySorting(query, request.SortBy, request.SortDirection);
+        query = ApplySorting(query, request.Filter.SortBy, request.Filter.SortDirection);
 
         // Get paginated results
-        var pagedItems = await _repository.GetPageAsync(query, request.Page, request.Size, cancellationToken);
+        var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
 
         // Map to DTOs and return PagedList
         return new PagedList<AgencyResponseDto>(
             pagedItems.Adapt<List<AgencyResponseDto>>(),
             pagedItems.GetMetaData().TotalItems,
-            request.Page, request.Size);
+            request.Filter.PageNumber, request.Filter.PageSize);
+
     }
 
     private IQueryable<Agency> ApplySorting(IQueryable<Agency> query, string? sortBy, string? sortDirection)

@@ -1,7 +1,7 @@
 using MediatR;
 using TLBIOMASS.Domain.Agencies;
 using TLBIOMASS.Domain.Agencies.Interfaces;
-using TLBIOMASS.Domain.Agencies.Events;
+using Shared.Events.Agency;
 
 namespace TLBIOMASS.Application.Features.Agencies.Commands.CreateAgency
 {

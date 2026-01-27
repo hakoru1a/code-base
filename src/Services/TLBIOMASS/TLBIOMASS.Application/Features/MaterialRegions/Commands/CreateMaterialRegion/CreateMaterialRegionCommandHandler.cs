@@ -3,7 +3,7 @@ using TLBIOMASS.Domain.MaterialRegions;
 using TLBIOMASS.Domain.MaterialRegions.Interfaces;
 using TLBIOMASS.Domain.Materials.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using TLBIOMASS.Domain.MaterialRegions.Events;
+using Shared.Events.MaterialRegion;
 
 namespace TLBIOMASS.Application.Features.MaterialRegions.Commands.CreateMaterialRegion;
 

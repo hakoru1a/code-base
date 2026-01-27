@@ -1,6 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.Materials.Interfaces;
-using TLBIOMASS.Application.Features.Materials.DTOs;
+using Shared.DTOs.Material;
 using Mapster;
 
 namespace TLBIOMASS.Application.Features.Materials.Queries.GetMaterialById;

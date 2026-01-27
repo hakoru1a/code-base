@@ -1,5 +1,5 @@
 using MediatR;
-using TLBIOMASS.Application.Features.Materials.DTOs;
+using Shared.DTOs.Material;
 
 namespace TLBIOMASS.Application.Features.Materials.Queries.GetMaterialById
 {

@@ -1,6 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.Landowners.Interfaces;
-using TLBIOMASS.Application.Features.Landowners.DTOs;
+using Shared.DTOs.Landowner;
 using Mapster;
 
 namespace TLBIOMASS.Application.Features.Landowners.Queries.GetLandownerById;

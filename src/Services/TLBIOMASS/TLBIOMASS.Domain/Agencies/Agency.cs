@@ -1,5 +1,5 @@
 using Contracts.Domain;
-using TLBIOMASS.Domain.Agencies.Rules;
+
 
 namespace TLBIOMASS.Domain.Agencies;
 
@@ -56,7 +56,7 @@ public class Agency : EntityAuditBase<int>
         DateTime? issueDate = null,
         bool isActive = true)
     {
-        CheckRule(new AgencyNameRequiredRule(name));
+
 
         return new Agency(
             name,
@@ -84,7 +84,7 @@ public class Agency : EntityAuditBase<int>
         DateTime? issueDate,
         bool isActive)
     {
-        CheckRule(new AgencyNameRequiredRule(name));
+
 
         Name = name;
         Phone = phone;

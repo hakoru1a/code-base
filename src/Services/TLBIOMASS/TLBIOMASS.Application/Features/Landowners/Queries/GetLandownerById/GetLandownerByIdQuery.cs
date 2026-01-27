@@ -1,5 +1,5 @@
 using MediatR;
-using TLBIOMASS.Application.Features.Landowners.DTOs;
+using Shared.DTOs.Landowner;
 
 namespace TLBIOMASS.Application.Features.Landowners.Queries.GetLandownerById
 {

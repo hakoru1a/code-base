@@ -1,7 +1,7 @@
 using MediatR;
 using TLBIOMASS.Domain.Materials;
 using TLBIOMASS.Domain.Materials.Interfaces;
-using TLBIOMASS.Domain.Materials.Events;
+using Shared.Events.Material;
 
 namespace TLBIOMASS.Application.Features.Materials.Commands.CreateMaterial;
 

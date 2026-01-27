@@ -1,8 +1,8 @@
 using Contracts.Domain;
 using Contracts.Domain.Interface;
-using TLBIOMASS.Domain.Receivers.Rules;
 
-using TLBIOMASS.Domain.Receivers.Events;
+
+using Shared.Events.Receiver;
 
 namespace TLBIOMASS.Domain.Receivers;
 
@@ -70,7 +70,7 @@ public class Receiver : EntityBase<int>
         string? note = null,
         DateTime? dateOfBirth = null)
     {
-        CheckRule(new ReceiverNameRequiredRule(name));
+
 
         var receiver = new Receiver(
             name,
@@ -106,7 +106,7 @@ public class Receiver : EntityBase<int>
         string? note,
         DateTime? dateOfBirth)
     {
-        CheckRule(new ReceiverNameRequiredRule(name));
+
 
         Name = name;
         Phone = phone;

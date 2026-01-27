@@ -1,6 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.MaterialRegions.Interfaces;
-using TLBIOMASS.Application.Features.MaterialRegions.DTOs;
+using Shared.DTOs.MaterialRegion;
 using TLBIOMASS.Domain.MaterialRegions.Specifications;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
@@ -23,15 +23,15 @@ public class GetAllMaterialRegionsQueryHandler : IRequestHandler<GetAllMaterialR
             .ThenInclude(x => x.Material)
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(request.Search))
+        if (!string.IsNullOrEmpty(request.Filter.Search))
         {
-            var spec = new MaterialRegionSearchSpecification(request.Search);
+            var spec = new MaterialRegionSearchSpecification(request.Filter.Search);
             query = query.Where(spec.ToExpression());
         }
 
-        if (request.OwnerId.HasValue)
+        if (request.Filter.OwnerId.HasValue)
         {
-            query = query.Where(x => x.OwnerId == request.OwnerId.Value);
+            query = query.Where(x => x.OwnerId == request.Filter.OwnerId.Value);
         }
 
         query = query.OrderByDescending(x => x.CreatedDate);

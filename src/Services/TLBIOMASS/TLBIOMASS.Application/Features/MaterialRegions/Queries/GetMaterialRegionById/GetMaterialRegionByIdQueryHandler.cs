@@ -1,6 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.MaterialRegions.Interfaces;
-using TLBIOMASS.Application.Features.MaterialRegions.DTOs;
+using Shared.DTOs.MaterialRegion;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 

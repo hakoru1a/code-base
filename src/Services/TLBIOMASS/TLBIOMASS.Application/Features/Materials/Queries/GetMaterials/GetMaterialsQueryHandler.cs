@@ -1,6 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.Materials.Interfaces;
-using TLBIOMASS.Application.Features.Materials.DTOs;
+using Shared.DTOs.Material;
 using Shared.SeedWork;
 using Mapster;
 using System.Linq;
@@ -24,29 +24,30 @@ public class GetMaterialsQueryHandler : IRequestHandler<GetMaterialsQuery, Paged
         var query = _repository.FindAll();
 
         // Apply filters
-        if (!string.IsNullOrEmpty(request.Search))
+        if (!string.IsNullOrEmpty(request.Filter.Search))
         {
-            var spec = new MaterialSearchSpecification(request.Search);
+            var spec = new MaterialSearchSpecification(request.Filter.Search);
             query = query.Where(spec.ToExpression());
         }
 
-        if (request.IsActive.HasValue)
+        if (request.Filter.IsActive.HasValue)
         {
-            var spec = new MaterialIsActiveSpecification(request.IsActive.Value);
+            var spec = new MaterialIsActiveSpecification(request.Filter.IsActive.Value);
             query = query.Where(spec.ToExpression());
         }
 
         // Apply sorting
-        query = ApplySorting(query, request.SortBy, request.SortDirection);
+        query = ApplySorting(query, request.Filter.SortBy, request.Filter.SortDirection);
 
         // Get paginated results
-        var pagedItems = await _repository.GetPageAsync(query, request.Page, request.Size, cancellationToken);
+        var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
 
         // Map to DTOs
         return new PagedList<MaterialResponseDto>(
             pagedItems.Adapt<List<MaterialResponseDto>>(),
             pagedItems.GetMetaData().TotalItems,
-            request.Page, request.Size);
+            request.Filter.PageNumber, request.Filter.PageSize);
+
     }
 
     private IQueryable<Material> ApplySorting(IQueryable<Material> query, string? sortBy, string? sortDirection)

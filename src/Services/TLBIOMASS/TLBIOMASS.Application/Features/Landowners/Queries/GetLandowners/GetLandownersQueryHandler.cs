@@ -1,6 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.Landowners.Interfaces;
-using TLBIOMASS.Application.Features.Landowners.DTOs;
+using Shared.DTOs.Landowner;
 using Shared.SeedWork;
 using Mapster;
 using System.Linq.Expressions;
@@ -25,29 +25,30 @@ public class GetLandownersQueryHandler : IRequestHandler<GetLandownersQuery, Pag
         var query = _repository.FindAll();
 
         // Apply filters using Specifications
-        if (!string.IsNullOrEmpty(request.Search))
+        if (!string.IsNullOrEmpty(request.Filter.Search))
         {
-            var spec = new LandownerSearchSpecification(request.Search);
+            var spec = new LandownerSearchSpecification(request.Filter.Search);
             query = query.Where(spec.ToExpression());
         }
 
-        if (request.IsActive.HasValue)
+        if (request.Filter.IsActive.HasValue)
         {
-            var spec = new LandownerIsActiveSpecification(request.IsActive.Value);
+            var spec = new LandownerIsActiveSpecification(request.Filter.IsActive.Value);
             query = query.Where(spec.ToExpression());
         }
 
         // Apply sorting
-        query = ApplySorting(query, request.SortBy, request.SortDirection);
+        query = ApplySorting(query, request.Filter.SortBy, request.Filter.SortDirection);
 
         // Get paginated results
-        var pagedItems = await _repository.GetPageAsync(query, request.Page, request.Size, cancellationToken);
+        var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
 
         // Map to DTOs and return PagedList
         return new PagedList<LandownerResponseDto>(
             pagedItems.Adapt<List<LandownerResponseDto>>(),
             pagedItems.GetMetaData().TotalItems,
-            request.Page, request.Size);
+            request.Filter.PageNumber, request.Filter.PageSize);
+
     }
 
     private IQueryable<Landowner> ApplySorting(IQueryable<Landowner> query, string? sortBy, string? sortDirection)

@@ -1,5 +1,5 @@
 using MediatR;
-using TLBIOMASS.Application.Features.Receivers.DTOs;
+using Shared.DTOs.Receiver;
 using TLBIOMASS.Domain.Receivers.Interfaces;
 using Mapster;
 using Contracts.Exceptions;

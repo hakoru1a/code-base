@@ -1,6 +1,6 @@
 using MediatR;
 using Shared.SeedWork;
-using TLBIOMASS.Application.Features.Receivers.DTOs;
+using Shared.DTOs.Receiver;
 using TLBIOMASS.Domain.Receivers.Interfaces;
 using TLBIOMASS.Domain.Receivers.Specifications;
 using Mapster;
@@ -24,29 +24,30 @@ public class GetReceiversQueryHandler : IRequestHandler<GetReceiversQuery, Paged
         var query = _repository.FindAll();
 
         // Apply filters using Specifications as per Architecture Guide
-        if (!string.IsNullOrEmpty(request.Search))
+        if (!string.IsNullOrEmpty(request.Filter.Search))
         {
-            var spec = new ReceiverSearchSpecification(request.Search);
+            var spec = new ReceiverSearchSpecification(request.Filter.Search);
             query = query.Where(spec.ToExpression());
         }
 
-        if (request.IsActive.HasValue)
+        if (request.Filter.IsActive.HasValue)
         {
-            var spec = new ReceiverIsActiveSpecification(request.IsActive.Value);
+            var spec = new ReceiverIsActiveSpecification(request.Filter.IsActive.Value);
             query = query.Where(spec.ToExpression());
         }
 
         // Apply sorting
-        query = ApplySorting(query, request.SortBy, request.SortDirection);
+        query = ApplySorting(query, request.Filter.SortBy, request.Filter.SortDirection);
 
         // Get paginated results
-        var pagedItems = await _repository.GetPageAsync(query, request.Page, request.Size, cancellationToken);
+        var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
 
         // Map to DTOs and return PagedList
         return new PagedList<ReceiverResponseDto>(
             pagedItems.Adapt<List<ReceiverResponseDto>>(),
             pagedItems.GetMetaData().TotalItems,
-            request.Page, request.Size);
+            request.Filter.PageNumber, request.Filter.PageSize);
+
     }
 
     private IQueryable<Receiver> ApplySorting(IQueryable<Receiver> query, string? sortBy, string? sortDirection)

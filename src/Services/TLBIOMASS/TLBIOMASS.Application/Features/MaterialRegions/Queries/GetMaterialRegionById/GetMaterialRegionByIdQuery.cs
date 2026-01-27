@@ -1,5 +1,5 @@
 using MediatR;
-using TLBIOMASS.Application.Features.MaterialRegions.DTOs;
+using Shared.DTOs.MaterialRegion;
 
 namespace TLBIOMASS.Application.Features.MaterialRegions.Queries.GetMaterialRegionById
 {

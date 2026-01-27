@@ -1,5 +1,5 @@
 using Contracts.Domain;
-using TLBIOMASS.Domain.Landowners.Rules;
+
 
 namespace TLBIOMASS.Domain.Landowners;
 
@@ -60,7 +60,7 @@ public class Landowner : EntityAuditBase<int>
         DateTime? dateOfBirth = null,
         bool isActive = true)
     {
-        CheckRule(new LandownerNameRequiredRule(name));
+
 
         return new Landowner(
             name,
@@ -90,7 +90,7 @@ public class Landowner : EntityAuditBase<int>
         DateTime? dateOfBirth,
         bool isActive)
     {
-        CheckRule(new LandownerNameRequiredRule(name));
+
 
         Name = name;
         Phone = phone;

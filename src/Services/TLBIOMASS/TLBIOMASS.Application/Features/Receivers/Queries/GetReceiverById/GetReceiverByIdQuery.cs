@@ -1,5 +1,5 @@
 using MediatR;
-using TLBIOMASS.Application.Features.Receivers.DTOs;
+using Shared.DTOs.Receiver;
 
 namespace TLBIOMASS.Application.Features.Receivers.Queries.GetReceiverById
 {

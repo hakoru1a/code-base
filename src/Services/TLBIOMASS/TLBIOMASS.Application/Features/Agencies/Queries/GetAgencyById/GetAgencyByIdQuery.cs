@@ -1,5 +1,5 @@
 using MediatR;
-using TLBIOMASS.Application.Features.Agencies.DTOs;
+using Shared.DTOs.Agency;
 
 namespace TLBIOMASS.Application.Features.Agencies.Queries.GetAgencyById
 {

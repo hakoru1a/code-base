@@ -1,5 +1,5 @@
 using MediatR;
-using TLBIOMASS.Application.Features.Receivers.DTOs;
+using Shared.DTOs.Receiver;
 using TLBIOMASS.Domain.Receivers.Interfaces;
 using TLBIOMASS.Domain.Receivers.Specifications;
 using Mapster;
@@ -22,20 +22,20 @@ public class GetAllReceiversQueryHandler : IRequestHandler<GetAllReceiversQuery,
     {
         var query = _repository.FindAll();
 
-        if (!string.IsNullOrEmpty(request.Search))
+        if (!string.IsNullOrEmpty(request.Filter.Search))
         {
-            var spec = new ReceiverSearchSpecification(request.Search);
+            var spec = new ReceiverSearchSpecification(request.Filter.Search);
             query = query.Where(spec.ToExpression());
         }
 
-        if (request.IsActive.HasValue)
+        if (request.Filter.IsActive.HasValue)
         {
-            var spec = new ReceiverIsActiveSpecification(request.IsActive.Value);
+            var spec = new ReceiverIsActiveSpecification(request.Filter.IsActive.Value);
             query = query.Where(spec.ToExpression());
         }
 
         // Apply sorting
-        query = ApplySorting(query, request.SortBy, request.SortDirection);
+        query = ApplySorting(query, request.Filter.SortBy, request.Filter.SortDirection);
 
         var items = await query.ToListAsync(cancellationToken);
 

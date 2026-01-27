@@ -1,6 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.Materials.Interfaces;
-using TLBIOMASS.Application.Features.Materials.DTOs;
+using Shared.DTOs.Material;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -22,15 +22,15 @@ public class GetAllMaterialsQueryHandler : IRequestHandler<GetAllMaterialsQuery,
     {
         var query = _repository.FindAll();
 
-        if (!string.IsNullOrEmpty(request.Search))
+        if (!string.IsNullOrEmpty(request.Filter.Search))
         {
-            var spec = new MaterialSearchSpecification(request.Search);
+            var spec = new MaterialSearchSpecification(request.Filter.Search);
             query = query.Where(spec.ToExpression());
         }
 
-        if (request.IsActive.HasValue)
+        if (request.Filter.IsActive.HasValue)
         {
-            var spec = new MaterialIsActiveSpecification(request.IsActive.Value);
+            var spec = new MaterialIsActiveSpecification(request.Filter.IsActive.Value);
             query = query.Where(spec.ToExpression());
         }
 

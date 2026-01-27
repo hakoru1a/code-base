@@ -1,6 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.Agencies.Interfaces;
-using TLBIOMASS.Application.Features.Agencies.DTOs;
+using Shared.DTOs.Agency;
 using TLBIOMASS.Domain.Agencies.Specifications;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
@@ -22,15 +22,15 @@ public class GetAllAgenciesQueryHandler : IRequestHandler<GetAllAgenciesQuery, L
     {
         var query = _repository.FindAll();
 
-        if (!string.IsNullOrEmpty(request.Search))
+        if (!string.IsNullOrEmpty(request.Filter.Search))
         {
-            var spec = new AgencySearchSpecification(request.Search);
+            var spec = new AgencySearchSpecification(request.Filter.Search);
             query = query.Where(spec.ToExpression());
         }
 
-        if (request.IsActive.HasValue)
+        if (request.Filter.IsActive.HasValue)
         {
-            var spec = new AgencyIsActiveSpecification(request.IsActive.Value);
+            var spec = new AgencyIsActiveSpecification(request.Filter.IsActive.Value);
             query = query.Where(spec.ToExpression());
         }
 

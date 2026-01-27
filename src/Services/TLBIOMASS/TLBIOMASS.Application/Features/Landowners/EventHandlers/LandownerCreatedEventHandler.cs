@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
-using TLBIOMASS.Domain.Landowners.Events;
+using Shared.Events.Landowner;
 
 namespace TLBIOMASS.Application.Features.Landowners.EventHandlers;
 

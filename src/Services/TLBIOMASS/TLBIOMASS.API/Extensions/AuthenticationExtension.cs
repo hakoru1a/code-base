@@ -1,4 +1,4 @@
-﻿using Infrastructure.Extensions;
+using Infrastructure.Extensions;
 
 namespace TLBIOMASS.API.Extensions
 {

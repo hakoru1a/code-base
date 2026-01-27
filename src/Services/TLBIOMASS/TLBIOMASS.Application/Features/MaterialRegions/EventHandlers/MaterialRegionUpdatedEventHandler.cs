@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
-using TLBIOMASS.Domain.MaterialRegions.Events;
+using Shared.Events.MaterialRegion;
 
 namespace TLBIOMASS.Application.Features.MaterialRegions.EventHandlers;
 

@@ -1,10 +1,9 @@
 using MediatR;
-using TLBIOMASS.Application.Features.MaterialRegions.DTOs;
+using Shared.DTOs.MaterialRegion;
 
 namespace TLBIOMASS.Application.Features.MaterialRegions.Queries.GetAllMaterialRegions;
 
 public class GetAllMaterialRegionsQuery : IRequest<List<MaterialRegionResponseDto>>
 {
-    public string? Search { get; set; }
-    public int? OwnerId { get; set; }
+    public MaterialRegionFilterDto Filter { get; set; } = new();
 }

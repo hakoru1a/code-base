@@ -1,5 +1,5 @@
 using Contracts.Domain;
-using TLBIOMASS.Domain.MaterialRegions.Rules;
+
 using TLBIOMASS.Domain.Materials;
 
 namespace TLBIOMASS.Domain.MaterialRegions;
@@ -48,9 +48,7 @@ public class MaterialRegion : EntityAuditBase<int>
         string? certificateID,
         int ownerId)
     {
-        CheckRule(new MaterialRegionNameRequiredRule(regionName));
-        CheckRule(new MaterialRegionAreaValidRule(areaHa));
-        CheckRule(new MaterialRegionCoordinatesValidRule(latitude, longitude));
+
 
         return new MaterialRegion(
             regionName,
@@ -72,9 +70,7 @@ public class MaterialRegion : EntityAuditBase<int>
         string? certificateID,
         int ownerId)
     {
-        CheckRule(new MaterialRegionNameRequiredRule(regionName));
-        CheckRule(new MaterialRegionAreaValidRule(areaHa));
-        CheckRule(new MaterialRegionCoordinatesValidRule(latitude, longitude));
+
 
         RegionName = regionName;
         Address = address;

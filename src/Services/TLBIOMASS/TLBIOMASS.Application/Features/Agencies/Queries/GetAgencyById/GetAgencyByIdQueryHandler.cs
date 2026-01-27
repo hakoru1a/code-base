@@ -1,6 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.Agencies.Interfaces;
-using TLBIOMASS.Application.Features.Agencies.DTOs;
+using Shared.DTOs.Agency;
 using Mapster;
 
 namespace TLBIOMASS.Application.Features.Agencies.Queries.GetAgencyById;

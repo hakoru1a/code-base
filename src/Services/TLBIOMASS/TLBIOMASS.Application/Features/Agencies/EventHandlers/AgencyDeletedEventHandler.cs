@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
-using TLBIOMASS.Domain.Agencies.Events;
+using Shared.Events.Agency;
 
 namespace TLBIOMASS.Application.Features.Agencies.EventHandlers;
 

@@ -1,5 +1,5 @@
 using Contracts.Domain;
-using TLBIOMASS.Domain.Materials.Rules;
+
 
 namespace TLBIOMASS.Domain.Materials;
 
@@ -39,7 +39,7 @@ public class Material : EntityBase<int>
         decimal proposedImpurityDeduction,
         bool isActive = true)
     {
-        CheckRule(new MaterialNameRequiredRule(name));
+
 
         return new Material(
             name,
@@ -57,7 +57,7 @@ public class Material : EntityBase<int>
         decimal proposedImpurityDeduction,
         bool isActive)
     {
-        CheckRule(new MaterialNameRequiredRule(name));
+
 
         Name = name;
         Unit = unit;
