@@ -1,15 +1,9 @@
+using Shared.DTOs.Customer;
 using MediatR;
-using Shared.SeedWork;
-using TLBIOMASS.Application.Features.Customers.DTOs;
 
 namespace TLBIOMASS.Application.Features.Customers.Queries.GetCustomers;
 
-public class GetCustomersQuery : IRequest<PagedList<CustomerResponseDto>>
+public class GetCustomersQuery : IRequest<List<CustomerResponseDto>>
 {
-    public int Page { get; set; } = 1;
-    public int Size { get; set; } = 10;
-    public string? Search { get; set; }
-    public bool? IsActive { get; set; }
-    public string? SortBy { get; set; }
-    public string? SortDirection { get; set; } 
+    public CustomerFilterDto Filter { get; set; } = new();
 }

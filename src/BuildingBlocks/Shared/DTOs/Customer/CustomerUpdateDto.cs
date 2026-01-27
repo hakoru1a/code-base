@@ -1,4 +1,4 @@
-namespace TLBIOMASS.Application.Features.Customers.DTOs;
+namespace Shared.DTOs.Customer;
 
 public class CustomerUpdateDto
 {

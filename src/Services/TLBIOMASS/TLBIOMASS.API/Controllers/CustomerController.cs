@@ -1,17 +1,15 @@
 using Asp.Versioning;
 using Infrastructure.Common;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Shared.Identity;
+using Shared.DTOs.Customer;
 using Shared.SeedWork;
 using TLBIOMASS.Application.Features.Customers.Commands.CreateCustomer;
 using TLBIOMASS.Application.Features.Customers.Commands.DeleteCustomer;
 using TLBIOMASS.Application.Features.Customers.Commands.UpdateCustomer;
-using TLBIOMASS.Application.Features.Customers.DTOs;
-using TLBIOMASS.Application.Features.Customers.Queries.GetAllCustomers;
 using TLBIOMASS.Application.Features.Customers.Queries.GetCustomerById;
 using TLBIOMASS.Application.Features.Customers.Queries.GetCustomers;
+using TLBIOMASS.Application.Features.Customers.Queries.GetCustomersPaged;
 using Mapster;
 
 namespace TLBIOMASS.API.Controllers;
@@ -27,48 +25,22 @@ public class CustomerController : ApiControllerBase<CustomerController>
     }
 
     [HttpGet]
-    [ProducesResponseType(typeof(ApiSuccessResult<PagedList<CustomerResponseDto>>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetList(
-        [FromQuery] int page = 1,
-        [FromQuery] int size = 10,
-        [FromQuery] string? search = null,
-        [FromQuery] bool? isActive = null,
-        [FromQuery] string? sortBy = "CreatedAt",
-        [FromQuery] string? sortDirection = "desc")
-    {
-        var query = new GetCustomersQuery
-        {
-            Page = page,
-            Size = size,
-            Search = search,
-            IsActive = isActive,
-            SortBy = sortBy,
-            SortDirection = sortDirection
-        };
-
-        return await HandleGetPagedAsync<GetCustomersQuery, CustomerResponseDto>(
-            query, EntityName, page, size);
-    }
-
-    [HttpGet("all")]
     [ProducesResponseType(typeof(ApiSuccessResult<List<CustomerResponseDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAll(
-        [FromQuery] string? search = null,
-        [FromQuery] bool? isActive = null,
-        [FromQuery] string? sortBy ="CreatedAt",
-        [FromQuery] string? sortDirection = "desc")
+    public async Task<IActionResult> GetList([FromQuery] CustomerFilterDto filter)
     {
-        var query = new GetAllCustomersQuery
-        {
-            Search = search,
-            IsActive = isActive,
-            SortBy = sortBy,
-            SortDirection = sortDirection
-        };
+        var query = new GetCustomersQuery { Filter = filter };
+        return await HandleGetAllAsync<GetCustomersQuery, CustomerResponseDto>(query, EntityName);
+    }
 
-        return await HandleGetAllAsync<GetAllCustomersQuery, CustomerResponseDto>(query, EntityName);
+    [HttpGet("paged")]
+    [ProducesResponseType(typeof(ApiSuccessResult<PagedList<CustomerResponseDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetPagedList([FromQuery] CustomerPagedFilterDto filter)
+    {
+        var query = new GetCustomersPagedQuery { Filter = filter };
+        return await HandleGetPagedAsync<GetCustomersPagedQuery, CustomerResponseDto>(
+            query, EntityName, filter.PageNumber, filter.PageSize);
     }
 
     [HttpGet("{id}")]
@@ -99,7 +71,7 @@ public class CustomerController : ApiControllerBase<CustomerController>
     public async Task<IActionResult> Update(int id, [FromBody] CustomerUpdateDto dto)
     {
         var command = dto.Adapt<UpdateCustomerCommand>();
-        command.Id = id; // Ensure ID from route is used
+        command.Id = id;
         return await HandleUpdateAsync(command, id, dto.Id, EntityName);
     }
 
@@ -119,9 +91,6 @@ public class CustomerController : ApiControllerBase<CustomerController>
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateStatus(int id, [FromQuery] bool isActive)
     {
-        Logger.LogInformation("Updating status of {EntityName} with ID: {Id} to {IsActive}", 
-            EntityName, id, isActive);
-
         var getQuery = new GetCustomerByIdQuery { Id = id };
         var customer = await Mediator.Send(getQuery);
 
@@ -134,7 +103,6 @@ public class CustomerController : ApiControllerBase<CustomerController>
         command.IsActive = isActive;
 
         var result = await Mediator.Send(command);
-        
         return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.UpdateSuccess));
     }
 }

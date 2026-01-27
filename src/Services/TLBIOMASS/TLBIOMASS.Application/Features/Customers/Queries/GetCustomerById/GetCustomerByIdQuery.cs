@@ -1,5 +1,5 @@
 using MediatR;
-using TLBIOMASS.Application.Features.Customers.DTOs;
+using Shared.DTOs.Customer;
 
 namespace TLBIOMASS.Application.Features.Customers.Queries.GetCustomerById;
 

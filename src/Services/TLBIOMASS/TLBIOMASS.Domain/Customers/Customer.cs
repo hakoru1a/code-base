@@ -46,9 +46,6 @@ public class Customer : EntityBase<int>
         string? taxCode = null,
         string? note = null)
     {
-        CheckRule(new CustomerNameRequiredRule(name));
-        CheckRule(new CustomerEmailFormatRule(email));
-
         return new Customer(name, phone, address, email, taxCode, note);
     }
 
@@ -65,9 +62,6 @@ public class Customer : EntityBase<int>
         string? taxCode,
         string? note)
     {
-        CheckRule(new CustomerNameRequiredRule(name));
-        CheckRule(new CustomerEmailFormatRule(email));
-
         Name = name;
         Phone = phone;
         Address = address;

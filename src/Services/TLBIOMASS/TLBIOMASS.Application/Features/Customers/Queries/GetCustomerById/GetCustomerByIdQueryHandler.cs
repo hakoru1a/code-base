@@ -1,6 +1,6 @@
 using Mapster;
 using MediatR;
-using TLBIOMASS.Application.Features.Customers.DTOs;
+using Shared.DTOs.Customer;
 using TLBIOMASS.Domain.Customers.Interfaces;
 
 namespace TLBIOMASS.Application.Features.Customers.Queries.GetCustomerById;
