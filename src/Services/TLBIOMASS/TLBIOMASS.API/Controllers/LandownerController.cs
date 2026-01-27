@@ -14,7 +14,7 @@ using Shared.SeedWork;
 
 namespace TLBIOMASS.API.Controllers
 {
-    [ApiVersion("2.0")]
+    [ApiVersion("1.0")]
     public class LandownerController : ApiControllerBase<LandownerController>
     {
         private const string EntityName = "Landowner";
@@ -31,27 +31,16 @@ namespace TLBIOMASS.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetList([FromQuery] LandownerFilterDto filter)
         {
-            var query = new GetAllLandownersQuery
-            {
-                Search = filter.Search,
-                IsActive = filter.IsActive
-            };
-
+            var query = new GetAllLandownersQuery { Filter = filter };
             return await HandleGetAllAsync<GetAllLandownersQuery, LandownerResponseDto>(query, EntityName);
         }
 
         [HttpGet("paged")]
         [ProducesResponseType(typeof(ApiSuccessResult<List<LandownerResponseDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetPagedList([FromQuery] LandownerFilterDto filter)
+        public async Task<IActionResult> GetPagedList([FromQuery] LandownerPagedFilterDto filter)
         {
-            var query = new GetLandownersQuery
-            {
-                PageNumber = filter.PageNumber,
-                PageSize = filter.PageSize,
-                Search = filter.Search,
-                IsActive = filter.IsActive
-            };
+            var query = new GetLandownersQuery { Filter = filter };
 
             return await HandleGetPagedAsync<GetLandownersQuery, LandownerResponseDto>(
                 query, EntityName, filter.PageNumber, filter.PageSize);

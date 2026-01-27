@@ -14,7 +14,7 @@ using Shared.SeedWork;
 
 namespace TLBIOMASS.API.Controllers
 {
-    [ApiVersion("2.0")]
+    [ApiVersion("1.0")]
     public class MaterialRegionController : ApiControllerBase<MaterialRegionController>
     {
         private const string EntityName = "MaterialRegion";
@@ -38,7 +38,7 @@ namespace TLBIOMASS.API.Controllers
         [HttpGet("paged")]
         [ProducesResponseType(typeof(ApiSuccessResult<List<MaterialRegionResponseDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetPagedList([FromQuery] MaterialRegionFilterDto filter)
+        public async Task<IActionResult> GetPagedList([FromQuery] MaterialRegionPagedFilterDto filter)
         {
             var query = new GetMaterialRegionsQuery { Filter = filter };
             return await HandleGetPagedAsync<GetMaterialRegionsQuery, MaterialRegionResponseDto>(

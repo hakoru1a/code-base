@@ -15,11 +15,3 @@ public class MaterialRegionResponseDto
     public DateTimeOffset CreatedDate { get; set; }
     public DateTimeOffset? LastModifiedDate { get; set; }
 }
-
-public class RegionMaterialDto
-{
-    public int Id { get; set; }
-    public int MaterialId { get; set; }
-    public string? MaterialName { get; set; }
-    public double? AreaHa { get; set; }
-}

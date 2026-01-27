@@ -37,7 +37,7 @@ public class GetMaterialRegionsQueryHandler : IRequestHandler<GetMaterialRegions
         }
 
         // Apply sorting
-        query = ApplySorting(query, request.Filter.SortBy, request.Filter.SortDirection);
+        query = ApplySorting(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
 
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
 

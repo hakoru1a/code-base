@@ -14,7 +14,7 @@ using Shared.SeedWork;
 
 namespace TLBIOMASS.API.Controllers
 {
-    [ApiVersion("2.0")]
+    [ApiVersion("1.0")]
     public class ReceiverController : ApiControllerBase<ReceiverController>
     {
         private const string EntityName = "Receiver";
@@ -38,7 +38,7 @@ namespace TLBIOMASS.API.Controllers
         [HttpGet("paged")]
         [ProducesResponseType(typeof(ApiSuccessResult<List<ReceiverResponseDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetPagedList([FromQuery] ReceiverFilterDto filter)
+        public async Task<IActionResult> GetPagedList([FromQuery] ReceiverPagedFilterDto filter)
         {
             var query = new GetReceiversQuery { Filter = filter };
             return await HandleGetPagedAsync<GetReceiversQuery, ReceiverResponseDto>(

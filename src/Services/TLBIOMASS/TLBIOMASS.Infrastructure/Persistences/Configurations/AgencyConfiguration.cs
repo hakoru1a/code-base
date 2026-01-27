@@ -33,7 +33,7 @@ public class AgencyConfiguration : IEntityTypeConfiguration<Agency>
 
         builder.Property(x => x.IdentityCard)
             .HasMaxLength(50)
-            .HasColumnName("IdentityCardNo");
+            .HasColumnName("IdentityCard");
 
         builder.Property(x => x.IssuePlace)
             .HasMaxLength(255)

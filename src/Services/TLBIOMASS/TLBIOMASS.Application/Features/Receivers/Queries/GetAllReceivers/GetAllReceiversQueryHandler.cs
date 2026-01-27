@@ -35,7 +35,7 @@ public class GetAllReceiversQueryHandler : IRequestHandler<GetAllReceiversQuery,
         }
 
         // Apply sorting
-        query = ApplySorting(query, request.Filter.SortBy, request.Filter.SortDirection);
+        query = ApplySorting(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
 
         var items = await query.ToListAsync(cancellationToken);
 

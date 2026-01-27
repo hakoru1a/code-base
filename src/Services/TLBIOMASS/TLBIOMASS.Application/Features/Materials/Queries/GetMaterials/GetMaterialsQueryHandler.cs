@@ -37,7 +37,7 @@ public class GetMaterialsQueryHandler : IRequestHandler<GetMaterialsQuery, Paged
         }
 
         // Apply sorting
-        query = ApplySorting(query, request.Filter.SortBy, request.Filter.SortDirection);
+        query = ApplySorting(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
 
         // Get paginated results
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);

@@ -6,5 +6,5 @@ namespace TLBIOMASS.Application.Features.MaterialRegions.Queries.GetMaterialRegi
 
 public class GetMaterialRegionsQuery : IRequest<PagedList<MaterialRegionResponseDto>>
 {
-    public MaterialRegionFilterDto Filter { get; set; } = new();
+    public MaterialRegionPagedFilterDto Filter { get; set; } = new();
 }

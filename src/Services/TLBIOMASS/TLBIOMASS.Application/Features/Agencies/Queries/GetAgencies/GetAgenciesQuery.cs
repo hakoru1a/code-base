@@ -6,5 +6,5 @@ namespace TLBIOMASS.Application.Features.Agencies.Queries.GetAgencies;
 
 public class GetAgenciesQuery : IRequest<PagedList<AgencyResponseDto>>
 {
-    public AgencyFilterDto Filter { get; set; } = new();
+    public AgencyPagedFilterDto Filter { get; set; } = new();
 }
