@@ -6,6 +6,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Shared.Interfaces.Event;
 using System.Reflection;
+using TLBIOMASS.Domain.Customers;
 
 namespace TLBIOMASS.Infrastructure.Persistences
 {
@@ -65,16 +66,30 @@ namespace TLBIOMASS.Infrastructure.Persistences
                         if (item.Entity is IDateTracking addedEntity)
                         {
                             addedEntity.CreatedDate = DateTime.UtcNow;
-                            item.State = EntityState.Added;
+                        }
+                        else if (item.Entity is Customer customerAdded)
+                        {
+                            customerAdded.CreatedAt = DateTime.Now;
                         }
                         break;
 
                     case EntityState.Modified:
-                        Entry(item.Entity).Property("Id").IsModified = false;
+                        if (item.Entity is not Customer)
+                        {
+                            var idProperty = item.Entity.GetType().GetProperty("Id");
+                            if (idProperty != null)
+                            {
+                                Entry(item.Entity).Property(idProperty.Name).IsModified = false;
+                            }
+                        }
+
                         if (item.Entity is IDateTracking modifiedEntity)
                         {
                             modifiedEntity.LastModifiedDate = DateTime.UtcNow;
-                            item.State = EntityState.Modified;
+                        }
+                        else if (item.Entity is Customer customerModified)
+                        {
+                            customerModified.UpdatedAt = DateTime.Now;
                         }
                         break;
                 }

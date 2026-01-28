@@ -31,7 +31,7 @@ public static class MapsterConfig
         TypeAdapterConfig<Agency, AgencyResponseDto>.NewConfig();
         TypeAdapterConfig<AgencyCreateDto, Agency>.NewConfig()
             .ConstructUsing(src => Agency.Create(
-                src.Name, src.Phone, src.Email, src.Address, src.BankAccount, 
+                src.Name, src.Phone, src.Email, src.Address, src.BankAccount,
                 src.BankName, src.IdentityCard, src.IssuePlace, src.IssueDate, src.IsActive));
     }
 
@@ -40,8 +40,8 @@ public static class MapsterConfig
         TypeAdapterConfig<Landowner, LandownerResponseDto>.NewConfig();
         TypeAdapterConfig<LandownerCreateDto, Landowner>.NewConfig()
             .ConstructUsing(src => Landowner.Create(
-                src.Name, src.Phone, src.Email, src.Address, src.BankAccount, 
-                src.BankName, src.IdentityCardNo, src.IssuePlace, src.IssueDate,src.DateOfBirth, src.IsActive));
+                src.Name, src.Phone, src.Email, src.Address, src.BankAccount,
+                src.BankName, src.IdentityCardNo, src.IssuePlace, src.IssueDate, src.DateOfBirth, src.IsActive));
     }
 
     private static void ConfigureMaterialMappings()
@@ -57,7 +57,7 @@ public static class MapsterConfig
         TypeAdapterConfig<MaterialRegion, MaterialRegionResponseDto>.NewConfig();
         TypeAdapterConfig<MaterialRegionCreateDto, MaterialRegion>.NewConfig()
             .ConstructUsing(src => MaterialRegion.Create(
-                src.RegionName,src.Address,src.Latitude,src.Longitude, src.AreaHa,src.CertificateID, src.OwnerId));
+                src.RegionName, src.Address, src.Latitude, src.Longitude, src.AreaHa, src.CertificateID, src.OwnerId));
     }
 
     private static void ConfigureReceiverMappings()
@@ -65,8 +65,8 @@ public static class MapsterConfig
         TypeAdapterConfig<Receiver, ReceiverResponseDto>.NewConfig();
         TypeAdapterConfig<ReceiverCreateDto, Receiver>.NewConfig()
             .ConstructUsing(src => Receiver.Create(
-                src.Name, src.Phone, src.BankAccount, src.BankName, src.IdentityNumber, 
-                src.IssuedDate, src.IssuedPlace, src.Address, src.IsDefault, src.IsActive, 
+                src.Name, src.Phone, src.BankAccount, src.BankName, src.IdentityNumber,
+                src.IssuedDate, src.IssuedPlace, src.Address, src.IsDefault, src.IsActive,
                 src.Note, src.DateOfBirth));
     }
 }

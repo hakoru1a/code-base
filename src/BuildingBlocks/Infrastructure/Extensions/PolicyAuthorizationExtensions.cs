@@ -26,7 +26,7 @@ namespace Infrastructure.Extensions
         {
             // Add required services
             services.AddHttpContextAccessor();
-            services.AddScoped<IUserContextAccessor, UserContextAccessor>();
+            // Note: UserContextService is now registered separately via AddUserContextService()
 
             // Build policy registry (logger will be available at runtime)
             var policyRegistry = new PolicyRegistry();

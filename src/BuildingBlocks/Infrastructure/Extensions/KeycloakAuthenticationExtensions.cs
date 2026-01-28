@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using Serilog;
 using System.Linq;
+using Infrastructure.Helpers;
 
 namespace Infrastructure.Extensions
 {
@@ -99,8 +100,8 @@ namespace Infrastructure.Extensions
                             // 1. Validate audience more strictly
                             if (!ValidateTokenAudience(token, keycloakSettings.ClientId))
                             {
-                                Log.Warning("[JWT] Token validation failed: Invalid audience. Expected: {ExpectedAudience}, Found: {ActualAudiences}", 
-                                    keycloakSettings.ClientId, 
+                                Log.Warning("[JWT] Token validation failed: Invalid audience. Expected: {ExpectedAudience}, Found: {ActualAudiences}",
+                                    keycloakSettings.ClientId,
                                     string.Join(", ", token.Audiences));
                                 context.Fail("Invalid token audience");
                                 return;
@@ -109,7 +110,7 @@ namespace Infrastructure.Extensions
                             // 2. Check token revocation status (optional, can be expensive)
                             if (await IsTokenRevokedAsync(token.RawData, keycloakSettings))
                             {
-                                Log.Warning("[JWT] Token validation failed: Token has been revoked. TokenId: {TokenId}", 
+                                Log.Warning("[JWT] Token validation failed: Token has been revoked. TokenId: {TokenId}",
                                     token.Claims.FirstOrDefault(c => c.Type == "jti")?.Value ?? "unknown");
                                 context.Fail("Token has been revoked");
                                 return;
@@ -384,15 +385,15 @@ namespace Infrastructure.Extensions
         private static bool ValidateTokenAudience(System.IdentityModel.Tokens.Jwt.JwtSecurityToken token, string expectedClientId)
         {
             var audiences = token.Audiences.ToList();
-            
+
             // Check if expected client ID is in audiences
             if (audiences.Contains(expectedClientId))
                 return true;
-            
+
             // Check for account audience (default Keycloak)
             if (audiences.Contains("account"))
                 return true;
-            
+
             return false;
         }
 
@@ -407,7 +408,7 @@ namespace Infrastructure.Extensions
                 // For performance, we can cache revocation status
                 // In production, you might want to check against a revocation list or call Keycloak introspection endpoint
                 // For now, we'll implement a simple cache-based approach
-                
+
                 // TODO: Implement actual revocation check with Keycloak introspection endpoint
                 // This is a placeholder that always returns false (not revoked)
                 return await Task.FromResult(false);
@@ -443,7 +444,7 @@ namespace Infrastructure.Extensions
                 {
                     var issuedAt = DateTimeOffset.FromUnixTimeSeconds(iat);
                     var maxAge = TimeSpan.FromHours(24); // Token shouldn't be older than 24 hours when issued
-                    
+
                     if (DateTime.UtcNow - issuedAt > maxAge)
                     {
                         Log.Warning("[JWT] Token is too old. IssuedAt: {IssuedAt}, MaxAge: {MaxAge}", issuedAt, maxAge);
@@ -470,81 +471,31 @@ namespace Infrastructure.Extensions
 
         /// <summary>
         /// Map Keycloak roles to ClaimsIdentity
+        /// Simplified version - only maps essential roles to ClaimTypes.Role
+        /// Additional role extraction is handled by UserContextService
         /// </summary>
         private static void MapKeycloakRoles(ClaimsIdentity identity, KeycloakSettings settings)
         {
-            // Extract realm roles
-            var realmAccessClaim = identity.FindFirst("realm_access");
-            if (realmAccessClaim != null)
+            // Extract realm roles và add vào ClaimTypes.Role
+            var realmRoles = KeycloakClaimsHelper.ExtractRealmRoles(identity.Claims);
+            foreach (var role in realmRoles)
             {
-                try
-                {
-                    var realmAccess = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
-                        realmAccessClaim.Value);
-
-                    if (realmAccess != null && realmAccess.TryGetValue("roles", out var rolesElement))
-                    {
-                        var roles = JsonSerializer.Deserialize<List<string>>(rolesElement.GetRawText());
-                        if (roles != null)
-                        {
-                            foreach (var role in roles)
-                            {
-                                identity.AddClaim(new Claim(ClaimTypes.Role, role));
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, "Failed to parse realm_access");
-                }
+                identity.AddClaim(new Claim(ClaimTypes.Role, role));
             }
 
-            // Extract resource (client) roles if enabled
+            // Extract resource (client) roles nếu enabled
             if (settings.UseResourceRoles)
             {
-                var resourceAccessClaim = identity.FindFirst("resource_access");
-                if (resourceAccessClaim != null)
+                var resourceRoles = KeycloakClaimsHelper.ExtractResourceRoles(
+                    identity.Claims,
+                    settings.ClientId,
+                    addPrefix: false);
+
+                foreach (var role in resourceRoles)
                 {
-                    try
-                    {
-                        var resourceAccess = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
-                            resourceAccessClaim.Value);
-
-                        if (resourceAccess != null)
-                        {
-                            var clientNames = new[] { settings.ClientId, };
-                            foreach (var clientName in clientNames)
-                            {
-                                if (resourceAccess.TryGetValue(clientName, out var clientRoles))
-                                {
-                                    {
-                                        if (clientRoles.TryGetProperty("roles", out var rolesElement))
-                                        {
-                                            var roles = JsonSerializer.Deserialize<List<string>>(
-                                                rolesElement.GetRawText());
-
-                                            if (roles != null)
-                                            {
-                                                foreach (var role in roles)
-                                                {
-                                                    identity.AddClaim(new Claim(ClaimTypes.Role, role));
-                                                }
-                                            }
-                                        }
-                                        break; // Found client, stop searching
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error(ex, "Failed to parse resource_access");
-                    }
+                    identity.AddClaim(new Claim(ClaimTypes.Role, role));
                 }
             }
-
         }
     }
 }
