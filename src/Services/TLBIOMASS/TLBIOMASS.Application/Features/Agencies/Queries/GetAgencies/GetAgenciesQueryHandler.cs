@@ -1,13 +1,10 @@
+using System.Linq;
 using MediatR;
 using TLBIOMASS.Domain.Agencies.Interfaces;
 using Shared.DTOs.Agency;
 using Shared.SeedWork;
-using Shared.Extensions;
 using Mapster;
-using System.Linq.Expressions;
 using TLBIOMASS.Domain.Agencies;
-using TLBIOMASS.Domain.Agencies.Specifications;
-using System.Linq;
 
 namespace TLBIOMASS.Application.Features.Agencies.Queries.GetAgencies;
 
@@ -22,37 +19,33 @@ public class GetAgenciesQueryHandler : IRequestHandler<GetAgenciesQuery, PagedLi
 
     public async Task<PagedList<AgencyResponseDto>> Handle(GetAgenciesQuery request, CancellationToken cancellationToken)
     {
-        // Start with base query
         var query = _repository.FindAll();
+        query = ApplyFilter(query, request.Filter);
+        query = ApplySort(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
 
-        // Auto filters (simple filters)
-        query = query.ApplyFilters(request.Filter);
-
-        // Business logic (Specifications)
-        if (!string.IsNullOrEmpty(request.Filter.Search))
-        {
-            var spec = new AgencySearchSpecification(request.Filter.Search);
-            query = query.Where(spec.ToExpression());
-        }
-
-        if (request.Filter.IsActive.HasValue)
-        {
-            var spec = new AgencyIsActiveSpecification(request.Filter.IsActive.Value);
-            query = query.Where(spec.ToExpression());
-        }
-
-        // Sorting
-        query = query.ApplySort(request.Filter.OrderBy, request.Filter.OrderByDirection);
-
-        // Get paginated results
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
 
-        // Map to DTOs and return PagedList
         return new PagedList<AgencyResponseDto>(
             pagedItems.Adapt<List<AgencyResponseDto>>(),
             pagedItems.GetMetaData().TotalItems,
             request.Filter.PageNumber, request.Filter.PageSize);
-
     }
 
+    private static IQueryable<Agency> ApplyFilter(IQueryable<Agency> query, AgencyPagedFilterDto filter)
+    {
+        if (filter == null) return query;
+
+        if (!string.IsNullOrWhiteSpace(filter.Name))
+            query = query.Where(x => x.Name.Contains(filter.Name));
+
+        if (filter.IsActive.HasValue)
+            query = query.Where(x => x.IsActive == filter.IsActive.Value);
+
+        return query;
+    }
+
+    private static IQueryable<Agency> ApplySort(IQueryable<Agency> query, string? orderBy, string? direction)
+    {
+        return query;
+    }
 }

@@ -1,101 +1,53 @@
 using Contracts.Domain;
-
+using Shared.Domain.ValueObjects;
 
 namespace TLBIOMASS.Domain.Agencies;
 
 public class Agency : EntityAuditBase<int>
 {
     public string Name { get; private set; } = string.Empty;
-    public string? Phone { get; private set; }
-    public string? Email { get; private set; }
-    public string? Address { get; private set; }
-    public string? BankAccount { get; private set; }
-    public string? BankName { get; private set; }
-    public string? IdentityCard { get; private set; }
-    public string? IssuePlace { get; private set; }
-    public DateTime? IssueDate { get; private set; }
+    public ContactInfo? Contact { get; private set; }
+    public BankInfo? Bank { get; private set; }
+    public IdentityInfo? Identity { get; private set; }
     public bool IsActive { get; private set; } = true;
 
-    // Protected constructor for EF Core
     protected Agency() { }
 
-    private Agency(
-        string name,
-        string? phone,
-        string? email,
-        string? address,
-        string? bankAccount,
-        string? bankName,
-        string? identityCard,
-        string? issuePlace,
-        DateTime? issueDate,
-        bool isActive)
+    private Agency(string name, ContactInfo? contact, BankInfo? bank, IdentityInfo? identity, bool isActive)
     {
         Name = name;
-        Phone = phone;
-        Email = email;
-        Address = address;
-        BankAccount = bankAccount;
-        BankName = bankName;
-        IdentityCard = identityCard;
-        IssuePlace = issuePlace;
-        IssueDate = issueDate;
+        Contact = contact;
+        Bank = bank;
+        Identity = identity;
         IsActive = isActive;
     }
 
-    // Factory Method
     public static Agency Create(
         string name,
-        string? phone = null,
-        string? email = null,
-        string? address = null,
-        string? bankAccount = null,
-        string? bankName = null,
-        string? identityCard = null,
-        string? issuePlace = null,
-        DateTime? issueDate = null,
+        ContactInfo? contact = null,
+        BankInfo? bank = null,
+        IdentityInfo? identity = null,
         bool isActive = true)
     {
-
-
-        return new Agency(
-            name,
-            phone,
-            email,
-            address,
-            bankAccount,
-            bankName,
-            identityCard,
-            issuePlace,
-            issueDate,
-            isActive);
+        return new Agency(name, contact, bank, identity, isActive);
     }
 
-    // Update method
     public void Update(
         string name,
-        string? phone,
-        string? email,
-        string? address,
-        string? bankAccount,
-        string? bankName,
-        string? identityCard,
-        string? issuePlace,
-        DateTime? issueDate,
-        bool isActive)
+        ContactInfo? contact = null,
+        BankInfo? bank = null,
+        IdentityInfo? identity = null,
+        bool? isActive = null)
     {
-
-
         Name = name;
-        Phone = phone;
-        Email = email;
-        Address = address;
-        BankAccount = bankAccount;
-        BankName = bankName;
-        IdentityCard = identityCard;
-        IssuePlace = issuePlace;
-        IssueDate = issueDate;
-        IsActive = isActive;
+        if (contact != null)
+            Contact = contact;
+        if (bank != null)
+            Bank = bank;
+        if (identity != null)
+            Identity = identity;
+        if (isActive.HasValue)
+            IsActive = isActive.Value;
     }
 
     public void Activate() => IsActive = true;

@@ -25,10 +25,10 @@ public class LandownerSearchSpecification : ISpecification<Landowner>
             return c => true;
 
         return c => c.Name.ToLower().Contains(_searchTerm) ||
-                   (c.Phone != null && c.Phone.Contains(_searchTerm)) ||
-                   (c.Email != null && c.Email.ToLower().Contains(_searchTerm)) ||
-                   (c.BankAccount != null && c.BankAccount.Contains(_searchTerm)) ||
-                   (c.IdentityCardNo != null && c.IdentityCardNo.Contains(_searchTerm)) ||
-                   (c.BankName != null && c.BankName.ToLower().Contains(_searchTerm));
+                   (c.Contact != null && c.Contact.Phone != null && c.Contact.Phone.Contains(_searchTerm)) ||
+                   (c.Contact != null && c.Contact.Email != null && c.Contact.Email.ToLower().Contains(_searchTerm)) ||
+                   (c.Bank != null && c.Bank.BankAccount != null && c.Bank.BankAccount.Contains(_searchTerm)) ||
+                   (c.Identity != null && c.Identity.IdentityNumber != null && c.Identity.IdentityNumber.Contains(_searchTerm)) ||
+                   (c.Bank != null && c.Bank.BankName != null && c.Bank.BankName.ToLower().Contains(_searchTerm));
     }
 }

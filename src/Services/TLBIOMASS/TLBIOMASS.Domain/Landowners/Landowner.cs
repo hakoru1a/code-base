@@ -1,108 +1,58 @@
 using Contracts.Domain;
-
+using Shared.Domain.ValueObjects;
 
 namespace TLBIOMASS.Domain.Landowners;
 
 public class Landowner : EntityAuditBase<int>
 {
     public string Name { get; private set; } = string.Empty;
-    public string? Phone { get; private set; }
-    public string? Email { get; private set; }
-    public string? Address { get; private set; }
-    public string? BankAccount { get; private set; }
-    public string? BankName { get; private set; }
-    public string? IdentityCardNo { get; private set; }
-    public string? IssuePlace { get; private set; }
-    public DateTime? IssueDate { get; private set; }
-    public DateTime? DateOfBirth { get; private set; }
+    public ContactInfo? Contact { get; private set; }
+    public BankInfo? Bank { get; private set; }
+    public IdentityInfo? Identity { get; private set; }
     public bool IsActive { get; private set; } = true;
 
-    // Protected constructor for EF Core
     protected Landowner() { }
 
     private Landowner(
         string name,
-        string? phone,
-        string? email,
-        string? address,
-        string? bankAccount,
-        string? bankName,
-        string? identityCardNo,
-        string? issuePlace,
-        DateTime? issueDate,
-        DateTime? dateOfBirth,
+        ContactInfo? contact,
+        BankInfo? bank,
+        IdentityInfo? identity,
         bool isActive)
     {
         Name = name;
-        Phone = phone;
-        Email = email;
-        Address = address;
-        BankAccount = bankAccount;
-        BankName = bankName;
-        IdentityCardNo = identityCardNo;
-        IssuePlace = issuePlace;
-        IssueDate = issueDate;
-        DateOfBirth = dateOfBirth;
+        Contact = contact;
+        Bank = bank;
+        Identity = identity;
         IsActive = isActive;
     }
 
-    // Factory Method
     public static Landowner Create(
         string name,
-        string? phone = null,
-        string? email = null,
-        string? address = null,
-        string? bankAccount = null,
-        string? bankName = null,
-        string? identityCardNo = null,
-        string? issuePlace = null,
-        DateTime? issueDate = null,
-        DateTime? dateOfBirth = null,
+        ContactInfo? contact = null,
+        BankInfo? bank = null,
+        IdentityInfo? identity = null,
         bool isActive = true)
     {
-
-
-        return new Landowner(
-            name,
-            phone,
-            email,
-            address,
-            bankAccount,
-            bankName,
-            identityCardNo,
-            issuePlace,
-            issueDate,
-            dateOfBirth,
-            isActive);
+        return new Landowner(name, contact, bank, identity, isActive);
     }
 
-    // Update method
     public void Update(
         string name,
-        string? phone,
-        string? email,
-        string? address,
-        string? bankAccount,
-        string? bankName,
-        string? identityCardNo,
-        string? issuePlace,
-        DateTime? issueDate,
-        DateTime? dateOfBirth,
-        bool isActive)
+        ContactInfo? contact = null,
+        BankInfo? bank = null,
+        IdentityInfo? identity = null,
+        bool? isActive = null)
     {
-
-
         Name = name;
-        Phone = phone;
-        Email = email;
-        Address = address;
-        BankAccount = bankAccount;
-        BankName = bankName;
-        IdentityCardNo = identityCardNo;
-        IssuePlace = issuePlace;
-        IssueDate = issueDate;
-        DateOfBirth = dateOfBirth;
-        IsActive = isActive;
+        if (contact != null)
+            Contact = contact;
+        if (bank != null)
+            Bank = bank;
+        if (identity != null)
+            Identity = identity;
+        if (isActive.HasValue)
+            IsActive = isActive.Value;
     }
 
     public void Activate() => IsActive = true;

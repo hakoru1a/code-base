@@ -1,8 +1,8 @@
+using System.Linq;
 using MediatR;
 using TLBIOMASS.Domain.MaterialRegions.Interfaces;
 using Shared.DTOs.MaterialRegion;
 using Shared.SeedWork;
-using Shared.Extensions;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using TLBIOMASS.Domain.MaterialRegions;
@@ -26,23 +26,15 @@ public class GetMaterialRegionsQueryHandler : IRequestHandler<GetMaterialRegions
             .ThenInclude(x => x.Material)
             .AsQueryable();
 
-        // Auto filters (simple filters)
-        query = query.ApplyFilters(request.Filter);
+        query = ApplyFilter(query, request.Filter);
 
-        // Business logic (Specifications)
         if (!string.IsNullOrEmpty(request.Filter.Search))
         {
             var spec = new MaterialRegionSearchSpecification(request.Filter.Search);
             query = query.Where(spec.ToExpression());
         }
 
-        if (request.Filter.OwnerId.HasValue)
-        {
-            query = query.Where(x => x.OwnerId == request.Filter.OwnerId.Value);
-        }
-
-        // Sorting
-        query = query.ApplySort(request.Filter.OrderBy, request.Filter.OrderByDirection);
+        query = ApplySort(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
 
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
 
@@ -50,8 +42,20 @@ public class GetMaterialRegionsQueryHandler : IRequestHandler<GetMaterialRegions
             pagedItems.Adapt<List<MaterialRegionResponseDto>>(),
             pagedItems.GetMetaData().TotalItems,
             request.Filter.PageNumber, request.Filter.PageSize);
-
     }
 
+    private static IQueryable<MaterialRegion> ApplyFilter(IQueryable<MaterialRegion> query, MaterialRegionPagedFilterDto filter)
+    {
+        if (filter == null) return query;
 
+        if (filter.OwnerId.HasValue)
+            query = query.Where(x => x.OwnerId == filter.OwnerId.Value);
+
+        return query;
+    }
+
+    private static IQueryable<MaterialRegion> ApplySort(IQueryable<MaterialRegion> query, string? orderBy, string? direction)
+    {
+        return query;
+    }
 }

@@ -1,6 +1,7 @@
 using MediatR;
 using TLBIOMASS.Domain.Landowners;
 using TLBIOMASS.Domain.Landowners.Interfaces;
+using Shared.Domain.ValueObjects;
 
 namespace TLBIOMASS.Application.Features.Landowners.Commands.CreateLandowner
 {
@@ -17,17 +18,10 @@ namespace TLBIOMASS.Application.Features.Landowners.Commands.CreateLandowner
         {
             var landowner = Landowner.Create(
                 request.Name,
-                request.Phone,
-                request.Email,
-                request.Address,
-                request.BankAccount,
-                request.BankName,
-                request.IdentityCardNo,
-                request.IssuePlace,
-                request.IssueDate,
-                request.DateOfBirth,
-                request.IsActive
-            );
+                new ContactInfo(request.Phone, request.Email, request.Address),
+                new BankInfo(request.BankAccount, request.BankName),
+                new IdentityInfo(request.IdentityCardNo, request.IssuePlace, request.IssueDate, request.DateOfBirth),
+                request.IsActive);
 
             //landowner.AddDomainEvent(new LandownerCreatedEvent(landowner.Id, landowner.Name));
 

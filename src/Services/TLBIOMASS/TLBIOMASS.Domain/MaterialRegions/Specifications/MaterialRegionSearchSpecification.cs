@@ -24,8 +24,8 @@ public class MaterialRegionSearchSpecification : ISpecification<MaterialRegion>
         if (string.IsNullOrEmpty(_searchTerm))
             return c => true;
 
-        return c => c.RegionName.ToLower().Contains(_searchTerm) ||
-                   (c.Address != null && c.Address.ToLower().Contains(_searchTerm)) ||
-                   (c.CertificateID != null && c.CertificateID.Contains(_searchTerm));
+        return c => c.Detail.RegionName.ToLower().Contains(_searchTerm) ||
+                   (c.Detail.Address != null && c.Detail.Address.ToLower().Contains(_searchTerm)) ||
+                   (c.Detail.CertificateId != null && c.Detail.CertificateId.Contains(_searchTerm));
     }
 }

@@ -1,6 +1,7 @@
 using MediatR;
 using TLBIOMASS.Domain.Receivers;
 using TLBIOMASS.Domain.Receivers.Interfaces;
+using Shared.Domain.ValueObjects;
 
 namespace TLBIOMASS.Application.Features.Receivers.Commands.CreateReceiver;
 
@@ -17,18 +18,11 @@ public class CreateReceiverCommandHandler : IRequestHandler<CreateReceiverComman
     {
         var receiver = Receiver.Create(
             request.Name,
-            request.Phone,
-            request.BankAccount,
-            request.BankName,
-            request.IdentityNumber,
-            request.IssuedDate,
-            request.IssuedPlace,
-            request.Address,
+            new ContactInfo(request.Phone, null, request.Address, request.Note),
+            new BankInfo(request.BankAccount, request.BankName),
+            new IdentityInfo(request.IdentityNumber, request.IssuedPlace, request.IssuedDate, request.DateOfBirth),
             request.IsDefault,
-            request.IsActive,
-            request.Note,
-            request.DateOfBirth
-        );
+            request.IsActive);
 
         await _repository.CreateAsync(receiver);
         await _repository.SaveChangesAsync(cancellationToken);

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TLBIOMASS.Domain.Landowners;
+using Shared.Domain.ValueObjects;
 
 namespace TLBIOMASS.Infrastructure.Persistences.Configurations;
 
@@ -18,40 +19,26 @@ public class LandownerConfiguration : IEntityTypeConfiguration<Landowner>
             .HasMaxLength(150)
             .HasColumnName("OwnerName");
 
-        builder.Property(x => x.Phone)
-            .HasMaxLength(50)
-            .HasColumnName("Phone");
+        builder.OwnsOne(x => x.Contact, c =>
+        {
+            c.Property(x => x.Phone).HasMaxLength(50).HasColumnName("Phone");
+            c.Property(x => x.Email).HasMaxLength(100).HasColumnName("Email");
+            c.Property(x => x.Address).HasMaxLength(255).HasColumnName("Address");
+        });
 
-        builder.Property(x => x.Email)
-            .HasMaxLength(100)
-            .HasColumnName("Email");
+        builder.OwnsOne(x => x.Bank, b =>
+        {
+            b.Property(x => x.BankAccount).HasMaxLength(50).HasColumnName("BankAccount");
+            b.Property(x => x.BankName).HasMaxLength(20).HasColumnName("BankName");
+        });
 
-        builder.Property(x => x.Address)
-            .HasMaxLength(255)
-            .HasColumnName("Address");
-
-        builder.Property(x => x.BankAccount)
-            .HasMaxLength(50)
-            .HasColumnName("BankAccount");
-
-        builder.Property(x => x.BankName)
-            .HasMaxLength(20)
-            .HasColumnName("BankName");
-
-        builder.Property(x => x.IdentityCardNo)
-            .HasMaxLength(20)
-            .HasColumnName("IdentityCardNo");
-
-        builder.Property(x => x.IssuePlace)
-            .HasMaxLength(255)
-            .HasColumnName("IssuePlace");
-
-        builder.Property(x => x.IssueDate)
-            .HasColumnName("IssueDate");
-
-        builder.Property(x => x.DateOfBirth)
-            .HasColumnType("date")
-            .HasColumnName("DateOfBirth");
+        builder.OwnsOne(x => x.Identity, i =>
+        {
+            i.Property(x => x.IdentityNumber).HasMaxLength(20).HasColumnName("IdentityCardNo");
+            i.Property(x => x.IssuePlace).HasMaxLength(255).HasColumnName("IssuePlace");
+            i.Property(x => x.IssueDate).HasColumnName("IssueDate");
+            i.Property(x => x.DateOfBirth).HasColumnType("date").HasColumnName("DateOfBirth");
+        });
 
         builder.Property(x => x.IsActive)
             .HasDefaultValue(true)

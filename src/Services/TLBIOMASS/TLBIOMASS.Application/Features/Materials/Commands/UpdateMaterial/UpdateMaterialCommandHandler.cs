@@ -1,5 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.Materials.Interfaces;
+using TLBIOMASS.Domain.Materials.ValueObjects;
 using Contracts.Exceptions;
 
 namespace TLBIOMASS.Application.Features.Materials.Commands.UpdateMaterial;
@@ -23,12 +24,8 @@ public class UpdateMaterialCommandHandler : IRequestHandler<UpdateMaterialComman
         }
 
         material.Update(
-            request.Name,
-            request.Unit,
-            request.Description,
-            request.ProposedImpurityDeduction,
-            request.IsActive
-        );
+            new MaterialSpec(request.Name, request.Unit, request.Description, request.ProposedImpurityDeduction),
+            request.IsActive);
 
         await _repository.UpdateAsync(material);
         await _repository.SaveChangesAsync(cancellationToken);

@@ -1,10 +1,9 @@
+using System.Linq;
 using MediatR;
 using TLBIOMASS.Domain.Materials.Interfaces;
 using Shared.DTOs.Material;
 using Shared.SeedWork;
-using Shared.Extensions;
 using Mapster;
-using System.Linq;
 using TLBIOMASS.Domain.Materials;
 using TLBIOMASS.Domain.Materials.Specifications;
 
@@ -21,13 +20,10 @@ public class GetMaterialsQueryHandler : IRequestHandler<GetMaterialsQuery, Paged
 
     public async Task<PagedList<MaterialResponseDto>> Handle(GetMaterialsQuery request, CancellationToken cancellationToken)
     {
-        // Start with base query
         var query = _repository.FindAll();
 
-        // Auto filters (simple filters)
-        query = query.ApplyFilters(request.Filter);
+        query = ApplyFilter(query, request.Filter);
 
-        // Business logic (Specifications)
         if (!string.IsNullOrEmpty(request.Filter.Search))
         {
             var spec = new MaterialSearchSpecification(request.Filter.Search);
@@ -40,18 +36,28 @@ public class GetMaterialsQueryHandler : IRequestHandler<GetMaterialsQuery, Paged
             query = query.Where(spec.ToExpression());
         }
 
-        // Sorting
-        query = query.ApplySort(request.Filter.OrderBy, request.Filter.OrderByDirection);
+        query = ApplySort(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
 
-        // Get paginated results
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
 
-        // Map to DTOs
         return new PagedList<MaterialResponseDto>(
             pagedItems.Adapt<List<MaterialResponseDto>>(),
             pagedItems.GetMetaData().TotalItems,
             request.Filter.PageNumber, request.Filter.PageSize);
-
     }
 
+    private static IQueryable<Material> ApplyFilter(IQueryable<Material> query, MaterialPagedFilterDto filter)
+    {
+        if (filter == null) return query;
+
+        if (filter.IsActive.HasValue)
+            query = query.Where(x => x.IsActive == filter.IsActive.Value);
+
+        return query;
+    }
+
+    private static IQueryable<Material> ApplySort(IQueryable<Material> query, string? orderBy, string? direction)
+    {
+        return query;
+    }
 }

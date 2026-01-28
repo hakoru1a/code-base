@@ -1,49 +1,30 @@
 using Contracts.Domain;
 using TLBIOMASS.Domain.Customers.Interfaces;
 using TLBIOMASS.Domain.Customers.Rules;
+using Shared.Domain.ValueObjects;
 
 namespace TLBIOMASS.Domain.Customers;
 
 public class Customer : EntityAuditBase<int>
 {
     public string Name { get; private set; } = string.Empty;
-    public string? Phone { get; private set; }
-    public string? Address { get; private set; }
-    public string? Note { get; private set; }
-    public string? Email { get; private set; }
+    public ContactInfo? Contact { get; private set; }
     public string? TaxCode { get; private set; }
     public bool IsActive { get; private set; } = true;
 
-    // Protected constructor for EF Core
     protected Customer() { }
 
-    // Domain constructor
-    public Customer(
-        string name,
-        string? phone = null,
-        string? address = null,
-        string? email = null,
-        string? taxCode = null,
-        string? note = null)
+    private Customer(string name, ContactInfo? contact, string? taxCode, bool isActive)
     {
         Name = name;
-        Phone = phone;
-        Address = address;
-        Email = email;
+        Contact = contact;
         TaxCode = taxCode;
-        Note = note;
-        IsActive = true;
+        IsActive = isActive;
     }
 
-    public static Customer Create(
-        string name,
-        string? phone = null,
-        string? address = null,
-        string? email = null,
-        string? taxCode = null,
-        string? note = null)
+    public static Customer Create(string name, ContactInfo? contact = null, string? taxCode = null)
     {
-        return new Customer(name, phone, address, email, taxCode, note);
+        return new Customer(name, contact, taxCode, true);
     }
 
     public void CheckTaxCodeUnique(ICustomerRepository repository)
@@ -51,30 +32,15 @@ public class Customer : EntityAuditBase<int>
         CheckRule(new CustomerTaxCodeUniqueRule(repository, TaxCode, Id == 0 ? null : Id));
     }
 
-    public void Update(
-        string name,
-        string? phone,
-        string? address,
-        string? email,
-        string? taxCode,
-        string? note)
+    public void Update(string name, ContactInfo? contact = null, string? taxCode = null)
     {
         Name = name;
-        Phone = phone;
-        Address = address;
-        Email = email;
-        TaxCode = taxCode;
-        Note = note;
+        if (contact != null)
+            Contact = contact;
+        if (taxCode != null)
+            TaxCode = taxCode;
     }
 
-    public void Activate()
-    {
-        IsActive = true;
-    }
-
-    public void Deactivate()
-    {
-        IsActive = false;
-    }
-
+    public void Activate() => IsActive = true;
+    public void Deactivate() => IsActive = false;
 }

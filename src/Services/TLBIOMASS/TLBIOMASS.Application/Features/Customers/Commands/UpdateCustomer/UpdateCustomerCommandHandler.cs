@@ -2,6 +2,7 @@ using MediatR;
 using TLBIOMASS.Domain.Customers.Events;
 using TLBIOMASS.Domain.Customers;
 using TLBIOMASS.Domain.Customers.Interfaces;
+using Shared.Domain.ValueObjects;
 
 namespace TLBIOMASS.Application.Features.Customers.Commands.UpdateCustomer;
 
@@ -25,15 +26,10 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
             return false;
         }
 
-        // Use Domain method to update
         customer.Update(
             request.Name,
-            request.Phone,
-            request.Address,
-            request.Email,
-            request.TaxCode,
-            request.Note
-        );
+            new ContactInfo(request.Phone, request.Email, request.Address, request.Note),
+            request.TaxCode);
 
         // Check tax code uniqueness via Domain Rule
         customer.CheckTaxCodeUnique(_customerRepository);

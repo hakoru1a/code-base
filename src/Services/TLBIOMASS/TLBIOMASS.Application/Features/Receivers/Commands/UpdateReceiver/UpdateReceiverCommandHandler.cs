@@ -1,5 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.Receivers.Interfaces;
+using Shared.Domain.ValueObjects;
 using Contracts.Exceptions;
 
 namespace TLBIOMASS.Application.Features.Receivers.Commands.UpdateReceiver;
@@ -24,18 +25,11 @@ public class UpdateReceiverCommandHandler : IRequestHandler<UpdateReceiverComman
 
         receiver.Update(
             request.Name,
-            request.Phone,
-            request.BankAccount,
-            request.BankName,
-            request.IdentityNumber,
-            request.IssuedDate,
-            request.IssuedPlace,
-            request.Address,
+            new ContactInfo(request.Phone, null, request.Address, request.Note),
+            new BankInfo(request.BankAccount, request.BankName),
+            new IdentityInfo(request.IdentityNumber, request.IssuedPlace, request.IssuedDate, request.DateOfBirth),
             request.IsDefault,
-            request.IsActive,
-            request.Note,
-            request.DateOfBirth
-        );
+            request.IsActive);
 
         await _repository.UpdateAsync(receiver);
         await _repository.SaveChangesAsync(cancellationToken);
