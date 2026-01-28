@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using TLBIOMASS.Application.Features.Agencies.Commands.CreateAgency;
 using TLBIOMASS.Application.Features.Agencies.Commands.UpdateAgency;
 using TLBIOMASS.Application.Features.Agencies.Commands.DeleteAgency;
+using TLBIOMASS.Application.Features.Agencies.Queries.GetAgenciesPaged;
 using TLBIOMASS.Application.Features.Agencies.Queries.GetAgencies;
-using TLBIOMASS.Application.Features.Agencies.Queries.GetAllAgencies;
 using TLBIOMASS.Application.Features.Agencies.Queries.GetAgencyById;
 using Shared.DTOs.Agency;
 using Mapster;
@@ -31,8 +31,8 @@ namespace TLBIOMASS.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetList([FromQuery] AgencyFilterDto filter)
         {
-            var query = new GetAllAgenciesQuery { Filter = filter };
-            return await HandleGetAllAsync<GetAllAgenciesQuery, AgencyResponseDto>(query, EntityName);
+            var query = new GetAgenciesQuery { Filter = filter };
+            return await HandleGetAllAsync<GetAgenciesQuery, AgencyResponseDto>(query, EntityName);
         }
 
         [HttpGet("paged")]
@@ -40,8 +40,8 @@ namespace TLBIOMASS.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetPagedList([FromQuery] AgencyPagedFilterDto filter)
         {
-            var query = new GetAgenciesQuery { Filter = filter };
-            return await HandleGetPagedAsync<GetAgenciesQuery, AgencyResponseDto>(
+            var query = new GetAgenciesPagedQuery { Filter = filter };
+            return await HandleGetPagedAsync<GetAgenciesPagedQuery, AgencyResponseDto>(
                 query, EntityName, filter.PageNumber, filter.PageSize);
         }
 

@@ -25,9 +25,9 @@ namespace TLBIOMASS.Application.Features.Agencies.Commands.UpdateAgency
 
             agency.Update(
                 request.Name,
-                new ContactInfo(request.Phone, request.Email, request.Address),
+                new ContactInfo(request.Phone, request.Email, request.Address,null),
                 new BankInfo(request.BankAccount, request.BankName),
-                new IdentityInfo(request.IdentityCard, request.IssuePlace, request.IssueDate),
+                new IdentityInfo(request.IdentityCard, request.IssuePlace, request.IssueDate, null),
                 request.IsActive);
 
             await _repository.UpdateAsync(agency);

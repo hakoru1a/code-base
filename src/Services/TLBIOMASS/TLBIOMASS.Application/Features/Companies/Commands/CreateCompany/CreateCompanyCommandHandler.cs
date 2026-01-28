@@ -21,8 +21,8 @@ public class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyCommand,
             request.CompanyName,
             request.TaxCode,
             new RepresentativeInfo(request.Representative, request.Position),
-            new ContactInfo(request.PhoneNumber, request.Email, request.Address),
-            new IdentityInfo(request.IdentityCardNo, request.IssuePlace, request.IssueDate));
+            new ContactInfo(request.PhoneNumber, request.Email, request.Address, null),
+            new IdentityInfo(request.IdentityCardNo, request.IssuePlace, request.IssueDate, null));
 
         //company.AddDomainEvent(new CompanyCreatedEvent(company.Id, company.CompanyName));
 

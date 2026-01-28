@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using TLBIOMASS.Application.Features.Receivers.Commands.CreateReceiver;
 using TLBIOMASS.Application.Features.Receivers.Commands.UpdateReceiver;
 using TLBIOMASS.Application.Features.Receivers.Commands.DeleteReceiver;
-using TLBIOMASS.Application.Features.Receivers.Queries.GetAllReceivers;
 using TLBIOMASS.Application.Features.Receivers.Queries.GetReceivers;
+using TLBIOMASS.Application.Features.Receivers.Queries.GetReceiversPaged;
 using TLBIOMASS.Application.Features.Receivers.Queries.GetReceiverById;
 using Shared.DTOs.Receiver;
 using Mapster;
@@ -31,8 +31,8 @@ namespace TLBIOMASS.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetList([FromQuery] ReceiverFilterDto filter)
         {
-            var query = new GetAllReceiversQuery { Filter = filter };
-            return await HandleGetAllAsync<GetAllReceiversQuery, ReceiverResponseDto>(query, EntityName);
+            var query = new GetReceiversQuery { Filter = filter };
+            return await HandleGetAllAsync<GetReceiversQuery, ReceiverResponseDto>(query, EntityName);
         }
 
         [HttpGet("paged")]
@@ -40,8 +40,8 @@ namespace TLBIOMASS.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetPagedList([FromQuery] ReceiverPagedFilterDto filter)
         {
-            var query = new GetReceiversQuery { Filter = filter };
-            return await HandleGetPagedAsync<GetReceiversQuery, ReceiverResponseDto>(
+            var query = new GetReceiversPagedQuery { Filter = filter };
+            return await HandleGetPagedAsync<GetReceiversPagedQuery, ReceiverResponseDto>(
                 query, EntityName, filter.PageNumber, filter.PageSize);
         }
 

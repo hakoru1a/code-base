@@ -9,6 +9,7 @@ public class WeighingTicketPaymentConfiguration : IEntityTypeConfiguration<Weigh
     public void Configure(EntityTypeBuilder<WeighingTicketPayment> builder)
     {
         builder.ToTable("weighing_ticket_payments");
+        builder.Ignore("Status");
         
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("ID");

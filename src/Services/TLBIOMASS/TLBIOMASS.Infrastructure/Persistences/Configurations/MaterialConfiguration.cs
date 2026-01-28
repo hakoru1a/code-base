@@ -10,6 +10,7 @@ public class MaterialConfiguration : IEntityTypeConfiguration<Material>
     public void Configure(EntityTypeBuilder<Material> builder)
     {
         builder.ToTable("hanghoa");
+        builder.Ignore("Status");
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id");

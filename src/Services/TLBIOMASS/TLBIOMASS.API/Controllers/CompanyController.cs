@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using TLBIOMASS.Application.Features.Companies.Commands.CreateCompany;
 using TLBIOMASS.Application.Features.Companies.Commands.UpdateCompany;
 using TLBIOMASS.Application.Features.Companies.Commands.DeleteCompany;
-using TLBIOMASS.Application.Features.Companies.Queries.GetAllCompanies;
 using TLBIOMASS.Application.Features.Companies.Queries.GetCompanies;
+using TLBIOMASS.Application.Features.Companies.Queries.GetCompaniesPaged;
 using TLBIOMASS.Application.Features.Companies.Queries.GetCompanyById;
 using Shared.DTOs.Company;
 using Mapster;
@@ -31,8 +31,8 @@ namespace TLBIOMASS.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetList([FromQuery] CompanyFilterDto filter)
         {
-            var query = new GetAllCompaniesQuery { Filter = filter };
-            return await HandleGetAllAsync<GetAllCompaniesQuery, CompanyResponseDto>(query, EntityName);
+            var query = new GetCompaniesQuery { Filter = filter };
+            return await HandleGetAllAsync<GetCompaniesQuery, CompanyResponseDto>(query, EntityName);
         }
 
         [HttpGet("paged")]
@@ -40,8 +40,8 @@ namespace TLBIOMASS.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetPagedList([FromQuery] CompanyPagedFilterDto filter)
         {
-            var query = new GetCompaniesQuery { Filter = filter };
-            return await HandleGetPagedAsync<GetCompaniesQuery, CompanyResponseDto>(
+            var query = new GetCompaniesPagedQuery { Filter = filter };
+            return await HandleGetPagedAsync<GetCompaniesPagedQuery, CompanyResponseDto>(
                 query, EntityName, filter.PageNumber, filter.PageSize);
         }
 

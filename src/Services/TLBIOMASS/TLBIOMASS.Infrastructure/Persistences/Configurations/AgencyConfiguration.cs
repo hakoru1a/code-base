@@ -22,6 +22,7 @@ public class AgencyConfiguration : IEntityTypeConfiguration<Agency>
             c.Property(x => x.Phone).HasMaxLength(50).HasColumnName("Phone");
             c.Property(x => x.Email).HasMaxLength(100).HasColumnName("Email");
             c.Property(x => x.Address).HasMaxLength(255).HasColumnName("Address");
+            c.Ignore(x => x.Note);
         });
 
         builder.OwnsOne(x => x.Bank, b =>
@@ -35,6 +36,7 @@ public class AgencyConfiguration : IEntityTypeConfiguration<Agency>
             i.Property(x => x.IdentityNumber).HasMaxLength(50).HasColumnName("IdentityCard");
             i.Property(x => x.IssuePlace).HasMaxLength(255).HasColumnName("IssuePlace");
             i.Property(x => x.IssueDate).HasColumnName("IssueDate");
+            i.Ignore(x => x.DateOfBirth);
         });
 
         builder.Property(x => x.IsActive)
@@ -45,5 +47,6 @@ public class AgencyConfiguration : IEntityTypeConfiguration<Agency>
         builder.Property(x => x.CreatedBy).HasColumnName("Created_By");
         builder.Property(x => x.LastModifiedDate).HasColumnName("Last_Updated_At");
         builder.Property(x => x.LastModifiedBy).HasColumnName("Last_Updated_By");
+        builder.Ignore("Status");
     }
 }

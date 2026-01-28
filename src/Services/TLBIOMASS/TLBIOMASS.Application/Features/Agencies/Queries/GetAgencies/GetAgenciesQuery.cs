@@ -1,10 +1,10 @@
 using MediatR;
-using Shared.SeedWork;
 using Shared.DTOs.Agency;
 
 namespace TLBIOMASS.Application.Features.Agencies.Queries.GetAgencies;
 
-public class GetAgenciesQuery : IRequest<PagedList<AgencyResponseDto>>
+public class GetAgenciesQuery : IRequest<List<AgencyResponseDto>>
 {
-    public AgencyPagedFilterDto Filter { get; set; } = new();
+    public AgencyFilterDto Filter { get; set; } = new();
 }
+

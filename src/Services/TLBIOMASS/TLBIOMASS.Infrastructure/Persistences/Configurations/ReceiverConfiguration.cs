@@ -10,6 +10,7 @@ public class ReceiverConfiguration : IEntityTypeConfiguration<Receiver>
     public void Configure(EntityTypeBuilder<Receiver> builder)
     {
         builder.ToTable("receivers");
+        builder.Ignore("Status");
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Name)

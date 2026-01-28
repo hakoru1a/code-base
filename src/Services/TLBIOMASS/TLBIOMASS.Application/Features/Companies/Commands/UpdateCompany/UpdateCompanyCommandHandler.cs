@@ -26,8 +26,8 @@ public class UpdateCompanyCommandHandler : IRequestHandler<UpdateCompanyCommand,
             request.CompanyName,
             request.TaxCode,
             new RepresentativeInfo(request.Representative, request.Position),
-            new ContactInfo(request.PhoneNumber, request.Email, request.Address),
-            new IdentityInfo(request.IdentityCardNo, request.IssuePlace, request.IssueDate));
+            new ContactInfo(request.PhoneNumber, request.Email, request.Address, null),
+            new IdentityInfo(request.IdentityCardNo, request.IssuePlace, request.IssueDate, null));
 
         await _repository.UpdateAsync(company);
         await _repository.SaveChangesAsync(cancellationToken);

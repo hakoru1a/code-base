@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Infrastructure.Common;
 using Shared.SeedWork;
 using Shared.DTOs.WeighingTicket;
-using TLBIOMASS.Application.Features.WeighingTickets.Queries.GetAllWeighingTickets;
 using TLBIOMASS.Application.Features.WeighingTickets.Queries.GetWeighingTickets;
+using TLBIOMASS.Application.Features.WeighingTickets.Queries.GetWeighingTicketsPaged;
 using TLBIOMASS.Application.Features.WeighingTickets.Queries.GetWeighingTicketById;
 using TLBIOMASS.Application.Features.WeighingTickets.Commands.AssignReceiver;
 
@@ -28,8 +28,8 @@ public class WeighingTicketController : ApiControllerBase<WeighingTicketControll
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetList([FromQuery] WeighingTicketFilterDto filter)
     {
-        var query = new GetAllWeighingTicketsQuery { Filter = filter };
-        return await HandleGetAllAsync<GetAllWeighingTicketsQuery, WeighingTicketResponseDto>(query, EntityName);
+        var query = new GetWeighingTicketsQuery { Filter = filter };
+        return await HandleGetAllAsync<GetWeighingTicketsQuery, WeighingTicketResponseDto>(query, EntityName);
     }
 
     [HttpGet("paged")]
@@ -37,8 +37,8 @@ public class WeighingTicketController : ApiControllerBase<WeighingTicketControll
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetPagedList([FromQuery] WeighingTicketPagedFilterDto filter)
     {
-        var query = new GetWeighingTicketsQuery { Filter = filter };
-        return await HandleGetPagedAsync<GetWeighingTicketsQuery, WeighingTicketResponseDto>(
+        var query = new GetWeighingTicketsPagedQuery { Filter = filter };
+        return await HandleGetPagedAsync<GetWeighingTicketsPagedQuery, WeighingTicketResponseDto>(
             query, EntityName, filter.PageNumber, filter.PageSize);
     }
 

@@ -25,7 +25,7 @@ public class UpdateLandownerCommandHandler : IRequestHandler<UpdateLandownerComm
 
         landowner.Update(
             request.Name,
-            new ContactInfo(request.Phone, request.Email, request.Address),
+            new ContactInfo(request.Phone, request.Email, request.Address, null),
             new BankInfo(request.BankAccount, request.BankName),
             new IdentityInfo(request.IdentityCardNo, request.IssuePlace, request.IssueDate, request.DateOfBirth),
             request.IsActive);

@@ -19,9 +19,9 @@ namespace TLBIOMASS.Application.Features.Agencies.Commands.CreateAgency
         {
             var agency = Agency.Create(
                 request.Name,
-                new ContactInfo(request.Phone, request.Email, request.Address),
+                new ContactInfo(request.Phone, request.Email, request.Address,null),
                 new BankInfo(request.BankAccount, request.BankName),
-                new IdentityInfo(request.IdentityCard, request.IssuePlace, request.IssueDate),
+                new IdentityInfo(request.IdentityCard, request.IssuePlace, request.IssueDate, null),
                 request.IsActive);
 
             //agency.AddDomainEvent(new AgencyCreatedEvent(agency.Id, agency.Name));
