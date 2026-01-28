@@ -1,4 +1,6 @@
-﻿using TLBIOMASS.Infrastructure.Persistences;
+using TLBIOMASS.Infrastructure.Persistences;
+using TLBIOMASS.Infrastructure.Repositories;
+using TLBIOMASS.Domain.Customers.Interfaces;
 using Infrastructure.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,8 +14,8 @@ namespace TLBIOMASS.Infrastructure
             // Add common infrastructure (Database + Redis)
             services.AddCommonInfrastructure<TLBIOMASSContext>(configuration);
 
-            // TODO: Register service-specific repositories as features are developed
-            // services.AddScoped<IEntityRepository, EntityRepository>();
+            // Register repositories
+            services.AddScoped<ICustomerRepository, CustomerRepository>();
 
             // Configure MassTransit with RabbitMQ (optional - uncomment if needed)
             // services.AddMassTransit(x =>

@@ -110,12 +110,11 @@ public abstract class ApiControllerBase<T> : ControllerBase where T : class
     /// <param name="entityIdentifier">Entity identifier for logging</param>
     /// <param name="getByIdActionName">Action name for CreatedAtAction</param>
     /// <returns>Created entity ID</returns>
-    protected async Task<IActionResult> HandleCreateAsync<TCommand>(
-        TCommand command,
+    protected async Task<IActionResult> HandleCreateAsync<TId>(
+        IRequest<TId> command,
         string entityName,
         string entityIdentifier,
         string getByIdActionName = "GetById")
-        where TCommand : IRequest<long>
     {
         Logger.LogInformation("Creating new {EntityName}: {EntityIdentifier}", entityName, entityIdentifier);
 
@@ -125,7 +124,7 @@ public abstract class ApiControllerBase<T> : ControllerBase where T : class
         return CreatedAtAction(
             getByIdActionName,
             new { id = entityId },
-            new ApiSuccessResult<long>(entityId, ResponseMessages.ItemCreated(entityName))
+            new ApiSuccessResult<TId>(entityId, ResponseMessages.ItemCreated(entityName))
         );
     }
 
