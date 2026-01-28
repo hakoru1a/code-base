@@ -1,6 +1,7 @@
 using MediatR;
 using Shared.SeedWork;
 using Shared.DTOs.Receiver;
+using Shared.Extensions;
 using TLBIOMASS.Domain.Receivers.Interfaces;
 using TLBIOMASS.Domain.Receivers.Specifications;
 using Mapster;
@@ -23,7 +24,10 @@ public class GetReceiversQueryHandler : IRequestHandler<GetReceiversQuery, Paged
         // Start with base query
         var query = _repository.FindAll();
 
-        // Apply filters using Specifications as per Architecture Guide
+        // Auto filters (simple filters)
+        query = query.ApplyFilters(request.Filter);
+
+        // Business logic (Specifications)
         if (!string.IsNullOrEmpty(request.Filter.Search))
         {
             var spec = new ReceiverSearchSpecification(request.Filter.Search);
@@ -35,6 +39,9 @@ public class GetReceiversQueryHandler : IRequestHandler<GetReceiversQuery, Paged
             var spec = new ReceiverIsActiveSpecification(request.Filter.IsActive.Value);
             query = query.Where(spec.ToExpression());
         }
+
+        // Sorting
+        query = query.ApplySort(request.Filter.OrderBy, request.Filter.OrderByDirection);
 
         // Get paginated results
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);

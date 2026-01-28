@@ -2,6 +2,7 @@ using MediatR;
 using TLBIOMASS.Domain.Materials.Interfaces;
 using Shared.DTOs.Material;
 using Shared.SeedWork;
+using Shared.Extensions;
 using Mapster;
 using System.Linq;
 using TLBIOMASS.Domain.Materials;
@@ -23,7 +24,10 @@ public class GetMaterialsQueryHandler : IRequestHandler<GetMaterialsQuery, Paged
         // Start with base query
         var query = _repository.FindAll();
 
-        // Apply filters
+        // Auto filters (simple filters)
+        query = query.ApplyFilters(request.Filter);
+
+        // Business logic (Specifications)
         if (!string.IsNullOrEmpty(request.Filter.Search))
         {
             var spec = new MaterialSearchSpecification(request.Filter.Search);
@@ -35,6 +39,9 @@ public class GetMaterialsQueryHandler : IRequestHandler<GetMaterialsQuery, Paged
             var spec = new MaterialIsActiveSpecification(request.Filter.IsActive.Value);
             query = query.Where(spec.ToExpression());
         }
+
+        // Sorting
+        query = query.ApplySort(request.Filter.OrderBy, request.Filter.OrderByDirection);
 
         // Get paginated results
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);

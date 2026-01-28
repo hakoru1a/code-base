@@ -2,6 +2,7 @@ using MediatR;
 using TLBIOMASS.Domain.MaterialRegions.Interfaces;
 using Shared.DTOs.MaterialRegion;
 using Shared.SeedWork;
+using Shared.Extensions;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using TLBIOMASS.Domain.MaterialRegions;
@@ -25,6 +26,10 @@ public class GetMaterialRegionsQueryHandler : IRequestHandler<GetMaterialRegions
             .ThenInclude(x => x.Material)
             .AsQueryable();
 
+        // Auto filters (simple filters)
+        query = query.ApplyFilters(request.Filter);
+
+        // Business logic (Specifications)
         if (!string.IsNullOrEmpty(request.Filter.Search))
         {
             var spec = new MaterialRegionSearchSpecification(request.Filter.Search);
@@ -35,6 +40,9 @@ public class GetMaterialRegionsQueryHandler : IRequestHandler<GetMaterialRegions
         {
             query = query.Where(x => x.OwnerId == request.Filter.OwnerId.Value);
         }
+
+        // Sorting
+        query = query.ApplySort(request.Filter.OrderBy, request.Filter.OrderByDirection);
 
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
 

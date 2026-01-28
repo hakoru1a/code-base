@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Shared.SeedWork;
 using Generate.Domain.Categories.Interfaces;
+using Shared.Extensions;
 
 namespace Generate.Application.Features.Categories.Queries.GetCategoriesPaged
 {
@@ -23,27 +24,17 @@ namespace Generate.Application.Features.Categories.Queries.GetCategoriesPaged
             // Start with base query
             var query = _categoryRepository.FindAll(trackChanges: false);
 
-            // Apply filters
-            if (!string.IsNullOrWhiteSpace(filter.Name))
-            {
-                query = query.Where(c => c.Name.Contains(filter.Name));
-            }
-
+            // Apply SearchTerms (custom logic cho Category)
             if (!string.IsNullOrWhiteSpace(filter.SearchTerms))
             {
                 query = query.Where(c => c.Name.Contains(filter.SearchTerms));
             }
 
-            if (filter.CreatedFrom.HasValue)
-            {
-                query = query.Where(c => c.CreatedDate >= filter.CreatedFrom.Value);
-            }
+            // Apply filters tự động từ DTO
+            query = query.ApplyFilters(filter);
 
-            if (filter.CreatedTo.HasValue)
-            {
-                query = query.Where(c => c.CreatedDate <= filter.CreatedTo.Value);
-            }
-
+            // Apply sorting
+            query = query.ApplySort(filter.OrderBy, filter.OrderByDirection);
 
             // Get paginated results
             var pagedCategories = await _categoryRepository.GetPageAsync(
@@ -64,4 +55,5 @@ namespace Generate.Application.Features.Categories.Queries.GetCategoriesPaged
 
     }
 }
+
 

@@ -2,6 +2,7 @@ using MediatR;
 using TLBIOMASS.Domain.Agencies.Interfaces;
 using Shared.DTOs.Agency;
 using Shared.SeedWork;
+using Shared.Extensions;
 using Mapster;
 using System.Linq.Expressions;
 using TLBIOMASS.Domain.Agencies;
@@ -24,7 +25,10 @@ public class GetAgenciesQueryHandler : IRequestHandler<GetAgenciesQuery, PagedLi
         // Start with base query
         var query = _repository.FindAll();
 
-        // Apply filters using Specifications as per Architecture Guide
+        // Auto filters (simple filters)
+        query = query.ApplyFilters(request.Filter);
+
+        // Business logic (Specifications)
         if (!string.IsNullOrEmpty(request.Filter.Search))
         {
             var spec = new AgencySearchSpecification(request.Filter.Search);
@@ -36,6 +40,9 @@ public class GetAgenciesQueryHandler : IRequestHandler<GetAgenciesQuery, PagedLi
             var spec = new AgencyIsActiveSpecification(request.Filter.IsActive.Value);
             query = query.Where(spec.ToExpression());
         }
+
+        // Sorting
+        query = query.ApplySort(request.Filter.OrderBy, request.Filter.OrderByDirection);
 
         // Get paginated results
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
