@@ -25,6 +25,11 @@ namespace TLBIOMASS.Infrastructure.Persistences
         public DbSet<TLBIOMASS.Domain.Receivers.Receiver> Receivers { get; set; }
         public DbSet<TLBIOMASS.Domain.Agencies.Agency> Agencies { get; set; }
         public DbSet<TLBIOMASS.Domain.Materials.Material> Materials { get; set; }
+        public DbSet<TLBIOMASS.Domain.Companies.Company> Companies { get; set; }
+        public DbSet<TLBIOMASS.Domain.WeighingTickets.WeighingTicket> WeighingTickets { get; set; }
+        public DbSet<TLBIOMASS.Domain.WeighingTicketCancels.WeighingTicketCancel> WeighingTicketCancels { get; set; }
+        public DbSet<TLBIOMASS.Domain.Payments.WeighingTicketPayment> WeighingTicketPayments { get; set; }
+        public DbSet<TLBIOMASS.Domain.Payments.PaymentDetail> PaymentDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,8 +1,9 @@
+using Shared.DTOs;
+
 namespace Shared.DTOs.MaterialRegion;
 
-public class MaterialRegionResponseDto
+public class MaterialRegionResponseDto : BaseResponseDto<int>
 {
-    public int Id { get; set; }
     public string RegionName { get; set; } = string.Empty;
     public string? Address { get; set; }
     public double Latitude { get; set; }
@@ -12,6 +13,4 @@ public class MaterialRegionResponseDto
     public int OwnerId { get; set; }
     public string? OwnerName { get; set; }
     public List<RegionMaterialDto> RegionMaterials { get; set; } = new();
-    public DateTimeOffset CreatedDate { get; set; }
-    public DateTimeOffset? LastModifiedDate { get; set; }
 }

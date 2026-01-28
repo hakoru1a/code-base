@@ -11,6 +11,7 @@ public class ReceiverConfiguration : IEntityTypeConfiguration<Receiver>
         builder.ToTable("receivers");
 
         builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("ID");
         
         builder.Property(x => x.Name)
             .IsRequired()

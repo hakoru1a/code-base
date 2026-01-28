@@ -1,11 +1,11 @@
 using MediatR;
 using TLBIOMASS.Domain.Agencies.Interfaces;
 using Shared.DTOs.Agency;
-using TLBIOMASS.Domain.Agencies.Specifications;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
-using TLBIOMASS.Domain.Agencies;
+using TLBIOMASS.Domain.Agencies.Specifications;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace TLBIOMASS.Application.Features.Agencies.Queries.GetAllAgencies;
 
@@ -22,9 +22,10 @@ public class GetAllAgenciesQueryHandler : IRequestHandler<GetAllAgenciesQuery, L
     {
         var query = _repository.FindAll();
 
-        if (!string.IsNullOrEmpty(request.Filter.Search))
+        // 1. Apply Search Filter
+        if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
         {
-            var spec = new AgencySearchSpecification(request.Filter.Search);
+            var spec = new AgencySearchSpecification(request.Filter.SearchTerms);
             query = query.Where(spec.ToExpression());
         }
 
@@ -34,12 +35,8 @@ public class GetAllAgenciesQueryHandler : IRequestHandler<GetAllAgenciesQuery, L
             query = query.Where(spec.ToExpression());
         }
 
-        // Apply sorting (reuse logic or simple default)
-        // Since we don't have SortBy in GetAllAgenciesQuery, defaults to CreatedDate desc
-        query = query.OrderByDescending(x => x.CreatedDate);
-
-        var items = await query.ToListAsync(cancellationToken);
-
-        return items.Adapt<List<AgencyResponseDto>>();
+        // 2. Fetch and Adapt (Strictly no sorting as per user request)
+        var entities = await query.ToListAsync(cancellationToken);
+        return entities.Adapt<List<AgencyResponseDto>>();
     }
 }

@@ -11,16 +11,17 @@ public class RegionMaterial : EntityAuditBase<int>
 
     // Navigation properties
     public virtual MaterialRegion MaterialRegion { get; private set; } = null!;
-    public virtual Material Material { get; private set; } = null!;
+    public virtual Material? Material { get; private set; } // Make nullable to avoid required check on insert
 
-    private RegionMaterial() { }
+    protected RegionMaterial() { }
 
-    internal RegionMaterial(MaterialRegion materialRegion, Material material, double? areaHa = null)
+    internal RegionMaterial(MaterialRegion materialRegion, int materialId, double? areaHa = null)
     {
         MaterialRegion = materialRegion;
-        MaterialRegionId = materialRegion.Id;
-        Material = material;
-        MaterialId = material.Id;
+        // MaterialRegionId might not be set yet if MaterialRegion is new (Id=0), 
+        // but EF Core handles the relationship fixup via navigation property.
+        
+        MaterialId = materialId;
         AreaHa = areaHa;
         CreatedDate = DateTime.UtcNow;
     }

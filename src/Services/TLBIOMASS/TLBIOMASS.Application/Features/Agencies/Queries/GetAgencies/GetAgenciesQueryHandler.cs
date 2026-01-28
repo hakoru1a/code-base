@@ -25,9 +25,9 @@ public class GetAgenciesQueryHandler : IRequestHandler<GetAgenciesQuery, PagedLi
         var query = _repository.FindAll();
 
         // Apply filters using Specifications as per Architecture Guide
-        if (!string.IsNullOrEmpty(request.Filter.Search))
+        if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
         {
-            var spec = new AgencySearchSpecification(request.Filter.Search);
+            var spec = new AgencySearchSpecification(request.Filter.SearchTerms);
             query = query.Where(spec.ToExpression());
         }
 

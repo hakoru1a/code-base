@@ -17,6 +17,11 @@ namespace TLBIOMASS.Infrastructure
             services.AddScoped<TLBIOMASS.Domain.Materials.Interfaces.IMaterialRepository, TLBIOMASS.Infrastructure.Repositories.MaterialRepository>();
             services.AddScoped<TLBIOMASS.Domain.Landowners.Interfaces.ILandownerRepository, TLBIOMASS.Infrastructure.Repositories.LandownerRepository>();
             services.AddScoped<TLBIOMASS.Domain.MaterialRegions.Interfaces.IMaterialRegionRepository, TLBIOMASS.Infrastructure.Repositories.MaterialRegionRepository>();
+            services.AddScoped<TLBIOMASS.Domain.Companies.Interfaces.ICompanyRepository, TLBIOMASS.Infrastructure.Repositories.CompanyRepository>();
+            services.AddScoped<TLBIOMASS.Domain.WeighingTickets.Interfaces.IWeighingTicketRepository, TLBIOMASS.Infrastructure.Repositories.WeighingTicketRepository>();
+            services.AddScoped<TLBIOMASS.Domain.WeighingTicketCancels.Interfaces.IWeighingTicketCancelRepository, TLBIOMASS.Infrastructure.Repositories.WeighingTicketCancelRepository>();
+            services.AddScoped<TLBIOMASS.Domain.Payments.Interfaces.IWeighingTicketPaymentRepository, TLBIOMASS.Infrastructure.Repositories.WeighingTicketPaymentRepository>();
+            services.AddScoped<TLBIOMASS.Domain.Payments.Interfaces.IPaymentDetailRepository, TLBIOMASS.Infrastructure.Repositories.PaymentDetailRepository>();
 
             // Configure MassTransit with RabbitMQ (optional - uncomment if needed)
             // services.AddMassTransit(x =>

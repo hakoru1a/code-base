@@ -11,6 +11,7 @@ public class RegionMaterialConfiguration : IEntityTypeConfiguration<RegionMateri
         builder.ToTable("material_region_materials");
 
         builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasColumnName("ID");
 
         builder.Property(x => x.MaterialRegionId)
             .IsRequired()

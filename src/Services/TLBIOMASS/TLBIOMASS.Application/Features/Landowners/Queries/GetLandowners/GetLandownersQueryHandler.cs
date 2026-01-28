@@ -25,9 +25,9 @@ public class GetLandownersQueryHandler : IRequestHandler<GetLandownersQuery, Pag
         var query = _repository.FindAll();
 
         // Apply filters using Specifications
-        if (!string.IsNullOrEmpty(request.Filter.Search))
+        if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
         {
-            var spec = new LandownerSearchSpecification(request.Filter.Search);
+            var spec = new LandownerSearchSpecification(request.Filter.SearchTerms);
             query = query.Where(spec.ToExpression());
         }
 

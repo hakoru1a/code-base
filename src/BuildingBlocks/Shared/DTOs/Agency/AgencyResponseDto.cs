@@ -1,8 +1,9 @@
+using Shared.DTOs;
+
 namespace Shared.DTOs.Agency;
 
-public class AgencyResponseDto
+public class AgencyResponseDto : BaseResponseDto<int>
 {
-    public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Phone { get; set; }
     public string? Email { get; set; }
@@ -13,6 +14,4 @@ public class AgencyResponseDto
     public string? IssuePlace { get; set; }
     public DateTime? IssueDate { get; set; }
     public bool IsActive { get; set; }
-    public DateTimeOffset CreatedDate { get; set; }
-    public DateTimeOffset? LastModifiedDate { get; set; }
 }

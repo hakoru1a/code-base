@@ -3,7 +3,7 @@ using TLBIOMASS.Domain.MaterialRegions;
 using TLBIOMASS.Domain.MaterialRegions.Interfaces;
 using TLBIOMASS.Domain.Materials.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Shared.Events.MaterialRegion;
+using Contracts.Exceptions;
 
 namespace TLBIOMASS.Application.Features.MaterialRegions.Commands.CreateMaterialRegion;
 
@@ -32,22 +32,25 @@ public class CreateMaterialRegionCommandHandler : IRequestHandler<CreateMaterial
 
         if (request.RegionMaterials.Any())
         {
-            var materialIds = request.RegionMaterials.Select(x => x.MaterialId).ToList();
-            var materials = await _materialRepository.FindAll()
-                .Where(x => materialIds.Contains(x.Id))
+            var requestMaterialIds = request.RegionMaterials.Select(x => x.MaterialId).Distinct().ToList();
+            
+            // Validate that all materials exist
+            var existingMaterialIds = await _materialRepository.FindAll()
+                .Where(x => requestMaterialIds.Contains(x.Id))
+                .Select(x => x.Id)
                 .ToListAsync(cancellationToken);
+
+            if (existingMaterialIds.Count != requestMaterialIds.Count)
+            {
+                var missingIds = requestMaterialIds.Except(existingMaterialIds);
+                throw new BadRequestException($"Materials with IDs [{string.Join(", ", missingIds)}] do not exist.");
+            }
 
             foreach (var rmDto in request.RegionMaterials)
             {
-                var material = materials.FirstOrDefault(x => x.Id == rmDto.MaterialId);
-                if (material != null)
-                {
-                    region.AddMaterial(material, rmDto.AreaHa);
-                }
+                region.AddMaterial(rmDto.MaterialId, rmDto.AreaHa);
             }
         }
-
-        //region.AddDomainEvent(new MaterialRegionCreatedEvent(region.Id, region.RegionName));
 
         await _repository.CreateAsync(region);
         await _repository.SaveChangesAsync(cancellationToken);

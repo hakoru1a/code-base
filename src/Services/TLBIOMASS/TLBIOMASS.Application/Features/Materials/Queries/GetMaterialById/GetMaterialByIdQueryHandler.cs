@@ -1,6 +1,7 @@
 using MediatR;
 using TLBIOMASS.Domain.Materials.Interfaces;
 using Shared.DTOs.Material;
+using Contracts.Exceptions;
 using Mapster;
 
 namespace TLBIOMASS.Application.Features.Materials.Queries.GetMaterialById;
@@ -17,6 +18,10 @@ public class GetMaterialByIdQueryHandler : IRequestHandler<GetMaterialByIdQuery,
     public async Task<MaterialResponseDto> Handle(GetMaterialByIdQuery request, CancellationToken cancellationToken)
     {
         var material = await _repository.GetByIdAsync(request.Id);
-        return material?.Adapt<MaterialResponseDto>();
+        if (material == null)
+        {
+            throw new NotFoundException("Material", request.Id);
+        }
+        return material.Adapt<MaterialResponseDto>();
     }
 }

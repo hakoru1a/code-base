@@ -1,5 +1,4 @@
 using Contracts.Domain;
-
 using TLBIOMASS.Domain.Materials;
 
 namespace TLBIOMASS.Domain.MaterialRegions;
@@ -48,8 +47,6 @@ public class MaterialRegion : EntityAuditBase<int>
         string? certificateID,
         int ownerId)
     {
-
-
         return new MaterialRegion(
             regionName,
             address,
@@ -70,8 +67,6 @@ public class MaterialRegion : EntityAuditBase<int>
         string? certificateID,
         int ownerId)
     {
-
-
         RegionName = regionName;
         Address = address;
         Latitude = latitude;
@@ -81,14 +76,12 @@ public class MaterialRegion : EntityAuditBase<int>
         OwnerId = ownerId;
     }
 
-    public void AddMaterial(Material material, double? areaHa = null)
+    public void AddMaterial(int materialId, double? areaHa = null)
     {
-        if (material == null) throw new ArgumentNullException(nameof(material));
-        
-        if (_regionMaterials.Any(x => x.MaterialId == material.Id))
+        if (_regionMaterials.Any(x => x.MaterialId == materialId))
             return;
 
-        _regionMaterials.Add(new RegionMaterial(this, material, areaHa));
+        _regionMaterials.Add(new RegionMaterial(this, materialId, areaHa));
     }
 
     public void RemoveMaterial(int materialId)

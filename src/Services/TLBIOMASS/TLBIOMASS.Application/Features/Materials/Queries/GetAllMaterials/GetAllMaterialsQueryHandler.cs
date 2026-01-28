@@ -3,9 +3,9 @@ using TLBIOMASS.Domain.Materials.Interfaces;
 using Shared.DTOs.Material;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using TLBIOMASS.Domain.Materials;
 using TLBIOMASS.Domain.Materials.Specifications;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace TLBIOMASS.Application.Features.Materials.Queries.GetAllMaterials;
 
@@ -22,6 +22,7 @@ public class GetAllMaterialsQueryHandler : IRequestHandler<GetAllMaterialsQuery,
     {
         var query = _repository.FindAll();
 
+        // 1. Apply Filters
         if (!string.IsNullOrEmpty(request.Filter.Search))
         {
             var spec = new MaterialSearchSpecification(request.Filter.Search);
@@ -34,11 +35,8 @@ public class GetAllMaterialsQueryHandler : IRequestHandler<GetAllMaterialsQuery,
             query = query.Where(spec.ToExpression());
         }
 
-        // Default sorting
-        query = query.OrderByDescending(x => x.CreatedAt);
-
-        var items = await query.ToListAsync(cancellationToken);
-
-        return items.Adapt<List<MaterialResponseDto>>();
+        // 2. Fetch and Adapt (No sorting)
+        var entities = await query.ToListAsync(cancellationToken);
+        return entities.Adapt<List<MaterialResponseDto>>();
     }
 }

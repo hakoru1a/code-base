@@ -1,9 +1,11 @@
 using MediatR;
 using TLBIOMASS.Domain.MaterialRegions.Interfaces;
 using Shared.DTOs.MaterialRegion;
-using TLBIOMASS.Domain.MaterialRegions.Specifications;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using TLBIOMASS.Domain.MaterialRegions.Specifications;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace TLBIOMASS.Application.Features.MaterialRegions.Queries.GetAllMaterialRegions;
 
@@ -18,26 +20,19 @@ public class GetAllMaterialRegionsQueryHandler : IRequestHandler<GetAllMaterialR
 
     public async Task<List<MaterialRegionResponseDto>> Handle(GetAllMaterialRegionsQuery request, CancellationToken cancellationToken)
     {
-        var query = _repository.FindAll()
-            .Include(x => x.RegionMaterials)
-            .ThenInclude(x => x.Material)
-            .AsQueryable();
+        var query = _repository.FindAll();
 
-        if (!string.IsNullOrEmpty(request.Filter.Search))
+        // 1. Apply Filters
+        if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
         {
-            var spec = new MaterialRegionSearchSpecification(request.Filter.Search);
+            var spec = new MaterialRegionSearchSpecification(request.Filter.SearchTerms);
             query = query.Where(spec.ToExpression());
         }
 
-        if (request.Filter.OwnerId.HasValue)
-        {
-            query = query.Where(x => x.OwnerId == request.Filter.OwnerId.Value);
-        }
+        // Removed IsActive check based on user feedback
 
-        query = query.OrderByDescending(x => x.CreatedDate);
-
-        var items = await query.ToListAsync(cancellationToken);
-
-        return items.Adapt<List<MaterialRegionResponseDto>>();
+        // 2. Fetch and Adapt (No sorting)
+        var entities = await query.ToListAsync(cancellationToken);
+        return entities.Adapt<List<MaterialRegionResponseDto>>();
     }
 }

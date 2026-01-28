@@ -24,9 +24,9 @@ public class GetReceiversQueryHandler : IRequestHandler<GetReceiversQuery, Paged
         var query = _repository.FindAll();
 
         // Apply filters using Specifications as per Architecture Guide
-        if (!string.IsNullOrEmpty(request.Filter.Search))
+        if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
         {
-            var spec = new ReceiverSearchSpecification(request.Filter.Search);
+            var spec = new ReceiverSearchSpecification(request.Filter.SearchTerms);
             query = query.Where(spec.ToExpression());
         }
 

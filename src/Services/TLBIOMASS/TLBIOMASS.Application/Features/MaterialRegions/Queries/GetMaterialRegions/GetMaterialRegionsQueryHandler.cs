@@ -25,9 +25,9 @@ public class GetMaterialRegionsQueryHandler : IRequestHandler<GetMaterialRegions
             .ThenInclude(x => x.Material)
             .AsQueryable();
 
-        if (!string.IsNullOrEmpty(request.Filter.Search))
+        if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
         {
-            var spec = new MaterialRegionSearchSpecification(request.Filter.Search);
+            var spec = new MaterialRegionSearchSpecification(request.Filter.SearchTerms);
             query = query.Where(spec.ToExpression());
         }
 
