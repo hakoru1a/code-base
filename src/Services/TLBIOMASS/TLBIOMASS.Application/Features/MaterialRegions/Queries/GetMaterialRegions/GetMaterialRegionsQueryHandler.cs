@@ -56,6 +56,35 @@ public class GetMaterialRegionsQueryHandler : IRequestHandler<GetMaterialRegions
 
     private static IQueryable<MaterialRegion> ApplySort(IQueryable<MaterialRegion> query, string? orderBy, string? direction)
     {
-        return query;
+        if (string.IsNullOrWhiteSpace(orderBy))
+            return query.OrderBy(x => x.Id);
+
+        var isDescending = direction?.ToLower() == "desc";
+
+        return orderBy.ToLower() switch
+        {
+            "regionname" => isDescending
+                ? query.OrderByDescending(x => x.Detail.RegionName)
+                : query.OrderBy(x => x.Detail.RegionName),
+            "address" => isDescending
+                ? query.OrderByDescending(x => x.Detail.Address)
+                : query.OrderBy(x => x.Detail.Address),
+            "areaha" => isDescending
+                ? query.OrderByDescending(x => x.Detail.AreaHa)
+                : query.OrderBy(x => x.Detail.AreaHa),
+            "certificateid" => isDescending
+                ? query.OrderByDescending(x => x.Detail.CertificateId)
+                : query.OrderBy(x => x.Detail.CertificateId),
+            "ownerid" => isDescending
+                ? query.OrderByDescending(x => x.OwnerId)
+                : query.OrderBy(x => x.OwnerId),
+            "createddate" => isDescending
+                ? query.OrderByDescending(x => x.CreatedDate)
+                : query.OrderBy(x => x.CreatedDate),
+            "lastmodifieddate" => isDescending
+                ? query.OrderByDescending(x => x.LastModifiedDate)
+                : query.OrderBy(x => x.LastModifiedDate),
+            _ => query.OrderBy(x => x.Id)
+        };
     }
 }

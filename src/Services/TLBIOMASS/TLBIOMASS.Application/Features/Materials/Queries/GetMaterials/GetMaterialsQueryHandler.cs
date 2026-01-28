@@ -58,6 +58,32 @@ public class GetMaterialsQueryHandler : IRequestHandler<GetMaterialsQuery, Paged
 
     private static IQueryable<Material> ApplySort(IQueryable<Material> query, string? orderBy, string? direction)
     {
-        return query;
+        if (string.IsNullOrWhiteSpace(orderBy))
+            return query.OrderBy(x => x.Id);
+
+        var isDescending = direction?.ToLower() == "desc";
+
+        return orderBy.ToLower() switch
+        {
+            "name" => isDescending
+                ? query.OrderByDescending(x => x.Spec.Name)
+                : query.OrderBy(x => x.Spec.Name),
+            "unit" => isDescending
+                ? query.OrderByDescending(x => x.Spec.Unit)
+                : query.OrderBy(x => x.Spec.Unit),
+            "description" => isDescending
+                ? query.OrderByDescending(x => x.Spec.Description)
+                : query.OrderBy(x => x.Spec.Description),
+            "isactive" => isDescending
+                ? query.OrderByDescending(x => x.IsActive)
+                : query.OrderBy(x => x.IsActive),
+            "createdat" => isDescending
+                ? query.OrderByDescending(x => x.CreatedAt)
+                : query.OrderBy(x => x.CreatedAt),
+            "updatedat" => isDescending
+                ? query.OrderByDescending(x => x.UpdatedAt)
+                : query.OrderBy(x => x.UpdatedAt),
+            _ => query.OrderBy(x => x.Id)
+        };
     }
 }

@@ -46,6 +46,32 @@ public class GetAgenciesQueryHandler : IRequestHandler<GetAgenciesQuery, PagedLi
 
     private static IQueryable<Agency> ApplySort(IQueryable<Agency> query, string? orderBy, string? direction)
     {
-        return query;
+        if (string.IsNullOrWhiteSpace(orderBy))
+        {
+            return query.OrderBy(x => x.Id); // Default sort
+        }
+
+        var isDescending = direction?.ToLower() == "desc";
+
+        return orderBy.ToLower() switch
+        {
+            "bankname" => isDescending
+                ? query.OrderByDescending(x => x.Bank != null ? x.Bank.BankName : null)
+                : query.OrderBy(x => x.Bank != null ? x.Bank.BankName : null),
+
+            "isactive" => isDescending
+                ? query.OrderByDescending(x => x.IsActive)
+                : query.OrderBy(x => x.IsActive),
+
+            "createdate" => isDescending
+                ? query.OrderByDescending(x => x.CreatedDate)
+                : query.OrderBy(x => x.CreatedDate),
+
+            "updatedate" => isDescending
+                ? query.OrderByDescending(x => x.LastModifiedDate)
+                : query.OrderBy(x => x.LastModifiedDate),
+
+            _ => query.OrderBy(x => x.Id) // Fallback to default
+        };
     }
 }

@@ -58,6 +58,41 @@ public class GetReceiversQueryHandler : IRequestHandler<GetReceiversQuery, Paged
 
     private static IQueryable<Receiver> ApplySort(IQueryable<Receiver> query, string? orderBy, string? direction)
     {
-        return query;
+        if (string.IsNullOrWhiteSpace(orderBy))
+            return query.OrderBy(x => x.Id);
+
+        var isDescending = direction?.ToLower() == "desc";
+
+        return orderBy.ToLower() switch
+        {
+            "name" => isDescending
+                ? query.OrderByDescending(x => x.Name)
+                : query.OrderBy(x => x.Name),
+            "phone" => isDescending
+                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Phone : null)
+                : query.OrderBy(x => x.Contact != null ? x.Contact.Phone : null),
+            "email" => isDescending
+                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Email : null)
+                : query.OrderBy(x => x.Contact != null ? x.Contact.Email : null),
+            "address" => isDescending
+                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Address : null)
+                : query.OrderBy(x => x.Contact != null ? x.Contact.Address : null),
+            "bankname" => isDescending
+                ? query.OrderByDescending(x => x.Bank != null ? x.Bank.BankName : null)
+                : query.OrderBy(x => x.Bank != null ? x.Bank.BankName : null),
+            "isdefault" => isDescending
+                ? query.OrderByDescending(x => x.IsDefault)
+                : query.OrderBy(x => x.IsDefault),
+            "isactive" => isDescending
+                ? query.OrderByDescending(x => x.IsActive)
+                : query.OrderBy(x => x.IsActive),
+            "createdat" => isDescending
+                ? query.OrderByDescending(x => x.CreatedAt)
+                : query.OrderBy(x => x.CreatedAt),
+            "updatedat" => isDescending
+                ? query.OrderByDescending(x => x.UpdatedAt)
+                : query.OrderBy(x => x.UpdatedAt),
+            _ => query.OrderBy(x => x.Id)
+        };
     }
 }

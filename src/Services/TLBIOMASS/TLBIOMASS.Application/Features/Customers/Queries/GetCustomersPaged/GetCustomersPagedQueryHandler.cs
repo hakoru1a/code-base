@@ -67,7 +67,39 @@ public class GetCustomersPagedQueryHandler : IRequestHandler<GetCustomersPagedQu
 
     private static IQueryable<Customer> ApplySort(IQueryable<Customer> query, string? orderBy, string? direction)
     {
-        return query;
+        if (string.IsNullOrWhiteSpace(orderBy))
+            return query.OrderBy(x => x.Id);
+
+        var isDescending = direction?.ToLower() == "desc";
+
+        return orderBy.ToLower() switch
+        {
+            "name" => isDescending
+                ? query.OrderByDescending(x => x.Name)
+                : query.OrderBy(x => x.Name),
+            "taxcode" => isDescending
+                ? query.OrderByDescending(x => x.TaxCode)
+                : query.OrderBy(x => x.TaxCode),
+            "phone" => isDescending
+                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Phone : null)
+                : query.OrderBy(x => x.Contact != null ? x.Contact.Phone : null),
+            "email" => isDescending
+                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Email : null)
+                : query.OrderBy(x => x.Contact != null ? x.Contact.Email : null),
+            "address" => isDescending
+                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Address : null)
+                : query.OrderBy(x => x.Contact != null ? x.Contact.Address : null),
+            "isactive" => isDescending
+                ? query.OrderByDescending(x => x.IsActive)
+                : query.OrderBy(x => x.IsActive),
+            "createddate" => isDescending
+                ? query.OrderByDescending(x => x.CreatedDate)
+                : query.OrderBy(x => x.CreatedDate),
+            "lastmodifieddate" => isDescending
+                ? query.OrderByDescending(x => x.LastModifiedDate)
+                : query.OrderBy(x => x.LastModifiedDate),
+            _ => query.OrderBy(x => x.Id)
+        };
     }
 }
 
