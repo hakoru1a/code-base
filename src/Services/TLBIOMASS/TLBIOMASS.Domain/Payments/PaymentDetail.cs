@@ -2,21 +2,18 @@ using Contracts.Domain;
 using TLBIOMASS.Domain.Payments.Rules;
 using TLBIOMASS.Domain.WeighingTickets;
 using TLBIOMASS.Domain.Agencies;
+using TLBIOMASS.Domain.Payments.ValueObjects;
 
 namespace TLBIOMASS.Domain.Payments;
 
 public class PaymentDetail : EntityAuditBase<int>
 {
     public int WeighingTicketId { get; private set; }
-    public string PaymentCode { get; private set; } = string.Empty;
-    public DateTime PaymentDate { get; private set; }
     public int? AgencyId { get; private set; }
-    public decimal Amount { get; private set; }
-    public decimal RemainingAmount { get; private set; }
-    public string? Note { get; private set; }
-    public bool IsPaid { get; private set; }
-    public bool IsLocked { get; private set; }
-    public DateTime? CustomerPaymentDate { get; private set; }
+    
+    public PaymentInfo Info { get; private set; } = null!;
+    public PaymentAmount PaymentAmount { get; private set; } = null!;
+    public PaymentProcessStatus ProcessStatus { get; private set; } = null!;
 
     // Navigation properties
     public virtual WeighingTicket WeighingTicket { get; private set; } = null!;
@@ -26,66 +23,50 @@ public class PaymentDetail : EntityAuditBase<int>
 
     private PaymentDetail(
         int weighingTicketId, 
-        string paymentCode,
-        DateTime paymentDate,
         int? agencyId,
-        decimal amount, 
-        decimal remainingAmount, 
-        string? note, 
-        bool isPaid, 
-        DateTime? customerPaymentDate)
+        PaymentInfo info,
+        PaymentAmount paymentAmount,
+        PaymentProcessStatus processStatus)
     {
         WeighingTicketId = weighingTicketId;
-        PaymentCode = paymentCode;
-        PaymentDate = paymentDate;
         AgencyId = agencyId;
-        Amount = amount;
-        RemainingAmount = remainingAmount;
-        Note = note;
-        IsPaid = isPaid;
-        IsLocked = false;
-        CustomerPaymentDate = customerPaymentDate;
+        Info = info;
+        PaymentAmount = paymentAmount;
+        ProcessStatus = processStatus;
     }
 
     public static PaymentDetail Create(
         int weighingTicketId, 
-        string paymentCode,
-        DateTime paymentDate,
         int? agencyId,
+        PaymentInfo info,
         decimal amount, 
         decimal currentRemaining, // The remaining amount BEFORE this payment
-        string? note, 
-        bool isPaid, 
-        DateTime? customerPaymentDate)
+        bool isPaid)
     {
         // Business Rule: Amount cannot exceed remaining
         CheckRule(new PaymentAmountCannotExceedRemainingRule(amount, currentRemaining));
 
         var newRemaining = currentRemaining - amount;
+        var paymentAmount = new PaymentAmount(amount, newRemaining);
+        var status = new PaymentProcessStatus(isPaid, false);
 
         return new PaymentDetail(
             weighingTicketId, 
-            paymentCode,
-            paymentDate,
             agencyId,
-            amount, 
-            newRemaining, 
-            note, 
-            isPaid, 
-            customerPaymentDate);
+            info,
+            paymentAmount,
+            status);
     }
 
-    // Explicitly NO Update or Delete methods for Amount/RemainingAmount to enforce immutability.
-    
     public void UpdatePaymentStatus(bool isPaid)
     {
-        CheckRule(new PaymentIsLockedRule(IsLocked));
+        CheckRule(new PaymentIsLockedRule(ProcessStatus.IsLocked));
             
-        IsPaid = isPaid;
+        ProcessStatus = ProcessStatus with { IsPaid = isPaid };
     }
 
     public void Lock()
     {
-        IsLocked = true;
+        ProcessStatus = ProcessStatus with { IsLocked = true };
     }
 }

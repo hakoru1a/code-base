@@ -3,7 +3,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Shared.DTOs.Customer;
 using TLBIOMASS.Domain.Customers.Interfaces;
-using TLBIOMASS.Domain.Customers.Specifications;
 
 namespace TLBIOMASS.Application.Features.Customers.Queries.GetCustomers;
 
@@ -23,14 +22,12 @@ public class GetCustomersQueryHandler : IRequestHandler<GetCustomersQuery, List<
 
         if (!string.IsNullOrEmpty(filter.Search))
         {
-            var searchSpec = new CustomerSearchSpecification(filter.Search);
-            query = query.Where(searchSpec.ToExpression());
-        }
-
-        if (filter.IsActive.HasValue)
-        {
-            var activeSpec = new CustomerIsActiveSpecification(filter.IsActive.Value);
-            query = query.Where(activeSpec.ToExpression());
+            var search = filter.Search.Trim().ToLower();
+            query = query.Where(c => c.Name.ToLower().Contains(search) ||
+                               (c.Contact != null && c.Contact.Phone != null && c.Contact.Phone.Contains(search)) ||
+                               (c.Contact != null && c.Contact.Email != null && c.Contact.Email.ToLower().Contains(search)) ||
+                               (c.Contact != null && c.Contact.Address != null && c.Contact.Address.ToLower().Contains(search)) ||
+                               (c.TaxCode != null && c.TaxCode.ToLower().Contains(search)));
         }
 
         var customers = await query.ToListAsync(cancellationToken);

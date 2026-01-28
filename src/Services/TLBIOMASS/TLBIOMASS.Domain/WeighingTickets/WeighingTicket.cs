@@ -2,6 +2,7 @@ using Contracts.Domain;
 using TLBIOMASS.Domain.Payments;
 using TLBIOMASS.Domain.Receivers;
 using TLBIOMASS.Domain.Materials;
+using TLBIOMASS.Domain.WeighingTickets.ValueObjects;
 
 namespace TLBIOMASS.Domain.WeighingTickets;
 
@@ -15,11 +16,7 @@ public class WeighingTicket : EntityBase<int>
     public string CustomerName { get; private set; } = string.Empty;
     public string MaterialName { get; private set; } = string.Empty;
     public string? PhoneNumber { get; private set; }
-    public int WeightIn { get; private set; }
-    public int WeightOut { get; private set; }
-    public int NetWeight { get; private set; }
-    public int ImpurityDeduction { get; private set; }
-    public int PayableWeight { get; private set; }
+    public WeightInfo Weights { get; private set; } = null!;
     public long Price { get; private set; }
     public long TotalAmount { get; private set; }
     public DateTime? FirstWeighingTime { get; private set; }
@@ -28,9 +25,7 @@ public class WeighingTicket : EntityBase<int>
     public DateTime CreatedDate { get; private set; } // ngay_tao
     public string? FSCClassification { get; private set; }
     public bool HasOriginProfile { get; private set; }
-    public string? VehicleFrontImage { get; private set; }
-    public string? VehicleBodyImage { get; private set; }
-    public string? VehicleRearImage { get; private set; }
+    public TicketImages Images { get; private set; } = null!;
     public string? Note { get; private set; }
     public string? QualityStatus { get; private set; }
     public string? CreatedByString { get; private set; }
@@ -46,12 +41,12 @@ public class WeighingTicket : EntityBase<int>
 
     // Calculated properties (Not mapped to DB)
     public decimal RemainingAmount => PaymentDetails.Any() 
-        ? PaymentDetails.OrderByDescending(pd => pd.CreatedDate).ThenByDescending(pd => pd.Id).First().RemainingAmount 
+        ? PaymentDetails.OrderByDescending(pd => pd.CreatedDate).ThenByDescending(pd => pd.Id).First().PaymentAmount.RemainingAmount 
         : (FinalPayment != null ? FinalPayment.TotalPayableAmount : (decimal)TotalAmount);
 
     public bool IsPaid => PaymentDetails.Any();
 
-    public bool IsFullyPaid => PaymentDetails.Any(pd => pd.RemainingAmount == 0);
+    public bool IsFullyPaid => PaymentDetails.Any(pd => pd.PaymentAmount.RemainingAmount == 0);
 
     protected WeighingTicket() { }
 
@@ -64,11 +59,7 @@ public class WeighingTicket : EntityBase<int>
         string customerName,
         string materialName,
         string? phoneNumber,
-        int weightIn,
-        int weightOut,
-        int netWeight,
-        int impurityDeduction,
-        int payableWeight,
+        WeightInfo weights,
         long price,
         long totalAmount,
         DateTime? firstWeighingTime,
@@ -77,9 +68,7 @@ public class WeighingTicket : EntityBase<int>
         DateTime createdDate,
         string? fscClassification,
         bool hasOriginProfile,
-        string? vehicleFrontImage,
-        string? vehicleBodyImage,
-        string? vehicleRearImage,
+        TicketImages images,
         string? note,
         string? qualityStatus,
         string? createdByString,
@@ -94,11 +83,7 @@ public class WeighingTicket : EntityBase<int>
         CustomerName = customerName;
         MaterialName = materialName;
         PhoneNumber = phoneNumber;
-        WeightIn = weightIn;
-        WeightOut = weightOut;
-        NetWeight = netWeight;
-        ImpurityDeduction = impurityDeduction;
-        PayableWeight = payableWeight;
+        Weights = weights;
         Price = price;
         TotalAmount = totalAmount;
         FirstWeighingTime = firstWeighingTime;
@@ -107,9 +92,7 @@ public class WeighingTicket : EntityBase<int>
         CreatedDate = createdDate;
         FSCClassification = fscClassification;
         HasOriginProfile = hasOriginProfile;
-        VehicleFrontImage = vehicleFrontImage;
-        VehicleBodyImage = vehicleBodyImage;
-        VehicleRearImage = vehicleRearImage;
+        Images = images;
         Note = note;
         QualityStatus = qualityStatus;
         CreatedByString = createdByString;
@@ -126,11 +109,7 @@ public class WeighingTicket : EntityBase<int>
         string customerName,
         string materialName,
         string? phoneNumber,
-        int weightIn,
-        int weightOut,
-        int netWeight,
-        int impurityDeduction,
-        int payableWeight,
+        WeightInfo weights,
         long price,
         long totalAmount,
         DateTime? firstWeighingTime,
@@ -139,9 +118,7 @@ public class WeighingTicket : EntityBase<int>
         DateTime createdDate,
         string? fscClassification,
         bool hasOriginProfile,
-        string? vehicleFrontImage,
-        string? vehicleBodyImage,
-        string? vehicleRearImage,
+        TicketImages images,
         string? note,
         string? qualityStatus,
         string? createdByString,
@@ -156,11 +133,7 @@ public class WeighingTicket : EntityBase<int>
             customerName,
             materialName,
             phoneNumber,
-            weightIn,
-            weightOut,
-            netWeight,
-            impurityDeduction,
-            payableWeight,
+            weights,
             price,
             totalAmount,
             firstWeighingTime,
@@ -169,9 +142,7 @@ public class WeighingTicket : EntityBase<int>
             createdDate,
             fscClassification,
             hasOriginProfile,
-            vehicleFrontImage,
-            vehicleBodyImage,
-            vehicleRearImage,
+            images,
             note,
             qualityStatus,
             createdByString,
@@ -186,11 +157,7 @@ public class WeighingTicket : EntityBase<int>
         string customerName,
         string materialName,
         string? phoneNumber,
-        int weightIn,
-        int weightOut,
-        int netWeight,
-        int impurityDeduction,
-        int payableWeight,
+        WeightInfo weights,
         long price,
         long totalAmount,
         DateTime? firstWeighingTime,
@@ -198,9 +165,7 @@ public class WeighingTicket : EntityBase<int>
         DateTime? paymentDate,
         string? fscClassification,
         bool hasOriginProfile,
-        string? vehicleFrontImage,
-        string? vehicleBodyImage,
-        string? vehicleRearImage,
+        TicketImages images,
         string? note,
         string? qualityStatus,
         int? receiverId)
@@ -211,11 +176,7 @@ public class WeighingTicket : EntityBase<int>
         CustomerName = customerName;
         MaterialName = materialName;
         PhoneNumber = phoneNumber;
-        WeightIn = weightIn;
-        WeightOut = weightOut;
-        NetWeight = netWeight;
-        ImpurityDeduction = impurityDeduction;
-        PayableWeight = payableWeight;
+        Weights = weights;
         Price = price;
         TotalAmount = totalAmount;
         FirstWeighingTime = firstWeighingTime;
@@ -223,9 +184,7 @@ public class WeighingTicket : EntityBase<int>
         PaymentDate = paymentDate;
         FSCClassification = fscClassification;
         HasOriginProfile = hasOriginProfile;
-        VehicleFrontImage = vehicleFrontImage;
-        VehicleBodyImage = vehicleBodyImage;
-        VehicleRearImage = vehicleRearImage;
+        Images = images;
         Note = note;
         QualityStatus = qualityStatus;
         ReceiverId = receiverId;

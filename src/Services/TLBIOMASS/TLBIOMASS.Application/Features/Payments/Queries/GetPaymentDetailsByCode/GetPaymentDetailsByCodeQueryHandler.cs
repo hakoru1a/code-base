@@ -18,7 +18,7 @@ public class GetPaymentDetailsByCodeQueryHandler : IRequestHandler<GetPaymentDet
 
     public async Task<List<PaymentDetailResponseDto>> Handle(GetPaymentDetailsByCodeQuery request, CancellationToken cancellationToken)
     {
-        return await _repository.FindByCondition(x => x.PaymentCode == request.PaymentCode)
+        return await _repository.FindByCondition(x => x.Info.PaymentCode == request.PaymentCode)
             .Include(x => x.WeighingTicket)
             .Include(x => x.Agency)
             .ProjectToType<PaymentDetailResponseDto>()

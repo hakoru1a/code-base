@@ -6,7 +6,6 @@ using Shared.SeedWork;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using TLBIOMASS.Domain.MaterialRegions;
-using TLBIOMASS.Domain.MaterialRegions.Specifications;
 
 namespace TLBIOMASS.Application.Features.MaterialRegions.Queries.GetMaterialRegions;
 
@@ -28,12 +27,6 @@ public class GetMaterialRegionsQueryHandler : IRequestHandler<GetMaterialRegions
 
         query = ApplyFilter(query, request.Filter);
 
-        if (!string.IsNullOrEmpty(request.Filter.Search))
-        {
-            var spec = new MaterialRegionSearchSpecification(request.Filter.SearchTerms);
-            query = query.Where(spec.ToExpression());
-        }
-
         query = ApplySort(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
 
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
@@ -50,6 +43,14 @@ public class GetMaterialRegionsQueryHandler : IRequestHandler<GetMaterialRegions
 
         if (filter.OwnerId.HasValue)
             query = query.Where(x => x.OwnerId == filter.OwnerId.Value);
+
+        if (!string.IsNullOrWhiteSpace(filter.SearchTerms))
+        {
+            var search = filter.SearchTerms.Trim().ToLower();
+            query = query.Where(x => x.Detail.RegionName.ToLower().Contains(search) || 
+                               (x.Detail.Address != null && x.Detail.Address.ToLower().Contains(search)) ||
+                               (x.Detail.CertificateId != null && x.Detail.CertificateId.ToLower().Contains(search)));
+        }
 
         return query;
     }

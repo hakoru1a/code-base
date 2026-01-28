@@ -3,7 +3,6 @@ using TLBIOMASS.Domain.Materials.Interfaces;
 using Shared.DTOs.Material;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
-using TLBIOMASS.Domain.Materials.Specifications;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -25,14 +24,9 @@ public class GetAllMaterialsQueryHandler : IRequestHandler<GetAllMaterialsQuery,
         // 1. Apply Filters
         if (!string.IsNullOrEmpty(request.Filter.Search))
         {
-            var spec = new MaterialSearchSpecification(request.Filter.Search);
-            query = query.Where(spec.ToExpression());
-        }
-
-        if (request.Filter.IsActive.HasValue)
-        {
-            var spec = new MaterialIsActiveSpecification(request.Filter.IsActive.Value);
-            query = query.Where(spec.ToExpression());
+            var search = request.Filter.Search.Trim().ToLower();
+            query = query.Where(x => x.Spec.Name.ToLower().Contains(search) || 
+                               (x.Spec.Description != null && x.Spec.Description.ToLower().Contains(search)));
         }
 
         // 2. Fetch and Adapt (No sorting)

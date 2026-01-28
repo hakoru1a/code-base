@@ -21,8 +21,11 @@ using TLBIOMASS.Domain.Materials.ValueObjects;
 using TLBIOMASS.Domain.Receivers;
 using TLBIOMASS.Domain.WeighingTickets;
 using TLBIOMASS.Domain.Companies;
+using TLBIOMASS.Domain.Companies.ValueObjects;
 using TLBIOMASS.Domain.Payments;
 using System.Linq;
+
+using TLBIOMASS.Domain.WeighingTicketCancels;
 
 namespace TLBIOMASS.Application.Common.Mappings;
 
@@ -67,28 +70,39 @@ public static class MapsterConfig
             .Map(dest => dest.FinalTotalAmount, src => src.FinalPayment != null ? src.FinalPayment.TotalPayableAmount : (decimal?)null)
             .Map(dest => dest.RemainingAmount, src => src.RemainingAmount)
             .Map(dest => dest.IsFullyPaid, src => src.IsFullyPaid)
-            .Map(dest => dest.IsPaid, src => src.IsPaid);
+            .Map(dest => dest.IsPaid, src => src.IsPaid)
+            .Map(dest => dest.WeightIn, src => src.Weights.WeightIn)
+            .Map(dest => dest.WeightOut, src => src.Weights.WeightOut)
+            .Map(dest => dest.NetWeight, src => src.Weights.NetWeight)
+            .Map(dest => dest.ImpurityDeduction, src => src.Weights.ImpurityDeduction)
+            .Map(dest => dest.PayableWeight, src => src.Weights.PayableWeight)
+            .Map(dest => dest.VehicleFrontImage, src => src.Images.VehicleFrontImage)
+            .Map(dest => dest.VehicleBodyImage, src => src.Images.VehicleBodyImage)
+            .Map(dest => dest.VehicleRearImage, src => src.Images.VehicleRearImage);
     }
 
     private static void ConfigureCompanyMappings()
     {
-        // Company -> CompanyResponseDto (Id, CreatedDate, LastModifiedDate map automatically)
-        TypeAdapterConfig<Company, CompanyResponseDto>.NewConfig();
+        // Company -> CompanyResponseDto
+        TypeAdapterConfig<Company, CompanyResponseDto>.NewConfig()
+            .Map(dest => dest.Representative, src => src.Representative != null ? src.Representative.Name : null)
+            .Map(dest => dest.Position, src => src.Representative != null ? src.Representative.Position : null)
+            .Map(dest => dest.Address, src => src.Contact != null ? src.Contact.Address : null)
+            .Map(dest => dest.PhoneNumber, src => src.Contact != null ? src.Contact.Phone : null)
+            .Map(dest => dest.Email, src => src.Contact != null ? src.Contact.Email : null)
+            .Map(dest => dest.IdentityCardNo, src => src.Identity != null ? src.Identity.IdentityNumber : null)
+            .Map(dest => dest.IssuePlace, src => src.Identity != null ? src.Identity.IssuePlace : null)
+            .Map(dest => dest.IssueDate, src => src.Identity != null ? src.Identity.IssueDate : null);
 
         // CompanyCreateDto -> Company (factory method)
         TypeAdapterConfig<CompanyCreateDto, Company>
             .NewConfig()
             .ConstructUsing(src => Company.Create(
                 src.CompanyName, 
-                src.Address, 
                 src.TaxCode, 
-                src.Representative, 
-                src.Position,
-                src.PhoneNumber, 
-                src.Email, 
-                src.IdentityCardNo, 
-                src.IssuePlace, 
-                src.IssueDate));
+                new RepresentativeInfo(src.Representative, src.Position),
+                new ContactInfo(src.PhoneNumber, src.Email, src.Address, null), 
+                new IdentityInfo(src.IdentityCardNo, src.IssuePlace, src.IssueDate, null)));
     }
 
     private static void ConfigureCustomerMappings()
@@ -123,9 +137,9 @@ public static class MapsterConfig
         TypeAdapterConfig<AgencyCreateDto, Agency>.NewConfig()
             .ConstructUsing(src => Agency.Create(
                 src.Name,
-                new ContactInfo(src.Phone, src.Email, src.Address),
+                new ContactInfo(src.Phone, src.Email, src.Address, null),
                 new BankInfo(src.BankAccount, src.BankName),
-                new IdentityInfo(src.IdentityCard, src.IssuePlace, src.IssueDate),
+                new IdentityInfo(src.IdentityCard, src.IssuePlace, src.IssueDate, null),
                 src.IsActive));
     }
 
@@ -145,7 +159,7 @@ public static class MapsterConfig
         TypeAdapterConfig<LandownerCreateDto, Landowner>.NewConfig()
             .ConstructUsing(src => Landowner.Create(
                 src.Name,
-                new ContactInfo(src.Phone, src.Email, src.Address),
+                new ContactInfo(src.Phone, src.Email, src.Address, null),
                 new BankInfo(src.BankAccount, src.BankName),
                 new IdentityInfo(src.IdentityCardNo, src.IssuePlace, src.IssueDate, src.DateOfBirth),
                 src.IsActive));
@@ -191,6 +205,6 @@ public static class MapsterConfig
 
     private static void ConfigureWeighingTicketCancelMappings()
     {
-        TypeAdapterConfig<TLBIOMASS.Domain.WeighingTicketCancels.WeighingTicketCancel, WeighingTicketCancelResponseDto>.NewConfig();
+        TypeAdapterConfig<WeighingTicketCancel, WeighingTicketCancelResponseDto>.NewConfig();
     }
 }

@@ -1,7 +1,6 @@
 using MediatR;
 using Shared.DTOs.Receiver;
 using TLBIOMASS.Domain.Receivers.Interfaces;
-using TLBIOMASS.Domain.Receivers.Specifications;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -25,14 +24,13 @@ public class GetAllReceiversQueryHandler : IRequestHandler<GetAllReceiversQuery,
         // 1. Apply Search Filter
         if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
         {
-            var spec = new ReceiverSearchSpecification(request.Filter.SearchTerms);
-            query = query.Where(spec.ToExpression());
-        }
-
-        if (request.Filter.IsActive.HasValue)
-        {
-            var spec = new ReceiverIsActiveSpecification(request.Filter.IsActive.Value);
-            query = query.Where(spec.ToExpression());
+            var search = request.Filter.SearchTerms.Trim().ToLower();
+            query = query.Where(c => c.Name.ToLower().Contains(search) ||
+                               (c.Contact != null && c.Contact.Phone != null && c.Contact.Phone.Contains(search)) ||
+                               (c.Contact != null && c.Contact.Address != null && c.Contact.Address.ToLower().Contains(search)) ||
+                               (c.Bank != null && c.Bank.BankAccount != null && c.Bank.BankAccount.Contains(search)) ||
+                               (c.Bank != null && c.Bank.BankName != null && c.Bank.BankName.ToLower().Contains(search)) ||
+                               (c.Identity != null && c.Identity.IdentityNumber != null && c.Identity.IdentityNumber.Contains(search)));
         }
 
         var items = await query.ToListAsync(cancellationToken);

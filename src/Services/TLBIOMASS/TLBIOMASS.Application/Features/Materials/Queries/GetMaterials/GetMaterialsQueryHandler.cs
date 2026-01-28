@@ -5,7 +5,6 @@ using Shared.DTOs.Material;
 using Shared.SeedWork;
 using Mapster;
 using TLBIOMASS.Domain.Materials;
-using TLBIOMASS.Domain.Materials.Specifications;
 
 namespace TLBIOMASS.Application.Features.Materials.Queries.GetMaterials;
 
@@ -24,18 +23,6 @@ public class GetMaterialsQueryHandler : IRequestHandler<GetMaterialsQuery, Paged
 
         query = ApplyFilter(query, request.Filter);
 
-        if (!string.IsNullOrEmpty(request.Filter.Search))
-        {
-            var spec = new MaterialSearchSpecification(request.Filter.Search);
-            query = query.Where(spec.ToExpression());
-        }
-
-        if (request.Filter.IsActive.HasValue)
-        {
-            var spec = new MaterialIsActiveSpecification(request.Filter.IsActive.Value);
-            query = query.Where(spec.ToExpression());
-        }
-
         query = ApplySort(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
 
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
@@ -50,8 +37,12 @@ public class GetMaterialsQueryHandler : IRequestHandler<GetMaterialsQuery, Paged
     {
         if (filter == null) return query;
 
-        if (filter.IsActive.HasValue)
-            query = query.Where(x => x.IsActive == filter.IsActive.Value);
+        if (!string.IsNullOrWhiteSpace(filter.Search))
+        {
+            var search = filter.Search.Trim().ToLower();
+            query = query.Where(x => x.Spec.Name.ToLower().Contains(search) || 
+                               (x.Spec.Description != null && x.Spec.Description.ToLower().Contains(search)));
+        }
 
         return query;
     }

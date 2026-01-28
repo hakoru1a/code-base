@@ -4,7 +4,6 @@ using Shared.DTOs.WeighingTicket;
 using Microsoft.EntityFrameworkCore;
 using Mapster;
 using TLBIOMASS.Infrastructure.Persistences;
-using TLBIOMASS.Domain.WeighingTickets.Specifications;
 using TLBIOMASS.Domain.WeighingTickets;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,11 +32,13 @@ public class GetAllWeighingTicketsQueryHandler : IRequestHandler<GetAllWeighingT
         var cancelledIds = _context.WeighingTicketCancels.Select(c => c.WeighingTicketId);
         query = query.Where(t => !cancelledIds.Contains(t.Id));
 
-        // 3. Apply Filters (Essential for specific UI needs)
-        if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
+        // 3. Apply Filters
+        if (!string.IsNullOrWhiteSpace(request.Filter.SearchTerms))
         {
-            var spec = new WeighingTicketSearchSpecification(request.Filter.SearchTerms);
-            query = query.Where(spec.ToExpression());
+            var search = request.Filter.SearchTerms.Trim().ToLower();
+            query = query.Where(x => x.TicketNumber.ToLower().Contains(search) || 
+                               (x.VehiclePlate != null && x.VehiclePlate.ToLower().Contains(search)) ||
+                               (x.CustomerName != null && x.CustomerName.ToLower().Contains(search)));
         }
 
         if (request.Filter.CustomerId.HasValue)
@@ -52,20 +53,25 @@ public class GetAllWeighingTicketsQueryHandler : IRequestHandler<GetAllWeighingT
 
         if (request.Filter.TicketType != null)
         {
-            var spec = new WeighingTicketTypeSpecification(request.Filter.TicketType);
-            query = query.Where(spec.ToExpression());
+            query = query.Where(x => x.TicketType == request.Filter.TicketType);
         }
 
         if (request.Filter.IsCompleted.HasValue)
         {
-            var spec = new WeighingTicketIsCompletedSpecification(request.Filter.IsCompleted.Value);
-            query = query.Where(spec.ToExpression());
+            if (request.Filter.IsCompleted.Value)
+                query = query.Where(x => x.Weights != null && x.Weights.NetWeight > 0);
+            else
+                query = query.Where(x => x.Weights == null || x.Weights.NetWeight == 0);
         }
 
-        if (request.Filter.FromDate.HasValue || request.Filter.ToDate.HasValue)
+        if (request.Filter.FromDate.HasValue)
         {
-            var spec = new WeighingTicketDateRangeSpecification(request.Filter.FromDate, request.Filter.ToDate);
-            query = query.Where(spec.ToExpression());
+            query = query.Where(x => x.CreatedDate.Date >= request.Filter.FromDate.Value.Date);
+        }
+
+        if (request.Filter.ToDate.HasValue)
+        {
+            query = query.Where(x => x.CreatedDate.Date <= request.Filter.ToDate.Value.Date);
         }
 
         // 4. Payment-specific filters
@@ -80,9 +86,9 @@ public class GetAllWeighingTicketsQueryHandler : IRequestHandler<GetAllWeighingT
         if (request.Filter.IsFullyPaid.HasValue)
         {
             if (request.Filter.IsFullyPaid.Value)
-                query = query.Where(x => x.PaymentDetails.Any(pd => pd.RemainingAmount == 0));
+                query = query.Where(x => x.PaymentDetails.Any(pd => pd.PaymentAmount.RemainingAmount == 0));
             else
-                query = query.Where(x => !x.PaymentDetails.Any(pd => pd.RemainingAmount == 0));
+                query = query.Where(x => !x.PaymentDetails.Any(pd => pd.PaymentAmount.RemainingAmount == 0));
         }
 
         // 5. Fetch and Adapt (No Sorting needed as per user request)

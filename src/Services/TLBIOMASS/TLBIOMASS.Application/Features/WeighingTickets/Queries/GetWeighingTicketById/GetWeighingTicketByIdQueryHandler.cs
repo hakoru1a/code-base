@@ -46,9 +46,9 @@ public class GetWeighingTicketByIdQueryHandler : IRequestHandler<GetWeighingTick
         // Map payment info
         dto.FinalUnitPrice = payment?.UnitPrice;
         dto.FinalTotalAmount = payment?.TotalPayableAmount;
-        dto.RemainingAmount = latestPayment?.RemainingAmount ?? (payment?.TotalPayableAmount ?? (decimal)weighingTicket.TotalAmount);
+        dto.RemainingAmount = latestPayment?.PaymentAmount.RemainingAmount ?? (payment?.TotalPayableAmount ?? (decimal)weighingTicket.TotalAmount);
         dto.IsPaid = latestPayment != null;
-        dto.IsFullyPaid = latestPayment != null && latestPayment.RemainingAmount == 0;
+        dto.IsFullyPaid = latestPayment != null && latestPayment.PaymentAmount.RemainingAmount == 0;
         dto.LastModifiedDate = weighingTicket.UpdatedAt;
 
         return dto;

@@ -1,5 +1,7 @@
 using MediatR;
 using TLBIOMASS.Domain.Companies.Interfaces;
+using Shared.Domain.ValueObjects;
+using TLBIOMASS.Domain.Companies.ValueObjects;
 
 namespace TLBIOMASS.Application.Features.Companies.Commands.UpdateCompany;
 
@@ -17,24 +19,15 @@ public class UpdateCompanyCommandHandler : IRequestHandler<UpdateCompanyCommand,
         var company = await _repository.GetByIdAsync(request.Id);
         if (company == null)
         {
-             // Implicitly using Contracts.Exceptions if I add the using, or just return false if standard didn't use exception? 
-             // Agency used `throw new NotFoundException("Agency", request.Id);`
-             // I will use `return false` to minimize dependency issues unless I know where NotFoundException is.
-             // Agency used `using Contracts.Exceptions;`. I'll add that using.
              return false; 
         }
 
         company.Update(
             request.CompanyName,
-            request.Address,
             request.TaxCode,
-            request.Representative,
-            request.Position,
-            request.PhoneNumber,
-            request.Email,
-            request.IdentityCardNo,
-            request.IssuePlace,
-            request.IssueDate);
+            new RepresentativeInfo(request.Representative, request.Position),
+            new ContactInfo(request.PhoneNumber, request.Email, request.Address),
+            new IdentityInfo(request.IdentityCardNo, request.IssuePlace, request.IssueDate));
 
         await _repository.UpdateAsync(company);
         await _repository.SaveChangesAsync(cancellationToken);

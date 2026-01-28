@@ -1,10 +1,9 @@
 using MediatR;
 using TLBIOMASS.Domain.Landowners.Interfaces;
 using Shared.DTOs.Landowner;
-using TLBIOMASS.Domain.Landowners.Specifications;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
+using System.Linq;
 using TLBIOMASS.Domain.Landowners;
 
 namespace TLBIOMASS.Application.Features.Landowners.Queries.GetAllLandowners;
@@ -24,14 +23,13 @@ public class GetAllLandownersQueryHandler : IRequestHandler<GetAllLandownersQuer
 
         if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
         {
-            var spec = new LandownerSearchSpecification(request.Filter.SearchTerms);
-            query = query.Where(spec.ToExpression());
-        }
-
-        if (request.Filter.IsActive.HasValue)
-        {
-            var spec = new LandownerIsActiveSpecification(request.Filter.IsActive.Value);
-            query = query.Where(spec.ToExpression());
+            var search = request.Filter.SearchTerms.Trim().ToLower();
+            query = query.Where(c => c.Name.ToLower().Contains(search) ||
+                               (c.Contact != null && c.Contact.Phone != null && c.Contact.Phone.Contains(search)) ||
+                               (c.Contact != null && c.Contact.Address != null && c.Contact.Address.ToLower().Contains(search)) ||
+                               (c.Bank != null && c.Bank.BankAccount != null && c.Bank.BankAccount.Contains(search)) ||
+                               (c.Bank != null && c.Bank.BankName != null && c.Bank.BankName.ToLower().Contains(search)) ||
+                               (c.Identity != null && c.Identity.IdentityNumber != null && c.Identity.IdentityNumber.Contains(search)));
         }
 
         // Apply sorting (defaults to CreatedDate desc)

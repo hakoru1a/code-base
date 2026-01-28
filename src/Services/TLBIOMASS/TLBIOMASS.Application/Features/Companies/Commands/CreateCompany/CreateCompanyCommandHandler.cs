@@ -1,6 +1,8 @@
 using MediatR;
 using TLBIOMASS.Domain.Companies;
 using TLBIOMASS.Domain.Companies.Interfaces;
+using Shared.Domain.ValueObjects;
+using TLBIOMASS.Domain.Companies.ValueObjects;
 
 namespace TLBIOMASS.Application.Features.Companies.Commands.CreateCompany;
 
@@ -17,15 +19,10 @@ public class CreateCompanyCommandHandler : IRequestHandler<CreateCompanyCommand,
     {
         var company = Company.Create(
             request.CompanyName,
-            request.Address,
             request.TaxCode,
-            request.Representative,
-            request.Position,
-            request.PhoneNumber,
-            request.Email,
-            request.IdentityCardNo,
-            request.IssuePlace,
-            request.IssueDate);
+            new RepresentativeInfo(request.Representative, request.Position),
+            new ContactInfo(request.PhoneNumber, request.Email, request.Address),
+            new IdentityInfo(request.IdentityCardNo, request.IssuePlace, request.IssueDate));
 
         //company.AddDomainEvent(new CompanyCreatedEvent(company.Id, company.CompanyName));
 

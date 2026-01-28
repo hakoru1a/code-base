@@ -3,7 +3,6 @@ using TLBIOMASS.Domain.MaterialRegions.Interfaces;
 using Shared.DTOs.MaterialRegion;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
-using TLBIOMASS.Domain.MaterialRegions.Specifications;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -25,11 +24,11 @@ public class GetAllMaterialRegionsQueryHandler : IRequestHandler<GetAllMaterialR
         // 1. Apply Filters
         if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
         {
-            var spec = new MaterialRegionSearchSpecification(request.Filter.SearchTerms);
-            query = query.Where(spec.ToExpression());
+            var search = request.Filter.SearchTerms.Trim().ToLower();
+            query = query.Where(x => x.Detail.RegionName.ToLower().Contains(search) || 
+                               (x.Detail.Address != null && x.Detail.Address.ToLower().Contains(search)) ||
+                               (x.Detail.CertificateId != null && x.Detail.CertificateId.ToLower().Contains(search)));
         }
-
-        // Removed IsActive check based on user feedback
 
         // 2. Fetch and Adapt (No sorting)
         var entities = await query.ToListAsync(cancellationToken);

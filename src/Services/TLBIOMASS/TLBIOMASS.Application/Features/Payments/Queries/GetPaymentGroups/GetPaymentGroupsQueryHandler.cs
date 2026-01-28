@@ -4,7 +4,7 @@ using Shared.SeedWork;
 using TLBIOMASS.Domain.Payments.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
-using TLBIOMASS.Domain.Payments.Specifications;
+using System.Linq;
 
 namespace TLBIOMASS.Application.Features.Payments.Queries.GetPaymentGroups;
 
@@ -24,41 +24,46 @@ public class GetPaymentGroupsQueryHandler : IRequestHandler<GetPaymentGroupsQuer
         // 1. Apply Filters
         if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
         {
-            var spec = new PaymentDetailSearchSpecification(request.Filter.SearchTerms);
-            query = query.Where(spec.ToExpression());
+            var search = request.Filter.SearchTerms.Trim().ToLower();
+            query = query.Where(x => x.Info.PaymentCode.ToLower().Contains(search) || 
+                               (x.Agency != null && x.Agency.Name.ToLower().Contains(search)) ||
+                               (x.WeighingTicket != null && x.WeighingTicket.Receiver != null && x.WeighingTicket.Receiver.Name.ToLower().Contains(search)));
         }
 
         if (request.Filter.AgencyId.HasValue)
         {
-            var spec = new PaymentDetailAgencySpecification(request.Filter.AgencyId.Value);
-            query = query.Where(spec.ToExpression());
+            query = query.Where(x => x.AgencyId == request.Filter.AgencyId.Value);
         }
 
-        if (request.Filter.FromDate.HasValue || request.Filter.ToDate.HasValue)
+        if (request.Filter.FromDate.HasValue)
         {
-            var spec = new PaymentDetailDateRangeSpecification(request.Filter.FromDate, request.Filter.ToDate);
-            query = query.Where(spec.ToExpression());
+            query = query.Where(x => x.Info.PaymentDate.Date >= request.Filter.FromDate.Value.Date);
+        }
+
+        if (request.Filter.ToDate.HasValue)
+        {
+            query = query.Where(x => x.Info.PaymentDate.Date <= request.Filter.ToDate.Value.Date);
         }
 
         if (request.Filter.IsPaid.HasValue)
         {
-            query = query.Where(x => x.IsPaid == request.Filter.IsPaid.Value);
+            query = query.Where(x => x.ProcessStatus.IsPaid == request.Filter.IsPaid.Value);
         }
 
         if (request.Filter.IsLocked.HasValue)
         {
-            query = query.Where(x => x.IsLocked == request.Filter.IsLocked.Value);
+            query = query.Where(x => x.ProcessStatus.IsLocked == request.Filter.IsLocked.Value);
         }
 
         // 2. Grouping
-        var groupingQuery = query.GroupBy(x => new { x.PaymentCode, x.PaymentDate, x.AgencyId, AgencyName = x.Agency.Name })
+        var groupingQuery = query.GroupBy(x => new { x.Info.PaymentCode, x.Info.PaymentDate, x.AgencyId, AgencyName = x.Agency.Name })
             .Select(g => new PaymentGroupResponseDto
             {
                 PaymentCode = g.Key.PaymentCode,
                 PaymentDate = g.Key.PaymentDate,
                 AgencyId = g.Key.AgencyId,
                 AgencyName = g.Key.AgencyName,
-                TotalAmount = g.Sum(x => x.Amount),
+                TotalAmount = g.Sum(x => x.PaymentAmount.Amount),
                 TicketCount = g.Select(x => x.WeighingTicketId).Distinct().Count()
             });
 

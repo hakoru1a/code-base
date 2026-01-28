@@ -100,7 +100,7 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
             decimal currentRemaining;
             if (latestDetailsMap.TryGetValue(item.WeighingTicketId, out var latest))
             {
-                currentRemaining = latest.RemainingAmount;
+                currentRemaining = latest.PaymentAmount.RemainingAmount;
             }
             else
             {
@@ -110,14 +110,11 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
             // 5. Create Detail
             var detail = PaymentDetail.Create(
                 item.WeighingTicketId,
-                request.PaymentCode,
-                request.PaymentDate,
                 item.AgencyId,
+                new TLBIOMASS.Domain.Payments.ValueObjects.PaymentInfo(request.PaymentCode, request.PaymentDate, item.CustomerPaymentDate, item.Note),
                 item.Amount,
                 currentRemaining,
-                item.Note,
-                item.IsPaid,
-                item.CustomerPaymentDate);
+                item.IsPaid);
 
             newDetails.Add(detail);
             
@@ -125,7 +122,7 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
             results.Add(new PaymentResultDto 
             { 
                 WeighingTicketId = item.WeighingTicketId, 
-                RemainingAmount = detail.RemainingAmount 
+                RemainingAmount = detail.PaymentAmount.RemainingAmount 
             });
 
             // Update tracking for multiple payments to same ticket in single batch

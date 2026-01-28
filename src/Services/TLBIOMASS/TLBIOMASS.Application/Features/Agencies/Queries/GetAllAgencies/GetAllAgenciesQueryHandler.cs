@@ -3,7 +3,6 @@ using TLBIOMASS.Domain.Agencies.Interfaces;
 using Shared.DTOs.Agency;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
-using TLBIOMASS.Domain.Agencies.Specifications;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -25,17 +24,17 @@ public class GetAllAgenciesQueryHandler : IRequestHandler<GetAllAgenciesQuery, L
         // 1. Apply Search Filter
         if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
         {
-            var spec = new AgencySearchSpecification(request.Filter.SearchTerms);
-            query = query.Where(spec.ToExpression());
+            var search = request.Filter.SearchTerms.Trim().ToLower();
+            query = query.Where(c => c.Name.ToLower().Contains(search) ||
+                               (c.Contact != null && c.Contact.Phone != null && c.Contact.Phone.Contains(search)) ||
+                               (c.Contact != null && c.Contact.Email != null && c.Contact.Email.ToLower().Contains(search)) ||
+                               (c.Contact != null && c.Contact.Address != null && c.Contact.Address.ToLower().Contains(search)) ||
+                               (c.Bank != null && c.Bank.BankAccount != null && c.Bank.BankAccount.Contains(search)) ||
+                               (c.Bank != null && c.Bank.BankName != null && c.Bank.BankName.ToLower().Contains(search)) ||
+                               (c.Identity != null && c.Identity.IdentityNumber != null && c.Identity.IdentityNumber.Contains(search)));
         }
 
-        if (request.Filter.IsActive.HasValue)
-        {
-            var spec = new AgencyIsActiveSpecification(request.Filter.IsActive.Value);
-            query = query.Where(spec.ToExpression());
-        }
-
-        // 2. Fetch and Adapt (Strictly no sorting as per user request)
+        // 2. Fetch and Adapt
         var entities = await query.ToListAsync(cancellationToken);
         return entities.Adapt<List<AgencyResponseDto>>();
     }

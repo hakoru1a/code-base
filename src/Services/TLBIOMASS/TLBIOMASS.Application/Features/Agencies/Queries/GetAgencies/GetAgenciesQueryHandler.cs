@@ -38,8 +38,17 @@ public class GetAgenciesQueryHandler : IRequestHandler<GetAgenciesQuery, PagedLi
         if (!string.IsNullOrWhiteSpace(filter.Name))
             query = query.Where(x => x.Name.Contains(filter.Name));
 
-        if (filter.IsActive.HasValue)
-            query = query.Where(x => x.IsActive == filter.IsActive.Value);
+        if (!string.IsNullOrWhiteSpace(filter.SearchTerms))
+        {
+            var search = filter.SearchTerms.Trim().ToLower();
+            query = query.Where(c => c.Name.ToLower().Contains(search) ||
+                               (c.Contact != null && c.Contact.Phone != null && c.Contact.Phone.Contains(search)) ||
+                               (c.Contact != null && c.Contact.Email != null && c.Contact.Email.ToLower().Contains(search)) ||
+                               (c.Contact != null && c.Contact.Address != null && c.Contact.Address.ToLower().Contains(search)) ||
+                               (c.Bank != null && c.Bank.BankAccount != null && c.Bank.BankAccount.Contains(search)) ||
+                               (c.Bank != null && c.Bank.BankName != null && c.Bank.BankName.ToLower().Contains(search)) ||
+                               (c.Identity != null && c.Identity.IdentityNumber != null && c.Identity.IdentityNumber.Contains(search)));
+        }
 
         return query;
     }

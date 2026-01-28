@@ -15,36 +15,45 @@ public class PaymentDetailConfiguration : IEntityTypeConfiguration<PaymentDetail
 
         builder.Property(x => x.WeighingTicketId).HasColumnName("WeighingTicketID");
         
-        builder.Property(x => x.Amount)
-            .HasColumnName("Amount")
-            .HasColumnType("decimal(18,2)");
+        builder.OwnsOne(x => x.PaymentAmount, money =>
+        {
+            money.Property(p => p.Amount)
+                .HasColumnName("Amount")
+                .HasColumnType("decimal(18,2)");
 
-        builder.Property(x => x.RemainingAmount)
-            .HasColumnName("RemainingAmount")
-            .HasColumnType("decimal(18,2)");
+            money.Property(p => p.RemainingAmount)
+                .HasColumnName("RemainingAmount")
+                .HasColumnType("decimal(18,2)");
+        });
 
-        builder.Property(x => x.Note).HasColumnName("Note");
+        builder.OwnsOne(x => x.Info, info =>
+        {
+            info.Property(p => p.PaymentCode).HasColumnName("PaymentCode").HasMaxLength(50);
+            info.Property(p => p.Note).HasColumnName("Note");
+            info.Property(p => p.PaymentDate)
+                .HasColumnName("PaymentDate")
+                .HasColumnType("datetime");
+            info.Property(p => p.CustomerPaymentDate)
+                .HasColumnName("CustomerPaymentDate")
+                .HasColumnType("datetime")
+                .IsRequired(false);
+            
+            info.HasIndex(p => p.PaymentCode);
+        });
+
         builder.Property(x => x.AgencyId)
             .HasColumnName("AgencyID")
             .IsRequired(false);
 
-        builder.Property(x => x.IsPaid).HasColumnName("IsPaid");
-        builder.Property(x => x.PaymentCode).HasColumnName("PaymentCode").HasMaxLength(50);
-        builder.Property(x => x.IsLocked).HasColumnName("IsLocked");
-
-        builder.Property(x => x.PaymentDate)
-            .HasColumnName("PaymentDate")
-            .HasColumnType("datetime");
-
-        builder.Property(x => x.CustomerPaymentDate)
-            .HasColumnName("CustomerPaymentDate")
-            .HasColumnType("datetime")
-            .IsRequired(false);
-
-        builder.HasIndex(x => x.WeighingTicketId);
-        builder.HasIndex(x => x.PaymentCode);
+        builder.OwnsOne(x => x.ProcessStatus, status =>
+        {
+            status.Property(p => p.IsPaid).HasColumnName("IsPaid");
+            status.Property(p => p.IsLocked).HasColumnName("IsLocked");
+        });
 
         // Relationships
+        builder.HasIndex(x => x.WeighingTicketId);
+        
         builder.HasOne(x => x.WeighingTicket)
             .WithMany(x => x.PaymentDetails)
             .HasForeignKey(x => x.WeighingTicketId);

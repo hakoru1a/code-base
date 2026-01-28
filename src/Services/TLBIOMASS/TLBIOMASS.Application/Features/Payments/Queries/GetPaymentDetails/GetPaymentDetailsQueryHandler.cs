@@ -34,22 +34,22 @@ public class GetPaymentDetailsQueryHandler : IRequestHandler<GetPaymentDetailsQu
 
         if (request.Filter.FromDate.HasValue)
         {
-            query = query.Where(x => x.PaymentDate >= request.Filter.FromDate.Value);
+            query = query.Where(x => x.Info.PaymentDate >= request.Filter.FromDate.Value);
         }
 
         if (request.Filter.ToDate.HasValue)
         {
-            query = query.Where(x => x.PaymentDate <= request.Filter.ToDate.Value);
+            query = query.Where(x => x.Info.PaymentDate <= request.Filter.ToDate.Value);
         }
 
         if (request.Filter.IsPaid.HasValue)
         {
-            query = query.Where(x => x.IsPaid == request.Filter.IsPaid.Value);
+            query = query.Where(x => x.ProcessStatus.IsPaid == request.Filter.IsPaid.Value);
         }
 
         if (request.Filter.IsLocked.HasValue)
         {
-            query = query.Where(x => x.IsLocked == request.Filter.IsLocked.Value);
+            query = query.Where(x => x.ProcessStatus.IsLocked == request.Filter.IsLocked.Value);
         }
 
         // 3. Apply Sorting
@@ -84,9 +84,9 @@ public class GetPaymentDetailsQueryHandler : IRequestHandler<GetPaymentDetailsQu
 
         return sortBy.ToLower() switch
         {
-            "paymentcode" => isDescending ? query.OrderByDescending(x => x.PaymentCode) : query.OrderBy(x => x.PaymentCode),
-            "paymentdate" => isDescending ? query.OrderByDescending(x => x.PaymentDate) : query.OrderBy(x => x.PaymentDate),
-            "amount" => isDescending ? query.OrderByDescending(x => x.Amount) : query.OrderBy(x => x.Amount),
+            "paymentcode" => isDescending ? query.OrderByDescending(x => x.Info.PaymentCode) : query.OrderBy(x => x.Info.PaymentCode),
+            "paymentdate" => isDescending ? query.OrderByDescending(x => x.Info.PaymentDate) : query.OrderBy(x => x.Info.PaymentDate),
+            "amount" => isDescending ? query.OrderByDescending(x => x.PaymentAmount.Amount) : query.OrderBy(x => x.PaymentAmount.Amount),
             "createddate" => isDescending ? query.OrderByDescending(x => x.CreatedDate) : query.OrderBy(x => x.CreatedDate),
             _ => query.OrderByDescending(x => x.CreatedDate)
         };

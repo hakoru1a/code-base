@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TLBIOMASS.Domain.WeighingTickets;
 using TLBIOMASS.Domain.Payments;
 using TLBIOMASS.Domain.Receivers;
+using TLBIOMASS.Domain.WeighingTickets.ValueObjects;
 
 namespace TLBIOMASS.Infrastructure.Persistences.Configurations;
 
@@ -55,11 +56,14 @@ public class WeighingTicketConfiguration : IEntityTypeConfiguration<WeighingTick
             .HasColumnName("so_dien_thoai")
             .HasMaxLength(20);
 
-        builder.Property(x => x.WeightIn).HasColumnName("trong_luong_vao");
-        builder.Property(x => x.WeightOut).HasColumnName("trong_luong_ra");
-        builder.Property(x => x.NetWeight).HasColumnName("trong_luong_hang"); 
-        builder.Property(x => x.ImpurityDeduction).HasColumnName("tru_tap_chat");
-        builder.Property(x => x.PayableWeight).HasColumnName("trong_luong_thanh_toan");
+        builder.OwnsOne(x => x.Weights, w =>
+        {
+            w.Property(x => x.WeightIn).HasColumnName("trong_luong_vao");
+            w.Property(x => x.WeightOut).HasColumnName("trong_luong_ra");
+            w.Property(x => x.NetWeight).HasColumnName("trong_luong_hang"); 
+            w.Property(x => x.ImpurityDeduction).HasColumnName("tru_tap_chat");
+            w.Property(x => x.PayableWeight).HasColumnName("trong_luong_thanh_toan");
+        });
         
         builder.Property(x => x.Price)
             .HasColumnName("don_gia")
@@ -93,17 +97,12 @@ public class WeighingTicketConfiguration : IEntityTypeConfiguration<WeighingTick
             .HasColumnName("ho_so_nguon_goc")
             .HasColumnType("tinyint(1)");
 
-        builder.Property(x => x.VehicleFrontImage)
-            .HasColumnName("anh_dau_xe")
-            .HasMaxLength(500);
-
-        builder.Property(x => x.VehicleBodyImage)
-            .HasColumnName("anh_than_xe")
-            .HasMaxLength(500);
-
-        builder.Property(x => x.VehicleRearImage)
-            .HasColumnName("anh_duoi_xe")
-            .HasMaxLength(500);
+        builder.OwnsOne(x => x.Images, i =>
+        {
+            i.Property(x => x.VehicleFrontImage).HasColumnName("anh_dau_xe").HasMaxLength(500);
+            i.Property(x => x.VehicleBodyImage).HasColumnName("anh_than_xe").HasMaxLength(500);
+            i.Property(x => x.VehicleRearImage).HasColumnName("anh_duoi_xe").HasMaxLength(500);
+        });
 
         builder.Property(x => x.Note)
             .HasColumnName("ghi_chu")

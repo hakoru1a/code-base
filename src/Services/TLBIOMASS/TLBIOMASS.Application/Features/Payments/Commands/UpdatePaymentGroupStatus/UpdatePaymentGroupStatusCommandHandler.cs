@@ -16,7 +16,7 @@ public class UpdatePaymentGroupStatusCommandHandler : IRequestHandler<UpdatePaym
     public async Task<bool> Handle(UpdatePaymentGroupStatusCommand request, CancellationToken cancellationToken)
     {
         var details = await _repository.FindAll(trackChanges: true)
-            .Where(x => x.PaymentCode == request.PaymentCode)
+            .Where(x => x.Info.PaymentCode == request.PaymentCode)
             .ToListAsync(cancellationToken);
 
         if (!details.Any()) return false;
