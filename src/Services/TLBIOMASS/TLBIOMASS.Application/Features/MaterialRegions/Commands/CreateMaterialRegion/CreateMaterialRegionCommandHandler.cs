@@ -1,6 +1,7 @@
 using MediatR;
 using TLBIOMASS.Domain.MaterialRegions;
 using TLBIOMASS.Domain.MaterialRegions.Interfaces;
+using TLBIOMASS.Domain.MaterialRegions.ValueObjects;
 using TLBIOMASS.Domain.Materials.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Contracts.Exceptions;
@@ -20,15 +21,8 @@ public class CreateMaterialRegionCommandHandler : IRequestHandler<CreateMaterial
 
     public async Task<long> Handle(CreateMaterialRegionCommand request, CancellationToken cancellationToken)
     {
-        var region = MaterialRegion.Create(
-            request.RegionName,
-            request.Address,
-            request.Latitude,
-            request.Longitude,
-            request.AreaHa,
-            request.CertificateID,
-            request.OwnerId
-        );
+        var detail = new RegionDetail(request.RegionName, request.Address, request.Latitude, request.Longitude, request.AreaHa, request.CertificateID);
+        var region = MaterialRegion.Create(detail, request.OwnerId);
 
         if (request.RegionMaterials.Any())
         {

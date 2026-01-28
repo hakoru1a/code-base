@@ -1,128 +1,69 @@
 using Contracts.Domain;
-using Contracts.Domain.Interface;
-
-
-using Shared.Events.Receiver;
+using Shared.Domain.ValueObjects;
 
 namespace TLBIOMASS.Domain.Receivers;
 
 public class Receiver : EntityBase<int>
 {
     public string Name { get; private set; } = string.Empty;
-    public string? Phone { get; private set; }
-    public string? BankAccount { get; private set; }
-    public string? BankName { get; private set; }
-    public string? IdentityNumber { get; private set; }
-    public DateTime? IssuedDate { get; private set; }
-    public string? IssuedPlace { get; private set; }
-    public string? Address { get; private set; }
+    public ContactInfo? Contact { get; private set; }
+    public BankInfo? Bank { get; private set; }
+    public IdentityInfo? Identity { get; private set; }
     public bool IsDefault { get; private set; }
     public bool IsActive { get; private set; } = true;
-    public string? Note { get; private set; }
-    public DateTime? DateOfBirth { get; private set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
-    // Protected constructor for EF Core
     protected Receiver() { }
 
     private Receiver(
         string name,
-        string? phone,
-        string? bankAccount,
-        string? bankName,
-        string? identityNumber,
-        DateTime? issuedDate,
-        string? issuedPlace,
-        string? address,
+        ContactInfo? contact,
+        BankInfo? bank,
+        IdentityInfo? identity,
         bool isDefault,
-        bool isActive,
-        string? note,
-        DateTime? dateOfBirth)
+        bool isActive)
     {
         Name = name;
-        Phone = phone;
-        BankAccount = bankAccount;
-        BankName = bankName;
-        IdentityNumber = identityNumber;
-        IssuedDate = issuedDate;
-        IssuedPlace = issuedPlace;
-        Address = address;
+        Contact = contact;
+        Bank = bank;
+        Identity = identity;
         IsDefault = isDefault;
-        Note = note;
-        DateOfBirth = dateOfBirth;
-        CreatedAt = DateTime.Now;
         IsActive = isActive;
+        CreatedAt = DateTime.UtcNow;
     }
 
-    // Factory Method
     public static Receiver Create(
         string name,
-        string? phone = null,
-        string? bankAccount = null,
-        string? bankName = null,
-        string? identityNumber = null,
-        DateTime? issuedDate = null,
-        string? issuedPlace = null,
-        string? address = null,
+        ContactInfo? contact = null,
+        BankInfo? bank = null,
+        IdentityInfo? identity = null,
         bool isDefault = false,
-        bool isActive = true,
-        string? note = null,
-        DateTime? dateOfBirth = null)
+        bool isActive = true)
     {
-
-
-        var receiver = new Receiver(
-            name,
-            phone,
-            bankAccount,
-            bankName,
-            identityNumber,
-            issuedDate,
-            issuedPlace,
-            address,
-            isDefault,
-            isActive,
-            note,
-            dateOfBirth);
-
-        // receiver.AddDomainEvent(new ReceiverCreatedEvent { ReceiverId = receiver.Id, Name = receiver.Name });
-
-        return receiver;
+        return new Receiver(name, contact, bank, identity, isDefault, isActive);
     }
 
-    // Update method
     public void Update(
         string name,
-        string? phone,
-        string? bankAccount,
-        string? bankName,
-        string? identityNumber,
-        DateTime? issuedDate,
-        string? issuedPlace,
-        string? address,
-        bool isDefault,
-        bool isActive,
-        string? note,
-        DateTime? dateOfBirth)
+        ContactInfo? contact = null,
+        BankInfo? bank = null,
+        IdentityInfo? identity = null,
+        bool? isDefault = null,
+        bool? isActive = null)
     {
-
-
         Name = name;
-        Phone = phone;
-        BankAccount = bankAccount;
-        BankName = bankName;
-        IdentityNumber = identityNumber;
-        IssuedDate = issuedDate;
-        IssuedPlace = issuedPlace;
-        Address = address;
-        IsDefault = isDefault;
-        IsActive = isActive;
-        Note = note;
-        DateOfBirth = dateOfBirth;
-        UpdatedAt = DateTime.Now;
-
-        // AddDomainEvent(new ReceiverUpdatedEvent { ReceiverId = Id, Name = Name });
+        if (contact != null)
+            Contact = contact;
+        if (bank != null)
+            Bank = bank;
+        if (identity != null)
+            Identity = identity;
+        if (isDefault.HasValue)
+            IsDefault = isDefault.Value;
+        if (isActive.HasValue)
+            IsActive = isActive.Value;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Activate() => IsActive = true;

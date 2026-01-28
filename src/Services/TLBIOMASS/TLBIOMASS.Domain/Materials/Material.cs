@@ -1,70 +1,34 @@
 using Contracts.Domain;
-
+using TLBIOMASS.Domain.Materials.ValueObjects;
 
 namespace TLBIOMASS.Domain.Materials;
 
 public class Material : EntityBase<int>
 {
-    public string Name { get; private set; } = string.Empty;
-    public string Unit { get; private set; } = string.Empty;
-    public string? Description { get; private set; }
-    public decimal ProposedImpurityDeduction { get; private set; }
+    public MaterialSpec Spec { get; private set; } = null!;
     public bool IsActive { get; private set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
-    // Protected constructor for EF Core
     protected Material() { }
 
-    private Material(
-        string name,
-        string unit,
-        string? description,
-        decimal proposedImpurityDeduction,
-        bool isActive)
+    private Material(MaterialSpec spec, bool isActive)
     {
-        Name = name;
-        Unit = unit;
-        Description = description;
-        ProposedImpurityDeduction = proposedImpurityDeduction;
+        Spec = spec;
         IsActive = isActive;
-        CreatedAt = DateTime.Now;
+        CreatedAt = DateTime.UtcNow;
     }
 
-    // Factory Method
-    public static Material Create(
-        string name,
-        string unit,
-        string? description,
-        decimal proposedImpurityDeduction,
-        bool isActive = true)
+    public static Material Create(MaterialSpec spec, bool isActive = true)
     {
-
-
-        return new Material(
-            name,
-            unit,
-            description,
-            proposedImpurityDeduction,
-            isActive);
+        return new Material(spec, isActive);
     }
 
-    // Update method
-    public void Update(
-        string name,
-        string unit,
-        string? description,
-        decimal proposedImpurityDeduction,
-        bool isActive)
+    public void Update(MaterialSpec spec, bool isActive)
     {
-
-
-        Name = name;
-        Unit = unit;
-        Description = description;
-        ProposedImpurityDeduction = proposedImpurityDeduction;
+        Spec = spec;
         IsActive = isActive;
-        UpdatedAt = DateTime.Now;
+        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Activate() => IsActive = true;

@@ -6,7 +6,7 @@ using Mapster;
 
 namespace TLBIOMASS.Application.Features.Materials.Queries.GetMaterialById;
 
-public class GetMaterialByIdQueryHandler : IRequestHandler<GetMaterialByIdQuery, MaterialResponseDto>
+public class GetMaterialByIdQueryHandler : IRequestHandler<GetMaterialByIdQuery, MaterialResponseDto?>
 {
     private readonly IMaterialRepository _repository;
 
@@ -15,7 +15,7 @@ public class GetMaterialByIdQueryHandler : IRequestHandler<GetMaterialByIdQuery,
         _repository = repository;
     }
 
-    public async Task<MaterialResponseDto> Handle(GetMaterialByIdQuery request, CancellationToken cancellationToken)
+    public async Task<MaterialResponseDto?> Handle(GetMaterialByIdQuery request, CancellationToken cancellationToken)
     {
         var material = await _repository.GetByIdAsync(request.Id);
         if (material == null)

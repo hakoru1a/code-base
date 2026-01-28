@@ -1,5 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.Agencies.Interfaces;
+using Shared.Domain.ValueObjects;
 using Contracts.Exceptions;
 
 namespace TLBIOMASS.Application.Features.Agencies.Commands.UpdateAgency
@@ -24,16 +25,10 @@ namespace TLBIOMASS.Application.Features.Agencies.Commands.UpdateAgency
 
             agency.Update(
                 request.Name,
-                request.Phone,
-                request.Email,
-                request.Address,
-                request.BankAccount,
-                request.BankName,
-                request.IdentityCard,
-                request.IssuePlace,
-                request.IssueDate,
-                request.IsActive
-            );
+                new ContactInfo(request.Phone, request.Email, request.Address),
+                new BankInfo(request.BankAccount, request.BankName),
+                new IdentityInfo(request.IdentityCard, request.IssuePlace, request.IssueDate),
+                request.IsActive);
 
             await _repository.UpdateAsync(agency);
             await _repository.SaveChangesAsync(cancellationToken);

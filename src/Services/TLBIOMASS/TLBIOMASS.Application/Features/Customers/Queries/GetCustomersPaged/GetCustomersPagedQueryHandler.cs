@@ -1,11 +1,11 @@
+using System.Linq;
 using Mapster;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using Shared.DTOs.Customer;
 using Shared.SeedWork;
+using TLBIOMASS.Domain.Customers;
 using TLBIOMASS.Domain.Customers.Interfaces;
 using TLBIOMASS.Domain.Customers.Specifications;
-using TLBIOMASS.Application.Common.Extensions;
 
 namespace TLBIOMASS.Application.Features.Customers.Queries.GetCustomersPaged;
 
@@ -23,6 +23,8 @@ public class GetCustomersPagedQueryHandler : IRequestHandler<GetCustomersPagedQu
         var filter = request.Filter;
         var query = _customerRepository.FindAll();
 
+        query = ApplyFilter(query, filter);
+
         if (!string.IsNullOrEmpty(filter.Search))
         {
             var searchSpec = new CustomerSearchSpecification(filter.Search);
@@ -35,7 +37,7 @@ public class GetCustomersPagedQueryHandler : IRequestHandler<GetCustomersPagedQu
             query = query.Where(activeSpec.ToExpression());
         }
 
-        query = query.ApplySorting(filter.OrderBy, filter.OrderByDirection);
+        query = ApplySort(query, filter.OrderBy, filter.OrderByDirection);
 
         var pagedItems = await _customerRepository.GetPageAsync(
             query,
@@ -52,4 +54,52 @@ public class GetCustomersPagedQueryHandler : IRequestHandler<GetCustomersPagedQu
             filter.PageSize
         );
     }
+
+    private static IQueryable<Customer> ApplyFilter(IQueryable<Customer> query, CustomerPagedFilterDto filter)
+    {
+        if (filter == null) return query;
+
+        if (filter.IsActive.HasValue)
+            query = query.Where(x => x.IsActive == filter.IsActive.Value);
+
+        return query;
+    }
+
+    private static IQueryable<Customer> ApplySort(IQueryable<Customer> query, string? orderBy, string? direction)
+    {
+        if (string.IsNullOrWhiteSpace(orderBy))
+            return query.OrderBy(x => x.Id);
+
+        var isDescending = direction?.ToLower() == "desc";
+
+        return orderBy.ToLower() switch
+        {
+            "name" => isDescending
+                ? query.OrderByDescending(x => x.Name)
+                : query.OrderBy(x => x.Name),
+            "taxcode" => isDescending
+                ? query.OrderByDescending(x => x.TaxCode)
+                : query.OrderBy(x => x.TaxCode),
+            "phone" => isDescending
+                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Phone : null)
+                : query.OrderBy(x => x.Contact != null ? x.Contact.Phone : null),
+            "email" => isDescending
+                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Email : null)
+                : query.OrderBy(x => x.Contact != null ? x.Contact.Email : null),
+            "address" => isDescending
+                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Address : null)
+                : query.OrderBy(x => x.Contact != null ? x.Contact.Address : null),
+            "isactive" => isDescending
+                ? query.OrderByDescending(x => x.IsActive)
+                : query.OrderBy(x => x.IsActive),
+            "createddate" => isDescending
+                ? query.OrderByDescending(x => x.CreatedDate)
+                : query.OrderBy(x => x.CreatedDate),
+            "lastmodifieddate" => isDescending
+                ? query.OrderByDescending(x => x.LastModifiedDate)
+                : query.OrderBy(x => x.LastModifiedDate),
+            _ => query.OrderBy(x => x.Id)
+        };
+    }
 }
+

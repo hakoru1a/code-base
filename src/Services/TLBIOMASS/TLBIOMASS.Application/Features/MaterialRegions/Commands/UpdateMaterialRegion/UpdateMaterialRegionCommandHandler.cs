@@ -1,5 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.MaterialRegions.Interfaces;
+using TLBIOMASS.Domain.MaterialRegions.ValueObjects;
 using TLBIOMASS.Domain.Materials.Interfaces;
 using Contracts.Exceptions;
 using Microsoft.EntityFrameworkCore;
@@ -28,15 +29,8 @@ public class UpdateMaterialRegionCommandHandler : IRequestHandler<UpdateMaterial
             throw new NotFoundException("MaterialRegion", request.Id);
         }
 
-        region.Update(
-            request.RegionName,
-            request.Address,
-            request.Latitude,
-            request.Longitude,
-            request.AreaHa,
-            request.CertificateID,
-            request.OwnerId
-        );
+        var detail = new RegionDetail(request.RegionName, request.Address, request.Latitude, request.Longitude, request.AreaHa, request.CertificateID);
+        region.Update(detail, request.OwnerId);
 
         // Update Materials: Clear and Re-add for simplicity in this pattern
         region.ClearMaterials();

@@ -6,13 +6,18 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Shared.Interfaces.Event;
 using System.Reflection;
+using TLBIOMASS.Domain.Agencies;
 using TLBIOMASS.Domain.Customers;
+using TLBIOMASS.Domain.Landowners;
+using TLBIOMASS.Domain.MaterialRegions;
+using TLBIOMASS.Domain.Materials;
+using TLBIOMASS.Domain.Receivers;
 
 namespace TLBIOMASS.Infrastructure.Persistences
 {
     public class TLBIOMASSContext : DbContext
     {
-        private IMediator _mediator;
+        private readonly IMediator _mediator;
 
         private List<BaseEvent>? _events;
 
@@ -21,15 +26,13 @@ namespace TLBIOMASS.Infrastructure.Persistences
             _mediator = mediator;
         }
 
-        // TODO: Add DbSets as features are developed
-        public DbSet<TLBIOMASS.Domain.Receivers.Receiver> Receivers { get; set; }
-        public DbSet<TLBIOMASS.Domain.Agencies.Agency> Agencies { get; set; }
-        public DbSet<TLBIOMASS.Domain.Materials.Material> Materials { get; set; }
-        public DbSet<TLBIOMASS.Domain.Companies.Company> Companies { get; set; }
-        public DbSet<TLBIOMASS.Domain.WeighingTickets.WeighingTicket> WeighingTickets { get; set; }
-        public DbSet<TLBIOMASS.Domain.WeighingTicketCancels.WeighingTicketCancel> WeighingTicketCancels { get; set; }
-        public DbSet<TLBIOMASS.Domain.Payments.WeighingTicketPayment> WeighingTicketPayments { get; set; }
-        public DbSet<TLBIOMASS.Domain.Payments.PaymentDetail> PaymentDetails { get; set; }
+        public DbSet<Customer> Customers { get; set; }
+        public DbSet<Landowner> Landowners { get; set; }
+        public DbSet<MaterialRegion> MaterialRegions { get; set; }
+        public DbSet<RegionMaterial> RegionMaterials { get; set; }
+        public DbSet<Receiver> Receivers { get; set; }
+        public DbSet<Agency> Agencies { get; set; }
+        public DbSet<Material> Materials { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -70,40 +73,25 @@ namespace TLBIOMASS.Infrastructure.Persistences
                     case EntityState.Added:
                         if (item.Entity is IDateTracking addedEntity)
                         {
-                            addedEntity.CreatedDate = DateTime.UtcNow;
-                        }
-                        else if (item.Entity is Customer customerAdded)
-                        {
-                            customerAdded.CreatedAt = DateTime.Now;
+                            addedEntity.CreatedDate = DateTimeOffset.UtcNow;
                         }
                         break;
 
                     case EntityState.Modified:
-                        if (item.Entity is not Customer)
+                        var idProperty = item.Entity.GetType().GetProperty("Id");
+                        if (idProperty != null)
                         {
-                            var idProperty = item.Entity.GetType().GetProperty("Id");
-                            if (idProperty != null)
-                            {
-                                Entry(item.Entity).Property(idProperty.Name).IsModified = false;
-                            }
+                            Entry(item.Entity).Property(idProperty.Name).IsModified = false;
                         }
-
                         if (item.Entity is IDateTracking modifiedEntity)
                         {
-                            modifiedEntity.LastModifiedDate = DateTime.UtcNow;
-                        }
-                        else if (item.Entity is Customer customerModified)
-                        {
-                            customerModified.UpdatedAt = DateTime.Now;
+                            modifiedEntity.LastModifiedDate = DateTimeOffset.UtcNow;
                         }
                         break;
                 }
             }
             var result = await base.SaveChangesAsync(cancellationToken);
-            //if (_events?.Any() == true)
-            //{
-            //    await _mediator.DispatchDomainEventAsync(_events);
-            //}
+            // Domain event dispatch intentionally disabled until handlers are ready.
             return result;
         }
     }

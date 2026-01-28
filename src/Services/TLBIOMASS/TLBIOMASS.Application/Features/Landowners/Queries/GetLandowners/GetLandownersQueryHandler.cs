@@ -1,12 +1,11 @@
+using System.Linq;
 using MediatR;
 using TLBIOMASS.Domain.Landowners.Interfaces;
 using Shared.DTOs.Landowner;
 using Shared.SeedWork;
 using Mapster;
-using System.Linq.Expressions;
 using TLBIOMASS.Domain.Landowners;
 using TLBIOMASS.Domain.Landowners.Specifications;
-using System.Linq;
 
 namespace TLBIOMASS.Application.Features.Landowners.Queries.GetLandowners;
 
@@ -21,11 +20,11 @@ public class GetLandownersQueryHandler : IRequestHandler<GetLandownersQuery, Pag
 
     public async Task<PagedList<LandownerResponseDto>> Handle(GetLandownersQuery request, CancellationToken cancellationToken)
     {
-        // Start with base query
         var query = _repository.FindAll();
 
-        // Apply filters using Specifications
-        if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
+        query = ApplyFilter(query, request.Filter);
+
+        if (!string.IsNullOrEmpty(request.Filter.Search))
         {
             var spec = new LandownerSearchSpecification(request.Filter.SearchTerms);
             query = query.Where(spec.ToExpression());
@@ -37,38 +36,60 @@ public class GetLandownersQueryHandler : IRequestHandler<GetLandownersQuery, Pag
             query = query.Where(spec.ToExpression());
         }
 
-        // Apply sorting
-        query = ApplySorting(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
+        query = ApplySort(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
 
-        // Get paginated results
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
 
-        // Map to DTOs and return PagedList
         return new PagedList<LandownerResponseDto>(
             pagedItems.Adapt<List<LandownerResponseDto>>(),
             pagedItems.GetMetaData().TotalItems,
             request.Filter.PageNumber, request.Filter.PageSize);
-
     }
 
-    private IQueryable<Landowner> ApplySorting(IQueryable<Landowner> query, string? sortBy, string? sortDirection)
+    private static IQueryable<Landowner> ApplyFilter(IQueryable<Landowner> query, LandownerPagedFilterDto filter)
     {
-        var isDescending = sortDirection?.ToLower() == "desc";
+        if (filter == null) return query;
 
-        if (string.IsNullOrWhiteSpace(sortBy))
-        {
-            return query.OrderByDescending(x => x.CreatedDate);
-        }
+        if (filter.IsActive.HasValue)
+            query = query.Where(x => x.IsActive == filter.IsActive.Value);
 
-        return sortBy.ToLower() switch
+        return query;
+    }
+
+    private static IQueryable<Landowner> ApplySort(IQueryable<Landowner> query, string? orderBy, string? direction)
+    {
+        if (string.IsNullOrWhiteSpace(orderBy))
+            return query.OrderBy(x => x.Id);
+
+        var isDescending = direction?.ToLower() == "desc";
+
+        return orderBy.ToLower() switch
         {
-            "name" => isDescending ? query.OrderByDescending(x => x.Name) : query.OrderBy(x => x.Name),
-            "phone" => isDescending ? query.OrderByDescending(x => x.Phone) : query.OrderBy(x => x.Phone),
-            "email" => isDescending ? query.OrderByDescending(x => x.Email) : query.OrderBy(x => x.Email),
-            "bankaccount" => isDescending ? query.OrderByDescending(x => x.BankAccount) : query.OrderBy(x => x.BankAccount),
-            "createddate" or "created" => isDescending ? query.OrderByDescending(x => x.CreatedDate) : query.OrderBy(x => x.CreatedDate),
-            "lastmodifieddate" or "updated" => isDescending ? query.OrderByDescending(x => x.LastModifiedDate) : query.OrderBy(x => x.LastModifiedDate),
-            _ => query.OrderByDescending(x => x.CreatedDate)
+            "name" => isDescending
+                ? query.OrderByDescending(x => x.Name)
+                : query.OrderBy(x => x.Name),
+            "phone" => isDescending
+                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Phone : null)
+                : query.OrderBy(x => x.Contact != null ? x.Contact.Phone : null),
+            "email" => isDescending
+                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Email : null)
+                : query.OrderBy(x => x.Contact != null ? x.Contact.Email : null),
+            "address" => isDescending
+                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Address : null)
+                : query.OrderBy(x => x.Contact != null ? x.Contact.Address : null),
+            "bankname" => isDescending
+                ? query.OrderByDescending(x => x.Bank != null ? x.Bank.BankName : null)
+                : query.OrderBy(x => x.Bank != null ? x.Bank.BankName : null),
+            "isactive" => isDescending
+                ? query.OrderByDescending(x => x.IsActive)
+                : query.OrderBy(x => x.IsActive),
+            "createddate" => isDescending
+                ? query.OrderByDescending(x => x.CreatedDate)
+                : query.OrderBy(x => x.CreatedDate),
+            "lastmodifieddate" => isDescending
+                ? query.OrderByDescending(x => x.LastModifiedDate)
+                : query.OrderBy(x => x.LastModifiedDate),
+            _ => query.OrderBy(x => x.Id)
         };
     }
 }

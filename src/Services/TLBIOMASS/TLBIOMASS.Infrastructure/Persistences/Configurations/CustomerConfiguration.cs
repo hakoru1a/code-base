@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TLBIOMASS.Domain.Customers;
+using Shared.Domain.ValueObjects;
 
 namespace TLBIOMASS.Infrastructure.Persistences.Configurations;
 
@@ -8,36 +9,25 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
 {
     public void Configure(EntityTypeBuilder<Customer> builder)
     {
-        // Table name
         builder.ToTable("khachhang");
 
-        // Primary key
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id)
             .HasColumnName("id")
             .ValueGeneratedOnAdd();
 
-        // Properties
         builder.Property(c => c.Name)
             .HasColumnName("ten_khach_hang")
             .HasMaxLength(200)
             .IsRequired();
 
-        builder.Property(c => c.Phone)
-            .HasColumnName("dien_thoai")
-            .HasMaxLength(20);
-
-        builder.Property(c => c.Address)
-            .HasColumnName("dia_chi")
-            .HasMaxLength(500);
-
-        builder.Property(c => c.Note)
-            .HasColumnName("ghi_chu")
-            .HasColumnType("text");
-
-        builder.Property(c => c.Email)
-            .HasColumnName("email")
-            .HasMaxLength(100);
+        builder.OwnsOne(c => c.Contact, c =>
+        {
+            c.Property(x => x.Phone).HasColumnName("dien_thoai").HasMaxLength(20);
+            c.Property(x => x.Address).HasColumnName("dia_chi").HasMaxLength(500);
+            c.Property(x => x.Note).HasColumnName("ghi_chu").HasColumnType("text");
+            c.Property(x => x.Email).HasColumnName("email").HasMaxLength(100);
+        });
 
         builder.Property(c => c.TaxCode)
             .HasColumnName("ma_so_thue")
@@ -47,15 +37,17 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasColumnName("is_active")
             .HasDefaultValue(true);
 
-        builder.Property(c => c.CreatedAt)
+        builder.Property(c => c.CreatedDate)
             .HasColumnName("created_at")
             .HasColumnType("timestamp");
 
-        builder.Property(c => c.UpdatedAt)
+        builder.Property(c => c.LastModifiedDate)
             .HasColumnName("updated_at")
             .HasColumnType("timestamp");
 
-        // Indexes
+        builder.Ignore(c => c.CreatedBy);
+        builder.Ignore(c => c.LastModifiedBy);
+
         builder.HasIndex(c => c.Name)
             .HasDatabaseName("idx_khachhang_ten");
 

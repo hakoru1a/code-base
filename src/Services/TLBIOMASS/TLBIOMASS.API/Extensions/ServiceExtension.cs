@@ -70,11 +70,7 @@ namespace TLBIOMASS.API.Extensions
 
         private static IServiceCollection AddApplicationServicesIntegrated(this IServiceCollection services)
         {
-            // Configure Mapster mappings first
-            MapsterConfig.ConfigureMappings();
-            
-            // Use generic application services from Infrastructure with Application assembly
-            var applicationAssembly = typeof(TLBIOMASS.Application.Common.Mappings.MapsterConfig).Assembly;
+            var applicationAssembly = typeof(MapsterConfig).Assembly;
             return services.AddGenericApplicationServices(applicationAssembly);
         }
     }

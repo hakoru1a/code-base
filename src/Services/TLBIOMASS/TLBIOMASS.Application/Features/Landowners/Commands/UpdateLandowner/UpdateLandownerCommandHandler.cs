@@ -1,5 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.Landowners.Interfaces;
+using Shared.Domain.ValueObjects;
 using Contracts.Exceptions;
 
 namespace TLBIOMASS.Application.Features.Landowners.Commands.UpdateLandowner;
@@ -24,17 +25,10 @@ public class UpdateLandownerCommandHandler : IRequestHandler<UpdateLandownerComm
 
         landowner.Update(
             request.Name,
-            request.Phone,
-            request.Email,
-            request.Address,
-            request.BankAccount,
-            request.BankName,
-            request.IdentityCardNo,
-            request.IssuePlace,
-            request.IssueDate,
-            request.DateOfBirth,
-            request.IsActive
-        );
+            new ContactInfo(request.Phone, request.Email, request.Address),
+            new BankInfo(request.BankAccount, request.BankName),
+            new IdentityInfo(request.IdentityCardNo, request.IssuePlace, request.IssueDate, request.DateOfBirth),
+            request.IsActive);
 
         await _repository.UpdateAsync(landowner);
         await _repository.SaveChangesAsync(cancellationToken);

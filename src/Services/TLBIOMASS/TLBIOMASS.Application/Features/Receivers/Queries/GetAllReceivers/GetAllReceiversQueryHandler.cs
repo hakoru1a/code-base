@@ -35,7 +35,6 @@ public class GetAllReceiversQueryHandler : IRequestHandler<GetAllReceiversQuery,
             query = query.Where(spec.ToExpression());
         }
 
-        // 2. Fetch and Adapt (No dynamic sorting)
         var items = await query.ToListAsync(cancellationToken);
         return items.Adapt<List<ReceiverResponseDto>>();
     }

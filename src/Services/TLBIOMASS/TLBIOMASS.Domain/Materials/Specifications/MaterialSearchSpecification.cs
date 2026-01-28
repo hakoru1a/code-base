@@ -24,8 +24,8 @@ public class MaterialSearchSpecification : ISpecification<Material>
         if (string.IsNullOrEmpty(_searchTerm))
             return c => true;
 
-        return c => c.Name.ToLower().Contains(_searchTerm) ||
-                   (c.Unit.ToLower().Contains(_searchTerm)) ||
-                   (c.Description != null && c.Description.ToLower().Contains(_searchTerm));
+        return c => c.Spec.Name.ToLower().Contains(_searchTerm) ||
+                   c.Spec.Unit.ToLower().Contains(_searchTerm) ||
+                   (c.Spec.Description != null && c.Spec.Description.ToLower().Contains(_searchTerm));
     }
 }

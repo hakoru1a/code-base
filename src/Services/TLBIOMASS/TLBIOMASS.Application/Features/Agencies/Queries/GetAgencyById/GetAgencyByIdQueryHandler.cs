@@ -6,7 +6,7 @@ using Mapster;
 
 namespace TLBIOMASS.Application.Features.Agencies.Queries.GetAgencyById;
 
-public class GetAgencyByIdQueryHandler : IRequestHandler<GetAgencyByIdQuery, AgencyResponseDto>
+public class GetAgencyByIdQueryHandler : IRequestHandler<GetAgencyByIdQuery, AgencyResponseDto?>
 {
     private readonly IAgencyRepository _repository;
 
@@ -15,7 +15,7 @@ public class GetAgencyByIdQueryHandler : IRequestHandler<GetAgencyByIdQuery, Age
         _repository = repository;
     }
 
-    public async Task<AgencyResponseDto> Handle(GetAgencyByIdQuery request, CancellationToken cancellationToken)
+    public async Task<AgencyResponseDto?> Handle(GetAgencyByIdQuery request, CancellationToken cancellationToken)
     {
         var agency = await _repository.GetByIdAsync(request.Id);
         if (agency == null)

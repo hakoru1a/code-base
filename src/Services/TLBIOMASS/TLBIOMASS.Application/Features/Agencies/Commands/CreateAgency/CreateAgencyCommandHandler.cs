@@ -1,6 +1,7 @@
 using MediatR;
 using TLBIOMASS.Domain.Agencies;
 using TLBIOMASS.Domain.Agencies.Interfaces;
+using Shared.Domain.ValueObjects;
 using Shared.Events.Agency;
 
 namespace TLBIOMASS.Application.Features.Agencies.Commands.CreateAgency
@@ -16,18 +17,12 @@ namespace TLBIOMASS.Application.Features.Agencies.Commands.CreateAgency
 
         public async Task<long> Handle(CreateAgencyCommand request, CancellationToken cancellationToken)
         {
-             var agency = Agency.Create(
+            var agency = Agency.Create(
                 request.Name,
-                request.Phone,
-                request.Email,
-                request.Address,
-                request.BankAccount,
-                request.BankName,
-                request.IdentityCard,
-                request.IssuePlace,
-                request.IssueDate,
-                request.IsActive
-            );
+                new ContactInfo(request.Phone, request.Email, request.Address),
+                new BankInfo(request.BankAccount, request.BankName),
+                new IdentityInfo(request.IdentityCard, request.IssuePlace, request.IssueDate),
+                request.IsActive);
 
             //agency.AddDomainEvent(new AgencyCreatedEvent(agency.Id, agency.Name));
 

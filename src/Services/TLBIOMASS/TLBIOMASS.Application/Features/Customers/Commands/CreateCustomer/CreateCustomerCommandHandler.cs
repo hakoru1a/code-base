@@ -2,6 +2,7 @@ using MediatR;
 using TLBIOMASS.Domain.Customers.Events;
 using TLBIOMASS.Domain.Customers;
 using TLBIOMASS.Domain.Customers.Interfaces;
+using Shared.Domain.ValueObjects;
 
 namespace TLBIOMASS.Application.Features.Customers.Commands.CreateCustomer;
 
@@ -21,12 +22,8 @@ public class CreateCustomerCommandHandler : IRequestHandler<CreateCustomerComman
     {
         var customer = Customer.Create(
             request.Name,
-            request.Phone,
-            request.Address,
-            request.Email,
-            request.TaxCode,
-            request.Note
-        );
+            new ContactInfo(request.Phone, request.Email, request.Address, request.Note),
+            request.TaxCode);
 
         // Check tax code uniqueness via Domain Rule
         customer.CheckTaxCodeUnique(_customerRepository);
