@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Shared.SeedWork;
+using System.Net;
 
 namespace Infrastructure.Filters
 {
@@ -23,7 +24,8 @@ namespace Infrastructure.Filters
 
                 var result = new ApiErrorResult<object>(
                     ResponseMessages.ValidationFailed,
-                    errors
+                    errors,
+                    HttpStatusCode.BadRequest
                 );
 
                 context.Result = new BadRequestObjectResult(result);

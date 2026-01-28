@@ -26,4 +26,9 @@ public interface IOAuthClient
     /// Revoke token (logout)
     /// </summary>
     Task RevokeTokenAsync(string refreshToken);
+
+    /// <summary>
+    /// End session ở Keycloak (xóa session)
+    /// </summary>
+    Task EndSessionAsync(string? idToken = null, string? postLogoutRedirectUri = null);
 }

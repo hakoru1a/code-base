@@ -1,0 +1,54 @@
+version: "3.8"
+
+services:
+  api-gateway:
+    build:
+      context: ..
+      dockerfile: src/ApiGateways/ApiGateway/Dockerfile
+    container_name: codebase_api_gateway
+    restart: unless-stopped
+    ports:
+      - "${GATEWAY_PORT:-5238}:8080"
+    env_file:
+      - ./ApiGateways/ApiGateway/.env
+    volumes:
+      - ./ApiGateways/ApiGateway/.env:/app/.env:ro
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ASPNETCORE_URLS=http://+:8080
+    networks:
+      - codebase_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - tlbiomass-api
+
+  tlbiomass-api:
+    build:
+      context: ..
+      dockerfile: src/Services/TLBIOMASS/TLBIOMASS.API/Dockerfile
+    container_name: codebase_tlbiomass_api
+    restart: unless-stopped
+    ports:
+      - "${SERVICES_TLBIOMASS_PORT:-5028}:8080"
+    env_file:
+      - ./Services/TLBIOMASS/TLBIOMASS.API/.env
+    volumes:
+      - ./Services/TLBIOMASS/TLBIOMASS.API/.env:/app/.env:ro
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ASPNETCORE_URLS=http://+:8080
+    networks:
+      - codebase_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  codebase_network:
+    driver: bridge

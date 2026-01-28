@@ -3,6 +3,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using ApiGateway.Configurations;
 using Shared.SeedWork;
+using System.Net;
 
 namespace ApiGateway.Middlewares;
 
@@ -44,7 +45,7 @@ public class JwtValidationMiddleware
 
         // 3. Check Authorization header
         var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
-        
+
         if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogWarning("Missing or invalid Authorization header for path: {Path}", path);
@@ -53,7 +54,7 @@ public class JwtValidationMiddleware
         }
 
         var token = authHeader.Substring("Bearer ".Length).Trim();
-        
+
         if (string.IsNullOrEmpty(token))
         {
             _logger.LogWarning("Empty bearer token for path: {Path}", path);
@@ -90,7 +91,7 @@ public class JwtValidationMiddleware
             // 7. Log successful validation
             var userId = jsonToken.Claims.FirstOrDefault(c => c.Type == "sub")?.Value;
             var username = jsonToken.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
-            
+
             _logger.LogDebug("JWT token validated successfully for user: {Username} ({UserId})", username, userId);
 
             await _next(context);
@@ -107,7 +108,7 @@ public class JwtValidationMiddleware
         context.Response.StatusCode = 401;
         context.Response.ContentType = "application/json";
 
-        var errorResponse = new ApiErrorResult<object>(message);
+        var errorResponse = new ApiErrorResult<object>(message, HttpStatusCode.Unauthorized);
         await context.Response.WriteAsJsonAsync(errorResponse);
     }
 
@@ -116,11 +117,12 @@ public class JwtValidationMiddleware
         var publicPaths = new[]
         {
             "/auth/login",
-            "/auth/signin-oidc", 
+            "/auth/signin-oidc",
             "/auth/health",
             "/health",
             "/swagger",
-            "/_whoami"
+            "/_whoami",
+            "/auth/exchange"
         };
 
         // Exact match

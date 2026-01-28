@@ -44,12 +44,12 @@ namespace Infrastructure.Middlewares
             {
                 case DuplicateException duplicateEx:
                     response.StatusCode = (int)HttpStatusCode.Conflict;
-                    errorResponse = new ApiErrorResult<object>(message);
+                    errorResponse = new ApiErrorResult<object>(message, HttpStatusCode.Conflict);
                     break;
 
                 case NotFoundException notFoundEx:
                     response.StatusCode = (int)HttpStatusCode.NotFound;
-                    errorResponse = new ApiErrorResult<object>(message);
+                    errorResponse = new ApiErrorResult<object>(message, HttpStatusCode.NotFound);
                     break;
 
                 case ValidationException validationEx:
@@ -59,12 +59,13 @@ namespace Infrastructure.Middlewares
                         .ToList() ?? new List<string> { message };
                     errorResponse = new ApiErrorResult<object>(
                         ResponseMessages.ValidationFailed,
-                        validationErrors);
+                        validationErrors,
+                        HttpStatusCode.BadRequest);
                     break;
 
                 case UnauthorizedException unauthorizedEx:
                     response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    errorResponse = new ApiErrorResult<object>(message);
+                    errorResponse = new ApiErrorResult<object>(message, HttpStatusCode.Unauthorized);
                     break;
 
                 case BadRequestException badRequestEx:
@@ -74,32 +75,32 @@ namespace Infrastructure.Middlewares
                         var errors = badRequestEx.ValidationErrors
                             .SelectMany(kvp => kvp.Value.Select(error => $"{kvp.Key}: {error}"))
                             .ToList();
-                        errorResponse = new ApiErrorResult<object>(message, errors);
+                        errorResponse = new ApiErrorResult<object>(message, errors, HttpStatusCode.BadRequest);
                     }
                     else
                     {
-                        errorResponse = new ApiErrorResult<object>(message);
+                        errorResponse = new ApiErrorResult<object>(message, HttpStatusCode.BadRequest);
                     }
                     break;
 
                 case BusinessException businessEx:
                     response.StatusCode = (int)HttpStatusCode.BadRequest;
-                    errorResponse = new ApiErrorResult<object>(message);
+                    errorResponse = new ApiErrorResult<object>(message, HttpStatusCode.BadRequest);
                     break;
 
                 case KeyNotFoundException:
                     response.StatusCode = (int)HttpStatusCode.NotFound;
-                    errorResponse = new ApiErrorResult<object>("Resource not found");
+                    errorResponse = new ApiErrorResult<object>("Resource not found", HttpStatusCode.NotFound);
                     break;
 
                 case UnauthorizedAccessException:
                     response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                    errorResponse = new ApiErrorResult<object>("Unauthorized access");
+                    errorResponse = new ApiErrorResult<object>("Unauthorized access", HttpStatusCode.Unauthorized);
                     break;
 
                 default:
                     response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    errorResponse = new ApiErrorResult<object>(ResponseMessages.InternalError);
+                    errorResponse = new ApiErrorResult<object>(HttpStatusCode.InternalServerError);
                     break;
             }
 

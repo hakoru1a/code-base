@@ -12,7 +12,7 @@ public class OAuthOptions
     public string ClientSecret { get; set; } = string.Empty;
     public string RedirectUri { get; set; } = "/auth/signin-oidc";
     public string PostLogoutRedirectUri { get; set; } = "/";
-    public string[] Scopes { get; set; } = new[] { "openid", "profile", "email" };
+    public string[] Scopes { get; set; } = new[] { "openid", "profile", "email", "profile_extended" }; // profile_extended is a custom scope that is not standard OIDC scope
     public string ResponseType { get; set; } = "code";
     public bool UsePkce { get; set; } = true;
     public string WebAppUrl { get; set; } = "http://localhost:3000";
@@ -24,6 +24,7 @@ public class OAuthOptions
     public int RefreshTokenBeforeExpirationSeconds { get; set; } = 60;
     public string InstanceName { get; set; } = "ApiGateway_";
     public int PkceExpirationMinutes { get; set; } = 10;
+    public string[] CorsAllowedOrigins { get; set; } = Array.Empty<string>();
 }
 
 
