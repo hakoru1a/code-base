@@ -1,5 +1,6 @@
 using TLBIOMASS.API.Extensions;
 using TLBIOMASS.Infrastructure;
+using TLBIOMASS.Application;
 using Common.Logging;
 using Infrastructure.Extensions;
 using Serilog;
@@ -24,7 +25,11 @@ try
     builder.Configuration.SubstituteEnvironmentVariables();
 
     // Add services to the container
+    // Add services to the container
     builder.Services.AddInfrastructureServices(builder.Configuration);
+
+    // Add Application Services (MediatR, Mapster, Validators)
+    builder.Services.AddApplication();
 
     // Add Infrastructure Services (Database, Repositories, etc.)
     builder.Services.AddInfrastructure(builder.Configuration);

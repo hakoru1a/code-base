@@ -21,8 +21,10 @@ namespace TLBIOMASS.Infrastructure.Persistences
             _mediator = mediator;
         }
 
-        // DbSets
-        public DbSet<Customer> Customers { get; set; }
+        // TODO: Add DbSets as features are developed
+        public DbSet<TLBIOMASS.Domain.Receivers.Receiver> Receivers { get; set; }
+        public DbSet<TLBIOMASS.Domain.Agencies.Agency> Agencies { get; set; }
+        public DbSet<TLBIOMASS.Domain.Materials.Material> Materials { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
