@@ -44,8 +44,6 @@ namespace Generate.Application.Features.Categories.Queries.GetCategoriesPaged
                 query = query.Where(c => c.CreatedDate <= filter.CreatedTo.Value);
             }
 
-            // Apply sorting
-            query = ApplySorting(query, filter.OrderBy, filter.OrderByDirection);
 
             // Get paginated results
             var pagedCategories = await _categoryRepository.GetPageAsync(
@@ -64,26 +62,6 @@ namespace Generate.Application.Features.Categories.Queries.GetCategoriesPaged
                 filter.PageSize);
         }
 
-        private IQueryable<Generate.Domain.Categories.Category> ApplySorting(
-            IQueryable<Generate.Domain.Categories.Category> query,
-            string orderBy,
-            string orderByDirection)
-        {
-            if (string.IsNullOrWhiteSpace(orderBy))
-            {
-                return query.OrderByDescending(c => c.CreatedDate);
-            }
-
-            var isDescending = orderByDirection?.ToLower() == "desc";
-
-            return orderBy.ToLower() switch
-            {
-                "name" => isDescending ? query.OrderByDescending(c => c.Name) : query.OrderBy(c => c.Name),
-                "createdate" or "created" => isDescending ? query.OrderByDescending(c => c.CreatedDate) : query.OrderBy(c => c.CreatedDate),
-                "lastmodifieddate" or "modified" => isDescending ? query.OrderByDescending(c => c.LastModifiedDate) : query.OrderBy(c => c.LastModifiedDate),
-                _ => query.OrderByDescending(c => c.CreatedDate)
-            };
-        }
     }
 }
 

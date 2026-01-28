@@ -5,7 +5,7 @@ using Mapster;
 
 namespace TLBIOMASS.Application.Features.Landowners.Queries.GetLandownerById;
 
-public class GetLandownerByIdQueryHandler : IRequestHandler<GetLandownerByIdQuery, LandownerResponseDto>
+public class GetLandownerByIdQueryHandler : IRequestHandler<GetLandownerByIdQuery, LandownerResponseDto?>
 {
     private readonly ILandownerRepository _repository;
 
@@ -14,7 +14,7 @@ public class GetLandownerByIdQueryHandler : IRequestHandler<GetLandownerByIdQuer
         _repository = repository;
     }
 
-    public async Task<LandownerResponseDto> Handle(GetLandownerByIdQuery request, CancellationToken cancellationToken)
+    public async Task<LandownerResponseDto?> Handle(GetLandownerByIdQuery request, CancellationToken cancellationToken)
     {
         var landowner = await _repository.GetByIdAsync(request.Id);
         return landowner?.Adapt<LandownerResponseDto>();

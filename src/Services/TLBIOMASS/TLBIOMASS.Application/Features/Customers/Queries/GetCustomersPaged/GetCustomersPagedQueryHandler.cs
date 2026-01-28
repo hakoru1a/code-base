@@ -5,7 +5,6 @@ using Shared.DTOs.Customer;
 using Shared.SeedWork;
 using TLBIOMASS.Domain.Customers.Interfaces;
 using TLBIOMASS.Domain.Customers.Specifications;
-using TLBIOMASS.Application.Common.Extensions;
 
 namespace TLBIOMASS.Application.Features.Customers.Queries.GetCustomersPaged;
 
@@ -34,8 +33,6 @@ public class GetCustomersPagedQueryHandler : IRequestHandler<GetCustomersPagedQu
             var activeSpec = new CustomerIsActiveSpecification(filter.IsActive.Value);
             query = query.Where(activeSpec.ToExpression());
         }
-
-        query = query.ApplySorting(filter.OrderBy, filter.OrderByDirection);
 
         var pagedItems = await _customerRepository.GetPageAsync(
             query,

@@ -47,13 +47,16 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasColumnName("is_active")
             .HasDefaultValue(true);
 
-        builder.Property(c => c.CreatedAt)
+        builder.Property(c => c.CreatedDate)
             .HasColumnName("created_at")
             .HasColumnType("timestamp");
 
-        builder.Property(c => c.UpdatedAt)
+        builder.Property(c => c.LastModifiedDate)
             .HasColumnName("updated_at")
             .HasColumnType("timestamp");
+
+        builder.Ignore(c => c.CreatedBy);
+        builder.Ignore(c => c.LastModifiedBy);
 
         // Indexes
         builder.HasIndex(c => c.Name)

@@ -36,9 +36,6 @@ public class GetReceiversQueryHandler : IRequestHandler<GetReceiversQuery, Paged
             query = query.Where(spec.ToExpression());
         }
 
-        // Apply sorting
-        query = ApplySorting(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
-
         // Get paginated results
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
 
@@ -50,23 +47,4 @@ public class GetReceiversQueryHandler : IRequestHandler<GetReceiversQuery, Paged
 
     }
 
-    private IQueryable<Receiver> ApplySorting(IQueryable<Receiver> query, string? sortBy, string? sortDirection)
-    {
-        var isDescending = sortDirection?.ToLower() == "desc";
-
-        if (string.IsNullOrWhiteSpace(sortBy))
-        {
-            return query.OrderByDescending(x => x.CreatedAt);
-        }
-
-        return sortBy.ToLower() switch
-        {
-            "name" => isDescending ? query.OrderByDescending(x => x.Name) : query.OrderBy(x => x.Name),
-            "phone" => isDescending ? query.OrderByDescending(x => x.Phone) : query.OrderBy(x => x.Phone),
-            "bankaccount" => isDescending ? query.OrderByDescending(x => x.BankAccount) : query.OrderBy(x => x.BankAccount),
-            "createdat" or "created" => isDescending ? query.OrderByDescending(x => x.CreatedAt) : query.OrderBy(x => x.CreatedAt),
-            "updatedat" or "updated" => isDescending ? query.OrderByDescending(x => x.UpdatedAt) : query.OrderBy(x => x.UpdatedAt),
-            _ => query.OrderByDescending(x => x.CreatedAt)
-        };
-    }
 }

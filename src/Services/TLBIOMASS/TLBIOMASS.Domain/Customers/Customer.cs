@@ -1,11 +1,10 @@
 using Contracts.Domain;
-using Contracts.Domain.Interface;
 using TLBIOMASS.Domain.Customers.Interfaces;
 using TLBIOMASS.Domain.Customers.Rules;
 
 namespace TLBIOMASS.Domain.Customers;
 
-public class Customer : EntityBase<int>
+public class Customer : EntityAuditBase<int>
 {
     public string Name { get; private set; } = string.Empty;
     public string? Phone { get; private set; }
@@ -14,8 +13,6 @@ public class Customer : EntityBase<int>
     public string? Email { get; private set; }
     public string? TaxCode { get; private set; }
     public bool IsActive { get; private set; } = true;
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
 
     // Protected constructor for EF Core
     protected Customer() { }

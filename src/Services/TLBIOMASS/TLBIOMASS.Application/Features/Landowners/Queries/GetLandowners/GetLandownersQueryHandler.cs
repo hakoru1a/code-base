@@ -37,9 +37,6 @@ public class GetLandownersQueryHandler : IRequestHandler<GetLandownersQuery, Pag
             query = query.Where(spec.ToExpression());
         }
 
-        // Apply sorting
-        query = ApplySorting(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
-
         // Get paginated results
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
 
@@ -51,24 +48,5 @@ public class GetLandownersQueryHandler : IRequestHandler<GetLandownersQuery, Pag
 
     }
 
-    private IQueryable<Landowner> ApplySorting(IQueryable<Landowner> query, string? sortBy, string? sortDirection)
-    {
-        var isDescending = sortDirection?.ToLower() == "desc";
 
-        if (string.IsNullOrWhiteSpace(sortBy))
-        {
-            return query.OrderByDescending(x => x.CreatedDate);
-        }
-
-        return sortBy.ToLower() switch
-        {
-            "name" => isDescending ? query.OrderByDescending(x => x.Name) : query.OrderBy(x => x.Name),
-            "phone" => isDescending ? query.OrderByDescending(x => x.Phone) : query.OrderBy(x => x.Phone),
-            "email" => isDescending ? query.OrderByDescending(x => x.Email) : query.OrderBy(x => x.Email),
-            "bankaccount" => isDescending ? query.OrderByDescending(x => x.BankAccount) : query.OrderBy(x => x.BankAccount),
-            "createddate" or "created" => isDescending ? query.OrderByDescending(x => x.CreatedDate) : query.OrderBy(x => x.CreatedDate),
-            "lastmodifieddate" or "updated" => isDescending ? query.OrderByDescending(x => x.LastModifiedDate) : query.OrderBy(x => x.LastModifiedDate),
-            _ => query.OrderByDescending(x => x.CreatedDate)
-        };
-    }
 }

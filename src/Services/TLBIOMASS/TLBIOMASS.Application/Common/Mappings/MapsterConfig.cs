@@ -1,10 +1,12 @@
 using Mapster;
 using Shared.DTOs.Agency;
+using Shared.DTOs.Customer;
 using Shared.DTOs.Landowner;
 using Shared.DTOs.Material;
 using Shared.DTOs.MaterialRegion;
 using Shared.DTOs.Receiver;
 using TLBIOMASS.Domain.Agencies;
+using TLBIOMASS.Domain.Customers;
 using TLBIOMASS.Domain.Landowners;
 using TLBIOMASS.Domain.MaterialRegions;
 using TLBIOMASS.Domain.Materials;
@@ -20,10 +22,20 @@ public static class MapsterConfig
         TypeAdapterConfig.GlobalSettings.Default.IgnoreNullValues(false);
 
         ConfigureAgencyMappings();
+        ConfigureCustomerMappings();
         ConfigureLandownerMappings();
         ConfigureMaterialMappings();
         ConfigureMaterialRegionMappings();
         ConfigureReceiverMappings();
+    }
+
+    private static void ConfigureCustomerMappings()
+    {
+        TypeAdapterConfig<Customer, CustomerResponseDto>.NewConfig()
+            .Map(dest => dest.CreatedAt, src => src.CreatedDate.UtcDateTime)
+            .Map(dest => dest.UpdatedAt, src => src.LastModifiedDate.HasValue ? src.LastModifiedDate.Value.UtcDateTime : (DateTime?)null);
+        TypeAdapterConfig<CustomerCreateDto, Customer>.NewConfig()
+            .ConstructUsing(src => Customer.Create(src.Name, src.Phone, src.Address, src.Email, src.TaxCode, src.Note));
     }
 
     private static void ConfigureAgencyMappings()

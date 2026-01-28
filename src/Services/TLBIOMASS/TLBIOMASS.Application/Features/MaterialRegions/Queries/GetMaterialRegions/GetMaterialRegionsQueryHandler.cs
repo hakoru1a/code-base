@@ -36,9 +36,6 @@ public class GetMaterialRegionsQueryHandler : IRequestHandler<GetMaterialRegions
             query = query.Where(x => x.OwnerId == request.Filter.OwnerId.Value);
         }
 
-        // Apply sorting
-        query = ApplySorting(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
-
         var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
 
         return new PagedList<MaterialRegionResponseDto>(
@@ -48,21 +45,5 @@ public class GetMaterialRegionsQueryHandler : IRequestHandler<GetMaterialRegions
 
     }
 
-    private IQueryable<MaterialRegion> ApplySorting(IQueryable<MaterialRegion> query, string? sortBy, string? sortDirection)
-    {
-        var isDescending = sortDirection?.ToLower() == "desc";
 
-        if (string.IsNullOrWhiteSpace(sortBy))
-        {
-            return query.OrderByDescending(x => x.CreatedDate);
-        }
-
-        return sortBy.ToLower() switch
-        {
-            "regionname" => isDescending ? query.OrderByDescending(x => x.RegionName) : query.OrderBy(x => x.RegionName),
-            "areaha" => isDescending ? query.OrderByDescending(x => x.AreaHa) : query.OrderBy(x => x.AreaHa),
-            "createddate" or "created" => isDescending ? query.OrderByDescending(x => x.CreatedDate) : query.OrderBy(x => x.CreatedDate),
-            _ => query.OrderByDescending(x => x.CreatedDate)
-        };
-    }
 }

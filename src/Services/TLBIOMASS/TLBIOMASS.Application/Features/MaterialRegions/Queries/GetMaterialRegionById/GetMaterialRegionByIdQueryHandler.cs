@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace TLBIOMASS.Application.Features.MaterialRegions.Queries.GetMaterialRegionById;
 
-public class GetMaterialRegionByIdQueryHandler : IRequestHandler<GetMaterialRegionByIdQuery, MaterialRegionResponseDto>
+public class GetMaterialRegionByIdQueryHandler : IRequestHandler<GetMaterialRegionByIdQuery, MaterialRegionResponseDto?>
 {
     private readonly IMaterialRegionRepository _repository;
 
@@ -15,7 +15,7 @@ public class GetMaterialRegionByIdQueryHandler : IRequestHandler<GetMaterialRegi
         _repository = repository;
     }
 
-    public async Task<MaterialRegionResponseDto> Handle(GetMaterialRegionByIdQuery request, CancellationToken cancellationToken)
+    public async Task<MaterialRegionResponseDto?> Handle(GetMaterialRegionByIdQuery request, CancellationToken cancellationToken)
     {
         var region = await _repository.FindAll()
             .Include(x => x.RegionMaterials)

@@ -21,20 +21,12 @@ try
     // Add Serilog Configuration
     builder.Host.UseSerilog(SeriLogger.Configure);
 
-    // Substitute environment variables in configuration (${VARIABLE} syntax)
     builder.Configuration.SubstituteEnvironmentVariables();
 
-    // Add services to the container
-    // Add services to the container
     builder.Services.AddInfrastructureServices(builder.Configuration);
-
-    // Add Application Services (MediatR, Mapster, Validators)
     builder.Services.AddApplication();
-
-    // Add Infrastructure Services (Database, Repositories, etc.)
     builder.Services.AddInfrastructure(builder.Configuration);
 
-    // Add Authentication and Authorization
     builder.Services.AddAuthenticationConfiguration(builder.Configuration);
 
     var app = builder.Build();

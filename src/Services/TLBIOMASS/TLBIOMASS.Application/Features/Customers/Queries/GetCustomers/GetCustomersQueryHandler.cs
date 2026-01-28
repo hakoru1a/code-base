@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Shared.DTOs.Customer;
 using TLBIOMASS.Domain.Customers.Interfaces;
 using TLBIOMASS.Domain.Customers.Specifications;
-using TLBIOMASS.Application.Common.Extensions;
 
 namespace TLBIOMASS.Application.Features.Customers.Queries.GetCustomers;
 
@@ -33,8 +32,6 @@ public class GetCustomersQueryHandler : IRequestHandler<GetCustomersQuery, List<
             var activeSpec = new CustomerIsActiveSpecification(filter.IsActive.Value);
             query = query.Where(activeSpec.ToExpression());
         }
-
-        query = query.ApplySorting(filter.OrderBy, filter.OrderByDirection);
 
         var customers = await query.ToListAsync(cancellationToken);
 
