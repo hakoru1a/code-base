@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TLBIOMASS.Domain.Receivers.Interfaces;
 using TLBIOMASS.Domain.BankAccounts;
 using Shared.Domain.ValueObjects;
+using Shared.Domain.Enums;
 using Contracts.Exceptions;
 
 namespace TLBIOMASS.Application.Features.Receivers.Commands.UpdateReceiver;
@@ -64,7 +65,7 @@ public class UpdateReceiverCommandHandler : IRequestHandler<UpdateReceiverComman
             receiver.BankAccounts.Add(BankAccount.Create(
                 dto.BankName,
                 dto.AccountNumber,
-                "Receiver",
+                OwnerType.Receiver,
                 receiver.Id,
                 dto.IsDefault
             ));

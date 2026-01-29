@@ -2,6 +2,7 @@ using Mapster;
 using MediatR;
 using Shared.DTOs.BankAccount;
 using TLBIOMASS.Domain.BankAccounts.Interfaces;
+using Shared.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.BankAccounts.Queries.GetBankAccountsByOwner;
 

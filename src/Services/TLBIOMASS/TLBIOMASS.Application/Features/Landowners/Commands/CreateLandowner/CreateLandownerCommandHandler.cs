@@ -2,6 +2,7 @@ using MediatR;
 using TLBIOMASS.Domain.Landowners;
 using TLBIOMASS.Domain.Landowners.Interfaces;
 using Shared.Domain.ValueObjects;
+using Shared.Domain.Enums;
 using TLBIOMASS.Domain.BankAccounts;
 using TLBIOMASS.Domain.BankAccounts.Interfaces;
 
@@ -32,7 +33,7 @@ namespace TLBIOMASS.Application.Features.Landowners.Commands.CreateLandowner
                 landowner.BankAccounts.Add(BankAccount.Create(
                     request.BankName ?? string.Empty,
                     request.BankAccount,
-                    "Landowner",
+                    OwnerType.Landowner,
                     0, // EF will fill this after save
                     true
                 ));

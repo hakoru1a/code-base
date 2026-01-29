@@ -5,6 +5,7 @@ using TLBIOMASS.Domain.BankAccounts;
 using TLBIOMASS.Domain.BankAccounts.Interfaces;
 using Shared.Domain.ValueObjects;
 using Shared.Events.Agency;
+using Shared.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Agencies.Commands.CreateAgency
 {
@@ -33,7 +34,7 @@ namespace TLBIOMASS.Application.Features.Agencies.Commands.CreateAgency
                 agency.BankAccounts.Add(BankAccount.Create(
                     request.BankName ?? string.Empty,
                     request.BankAccount,
-                    "Agency",
+                    OwnerType.Agency,
                     0, // EF Core will map this after save
                     true
                 ));

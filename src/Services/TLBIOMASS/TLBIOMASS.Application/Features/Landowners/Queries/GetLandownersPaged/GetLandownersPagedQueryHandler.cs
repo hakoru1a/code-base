@@ -5,6 +5,7 @@ using Shared.DTOs.Landowner;
 using Shared.SeedWork;
 using Mapster;
 using TLBIOMASS.Domain.Landowners;
+using Shared.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Landowners.Queries.GetLandownersPaged;
 
@@ -19,7 +20,7 @@ public class GetLandownersPagedQueryHandler : IRequestHandler<GetLandownersPaged
 
     public async Task<PagedList<LandownerResponseDto>> Handle(GetLandownersPagedQuery request, CancellationToken cancellationToken)
     {
-        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == "Landowner"));
+        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == OwnerType.Landowner));
 
         query = ApplyFilter(query, request.Filter);
 

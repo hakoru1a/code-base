@@ -5,6 +5,7 @@ using Mapster;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using Shared.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Agencies.Queries.GetAgencies;
 
@@ -19,7 +20,7 @@ public class GetAgenciesQueryHandler : IRequestHandler<GetAgenciesQuery, List<Ag
 
     public async Task<List<AgencyResponseDto>> Handle(GetAgenciesQuery request, CancellationToken cancellationToken)
     {
-        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == "Agency"));
+        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == OwnerType.Agency));
 
         // 1. Apply Search Filter
         if (!string.IsNullOrEmpty(request.Filter.SearchTerms))

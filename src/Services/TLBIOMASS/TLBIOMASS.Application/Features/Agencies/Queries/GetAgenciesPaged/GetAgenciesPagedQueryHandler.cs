@@ -5,6 +5,7 @@ using Shared.DTOs.Agency;
 using Shared.SeedWork;
 using Mapster;
 using TLBIOMASS.Domain.Agencies;
+using Shared.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Agencies.Queries.GetAgenciesPaged;
 
@@ -19,7 +20,7 @@ public class GetAgenciesPagedQueryHandler : IRequestHandler<GetAgenciesPagedQuer
 
     public async Task<PagedList<AgencyResponseDto>> Handle(GetAgenciesPagedQuery request, CancellationToken cancellationToken)
     {
-        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == "Agency"));
+        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == OwnerType.Agency));
         query = ApplyFilter(query, request.Filter);
         query = ApplySort(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
 

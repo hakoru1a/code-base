@@ -22,7 +22,8 @@ public class BankAccountConfiguration : IEntityTypeConfiguration<BankAccount>
 
         builder.Property(x => x.OwnerType)
             .IsRequired()
-            .HasMaxLength(50); // Mapped as string now
+            .HasMaxLength(50)
+            .HasConversion<string>();
 
         builder.Property(x => x.OwnerId)
             .IsRequired();

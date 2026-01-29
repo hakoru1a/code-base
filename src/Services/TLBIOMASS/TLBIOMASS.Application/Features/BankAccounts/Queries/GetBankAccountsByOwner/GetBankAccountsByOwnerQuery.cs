@@ -1,10 +1,11 @@
 using MediatR;
 using Shared.DTOs.BankAccount;
+using Shared.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.BankAccounts.Queries.GetBankAccountsByOwner;
 
 public class GetBankAccountsByOwnerQuery : IRequest<List<BankAccountResponseDto>>
 {
-    public string OwnerType { get; set; } = string.Empty;
+    public OwnerType OwnerType { get; set; }
     public int OwnerId { get; set; }
 }

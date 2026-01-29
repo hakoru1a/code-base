@@ -4,6 +4,7 @@ using TLBIOMASS.Domain.Receivers.Interfaces;
 using TLBIOMASS.Domain.BankAccounts;
 using TLBIOMASS.Domain.BankAccounts.Interfaces;
 using Shared.Domain.ValueObjects;
+using Shared.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Receivers.Commands.CreateReceiver;
 
@@ -33,7 +34,7 @@ public class CreateReceiverCommandHandler : IRequestHandler<CreateReceiverComman
             receiver.BankAccounts.Add(BankAccount.Create(
                 request.BankName ?? string.Empty,
                 request.BankAccount,
-                "Receiver",
+                OwnerType.Receiver,
                 0, // EF Core will map this after save
                 true // Always default for legacy sync
             ));

@@ -3,6 +3,7 @@ using TLBIOMASS.Domain.Landowners.Interfaces;
 using Shared.DTOs.Landowner;
 using Contracts.Exceptions;
 using Mapster;
+using Shared.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Landowners.Queries.GetLandownerById;
 
@@ -17,7 +18,7 @@ public class GetLandownerByIdQueryHandler : IRequestHandler<GetLandownerByIdQuer
 
     public async Task<LandownerResponseDto?> Handle(GetLandownerByIdQuery request, CancellationToken cancellationToken)
     {
-        var landowner = await _repository.GetByIdAsync(request.Id, cancellationToken, x => x.BankAccounts.Where(b => b.OwnerType == "Landowner"));
+        var landowner = await _repository.GetByIdAsync(request.Id, cancellationToken, x => x.BankAccounts.Where(b => b.OwnerType == OwnerType.Landowner));
         if (landowner == null)
         {
             throw new NotFoundException("Landowner", request.Id);

@@ -5,6 +5,7 @@ using Shared.DTOs.Receiver;
 using TLBIOMASS.Domain.Receivers.Interfaces;
 using Mapster;
 using TLBIOMASS.Domain.Receivers;
+using Shared.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Receivers.Queries.GetReceiversPaged;
 
@@ -19,7 +20,7 @@ public class GetReceiversPagedQueryHandler : IRequestHandler<GetReceiversPagedQu
 
     public async Task<PagedList<ReceiverResponseDto>> Handle(GetReceiversPagedQuery request, CancellationToken cancellationToken)
     {
-        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == "Receiver"));
+        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == OwnerType.Receiver));
 
         query = ApplyFilter(query, request.Filter);
         query = ApplySort(query, request.Filter.OrderBy, request.Filter.OrderByDirection);

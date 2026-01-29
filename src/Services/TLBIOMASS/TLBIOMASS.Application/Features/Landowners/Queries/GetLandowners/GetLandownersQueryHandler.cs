@@ -5,6 +5,7 @@ using Mapster;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using TLBIOMASS.Domain.Landowners;
+using Shared.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Landowners.Queries.GetLandowners;
 
@@ -19,7 +20,7 @@ public class GetLandownersQueryHandler : IRequestHandler<GetLandownersQuery, Lis
 
     public async Task<List<LandownerResponseDto>> Handle(GetLandownersQuery request, CancellationToken cancellationToken)
     {
-        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == "Landowner"));
+        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == OwnerType.Landowner));
 
         if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
         {

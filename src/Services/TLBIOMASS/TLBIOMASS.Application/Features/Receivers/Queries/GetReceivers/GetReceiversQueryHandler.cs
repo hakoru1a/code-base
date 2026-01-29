@@ -5,6 +5,7 @@ using Mapster;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using Shared.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Receivers.Queries.GetReceivers;
 
@@ -19,7 +20,7 @@ public class GetReceiversQueryHandler : IRequestHandler<GetReceiversQuery, List<
 
     public async Task<List<ReceiverResponseDto>> Handle(GetReceiversQuery request, CancellationToken cancellationToken)
     {
-        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == "Receiver"));
+        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == OwnerType.Receiver));
 
         // 1. Apply Search Filter
         if (!string.IsNullOrEmpty(request.Filter.SearchTerms))

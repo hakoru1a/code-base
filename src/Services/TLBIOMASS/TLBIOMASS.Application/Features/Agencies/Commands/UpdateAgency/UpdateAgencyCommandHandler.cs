@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TLBIOMASS.Domain.Agencies.Interfaces;
 using TLBIOMASS.Domain.BankAccounts;
 using Shared.Domain.ValueObjects;
+using Shared.Domain.Enums;
 using Contracts.Exceptions;
 
 namespace TLBIOMASS.Application.Features.Agencies.Commands.UpdateAgency
@@ -68,7 +69,7 @@ namespace TLBIOMASS.Application.Features.Agencies.Commands.UpdateAgency
             agency.BankAccounts.Add(BankAccount.Create(
                 dto.BankName,
                 dto.AccountNumber,
-                "Agency",
+                OwnerType.Agency,
                 agency.Id,
                 dto.IsDefault
             ));

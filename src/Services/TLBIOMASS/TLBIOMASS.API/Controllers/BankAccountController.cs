@@ -11,6 +11,7 @@ using TLBIOMASS.Application.Features.BankAccounts.Queries.GetBankAccountById;
 using TLBIOMASS.Application.Features.BankAccounts.Queries.GetBankAccountsByOwner;
 using Mapster;
 using Infrastructure.Common;
+using Shared.Domain.Enums;
 
 namespace TLBIOMASS.API.Controllers;
 
@@ -26,7 +27,7 @@ public class BankAccountController : ApiControllerBase<BankAccountController>
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiSuccessResult<IEnumerable<BankAccountResponseDto>>), 200)]
-    public async Task<IActionResult> GetByOwner([FromQuery] string ownerType, [FromQuery] int ownerId)
+    public async Task<IActionResult> GetByOwner([FromQuery] OwnerType ownerType, [FromQuery] int ownerId)
     {
         var query = new GetBankAccountsByOwnerQuery { OwnerType = ownerType, OwnerId = ownerId };
         return await HandleGetAllAsync<GetBankAccountsByOwnerQuery, BankAccountResponseDto>(query, EntityName);

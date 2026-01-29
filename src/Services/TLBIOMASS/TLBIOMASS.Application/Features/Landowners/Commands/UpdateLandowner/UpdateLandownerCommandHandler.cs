@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TLBIOMASS.Domain.Landowners.Interfaces;
 using TLBIOMASS.Domain.BankAccounts;
 using Shared.Domain.ValueObjects;
+using Shared.Domain.Enums;
 using Contracts.Exceptions;
 
 namespace TLBIOMASS.Application.Features.Landowners.Commands.UpdateLandowner;
@@ -63,7 +64,7 @@ public class UpdateLandownerCommandHandler : IRequestHandler<UpdateLandownerComm
             landowner.BankAccounts.Add(BankAccount.Create(
                 dto.BankName,
                 dto.AccountNumber,
-                "Landowner",
+                OwnerType.Landowner,
                 landowner.Id,
                 dto.IsDefault
             ));

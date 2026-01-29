@@ -1,5 +1,6 @@
 using MediatR;
 using TLBIOMASS.Domain.BankAccounts.Interfaces;
+using Shared.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.BankAccounts.Commands.UpdateBankAccount;
 
