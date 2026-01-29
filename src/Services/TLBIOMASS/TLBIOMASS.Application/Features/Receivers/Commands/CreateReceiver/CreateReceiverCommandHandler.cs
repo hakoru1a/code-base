@@ -27,22 +27,20 @@ public class CreateReceiverCommandHandler : IRequestHandler<CreateReceiverComman
             request.IsDefault,
             request.IsActive);
 
-        await _repository.CreateAsync(receiver);
-        await _repository.SaveChangesAsync(cancellationToken);
-
-        // Create polymorphic BankAccount if provided
+        // Create polymorphic BankAccount if provided and add to collection
         if (!string.IsNullOrWhiteSpace(request.BankAccount))
         {
-            var bankAccount = BankAccount.Create(
+            receiver.BankAccounts.Add(BankAccount.Create(
                 request.BankName ?? string.Empty,
                 request.BankAccount,
                 "Receiver",
-                receiver.Id,
+                0, // EF Core will map this after save
                 true // Always default for legacy sync
-            );
-            await _bankAccountRepository.CreateAsync(bankAccount, cancellationToken);
-            await _bankAccountRepository.SaveChangesAsync(cancellationToken);
+            ));
         }
+
+        await _repository.CreateWithoutSaveAsync(receiver, cancellationToken);
+        await _repository.SaveChangesAsync(cancellationToken);
 
         return (long)receiver.Id;
     }

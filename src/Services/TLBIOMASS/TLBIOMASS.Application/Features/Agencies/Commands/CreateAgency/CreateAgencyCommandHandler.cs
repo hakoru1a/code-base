@@ -27,24 +27,20 @@ namespace TLBIOMASS.Application.Features.Agencies.Commands.CreateAgency
                 new IdentityInfo(request.IdentityCard, request.IssuePlace, request.IssueDate, null),
                 request.IsActive);
 
-            //agency.AddDomainEvent(new AgencyCreatedEvent(agency.Id, agency.Name));
-
-            await _repository.CreateAsync(agency);
-            await _repository.SaveChangesAsync(cancellationToken);
-
-            // Create polymorphic BankAccount if provided
+            // Create polymorphic BankAccount if provided and add to collection
             if (!string.IsNullOrWhiteSpace(request.BankAccount))
             {
-                var bankAccount = BankAccount.Create(
+                agency.BankAccounts.Add(BankAccount.Create(
                     request.BankName ?? string.Empty,
                     request.BankAccount,
                     "Agency",
-                    agency.Id,
-                    true // Set as default for new agency
-                );
-                await _bankAccountRepository.CreateAsync(bankAccount, cancellationToken);
-                await _bankAccountRepository.SaveChangesAsync(cancellationToken);
+                    0, // EF Core will map this after save
+                    true
+                ));
             }
+
+            await _repository.CreateWithoutSaveAsync(agency, cancellationToken);
+            await _repository.SaveChangesAsync(cancellationToken);
 
             return (long)agency.Id;
         }

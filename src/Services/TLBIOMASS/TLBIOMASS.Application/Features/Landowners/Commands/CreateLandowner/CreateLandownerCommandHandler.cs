@@ -1,9 +1,9 @@
 using MediatR;
 using TLBIOMASS.Domain.Landowners;
 using TLBIOMASS.Domain.Landowners.Interfaces;
+using Shared.Domain.ValueObjects;
 using TLBIOMASS.Domain.BankAccounts;
 using TLBIOMASS.Domain.BankAccounts.Interfaces;
-using Shared.Domain.ValueObjects;
 
 namespace TLBIOMASS.Application.Features.Landowners.Commands.CreateLandowner
 {
@@ -26,24 +26,20 @@ namespace TLBIOMASS.Application.Features.Landowners.Commands.CreateLandowner
                 new IdentityInfo(request.IdentityCardNo, request.IssuePlace, request.IssueDate, request.DateOfBirth),
                 request.IsActive);
 
-            //landowner.AddDomainEvent(new LandownerCreatedEvent(landowner.Id, landowner.Name));
-
-            await _repository.CreateAsync(landowner);
-            await _repository.SaveChangesAsync(cancellationToken);
-
-            // Create polymorphic BankAccount if provided
+            // Create polymorphic BankAccount if provided and add to collection
             if (!string.IsNullOrWhiteSpace(request.BankAccount))
             {
-                var bankAccount = BankAccount.Create(
+                landowner.BankAccounts.Add(BankAccount.Create(
                     request.BankName ?? string.Empty,
                     request.BankAccount,
                     "Landowner",
-                    landowner.Id,
+                    0, // EF will fill this after save
                     true
-                );
-                await _bankAccountRepository.CreateAsync(bankAccount, cancellationToken);
-                await _bankAccountRepository.SaveChangesAsync(cancellationToken);
+                ));
             }
+
+            await _repository.CreateWithoutSaveAsync(landowner, cancellationToken);
+            await _repository.SaveChangesAsync(cancellationToken);
 
             return (long)landowner.Id;
         }

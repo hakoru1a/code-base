@@ -28,6 +28,9 @@ using TLBIOMASS.Domain.BankAccounts;
 using System.Linq;
 
 using TLBIOMASS.Domain.WeighingTicketCancels;
+using TLBIOMASS.Application.Features.Agencies.Commands.UpdateAgency;
+using TLBIOMASS.Application.Features.Landowners.Commands.UpdateLandowner;
+using TLBIOMASS.Application.Features.Receivers.Commands.UpdateReceiver;
 
 namespace TLBIOMASS.Application.Common.Mappings;
 
@@ -54,6 +57,14 @@ public static class MapsterConfig
         ConfigurePaymentDetailMappings();
         ConfigureWeighingTicketCancelMappings();
         ConfigureBankAccountMappings();
+
+        // Ensure List mapping for updates
+        TypeAdapterConfig<AgencyUpdateDto, UpdateAgencyCommand>.NewConfig()
+            .Map(dest => dest.BankAccounts, src => src.BankAccounts);
+        TypeAdapterConfig<LandownerUpdateDto, UpdateLandownerCommand>.NewConfig()
+            .Map(dest => dest.BankAccounts, src => src.BankAccounts);
+        TypeAdapterConfig<ReceiverUpdateDto, UpdateReceiverCommand>.NewConfig()
+            .Map(dest => dest.BankAccounts, src => src.BankAccounts);
     }
 
     private static void ConfigureBankAccountMappings()
@@ -144,8 +155,6 @@ public static class MapsterConfig
             .Map(d => d.Phone, s => s.Contact != null ? s.Contact.Phone : null)
             .Map(d => d.Email, s => s.Contact != null ? s.Contact.Email : null)
             .Map(d => d.Address, s => s.Contact != null ? s.Contact.Address : null)
-            .Map(d => d.BankAccount, s => s.BankAccounts.Where(x => x.IsDefault).Select(x => x.AccountNumber).FirstOrDefault())
-            .Map(d => d.BankName, s => s.BankAccounts.Where(x => x.IsDefault).Select(x => x.BankName).FirstOrDefault())
             .Map(d => d.IdentityCard, s => s.Identity != null ? s.Identity.IdentityNumber : null)
             .Map(d => d.IssuePlace, s => s.Identity != null ? s.Identity.IssuePlace : null)
             .Map(d => d.IssueDate, s => s.Identity != null ? s.Identity.IssueDate : null);
@@ -164,8 +173,6 @@ public static class MapsterConfig
             .Map(d => d.Phone, s => s.Contact != null ? s.Contact.Phone : null)
             .Map(d => d.Email, s => s.Contact != null ? s.Contact.Email : null)
             .Map(d => d.Address, s => s.Contact != null ? s.Contact.Address : null)
-            .Map(d => d.BankAccount, s => s.BankAccounts.Where(x => x.IsDefault).Select(x => x.AccountNumber).FirstOrDefault())
-            .Map(d => d.BankName, s => s.BankAccounts.Where(x => x.IsDefault).Select(x => x.BankName).FirstOrDefault())
             .Map(d => d.IdentityCardNo, s => s.Identity != null ? s.Identity.IdentityNumber : null)
             .Map(d => d.IssuePlace, s => s.Identity != null ? s.Identity.IssuePlace : null)
             .Map(d => d.IssueDate, s => s.Identity != null ? s.Identity.IssueDate : null)
@@ -222,8 +229,6 @@ public static class MapsterConfig
             .Map(d => d.IssuedDate, s => s.Identity != null ? s.Identity.IssueDate : null)
             .Map(d => d.IssuedPlace, s => s.Identity != null ? s.Identity.IssuePlace : null)
             .Map(d => d.DateOfBirth, s => s.Identity != null ? s.Identity.DateOfBirth : null)
-            .Map(d => d.BankAccount, s => s.BankAccounts.Where(x => x.IsDefault).Select(x => x.AccountNumber).FirstOrDefault())
-            .Map(d => d.BankName, s => s.BankAccounts.Where(x => x.IsDefault).Select(x => x.BankName).FirstOrDefault())
             .Map(d => d.CreatedDate, s => s.CreatedAt)
             .Map(d => d.LastModifiedDate, s => s.UpdatedAt);
 
@@ -234,6 +239,9 @@ public static class MapsterConfig
                 new IdentityInfo(src.IdentityNumber, src.IssuedPlace, src.IssuedDate, src.DateOfBirth),
                 src.IsDefault,
                 src.IsActive));
+
+        TypeAdapterConfig<ReceiverUpdateDto, UpdateReceiverCommand>.NewConfig()
+            .Map(dest => dest.BankAccounts, src => src.BankAccounts);
     }
 
     private static void ConfigureWeighingTicketCancelMappings()
