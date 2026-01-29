@@ -17,7 +17,7 @@ public class GetAgencyByIdQueryHandler : IRequestHandler<GetAgencyByIdQuery, Age
 
     public async Task<AgencyResponseDto?> Handle(GetAgencyByIdQuery request, CancellationToken cancellationToken)
     {
-        var agency = await _repository.GetByIdAsync(request.Id);
+        var agency = await _repository.GetByIdAsync(request.Id, cancellationToken, x => x.BankAccounts.Where(b => b.OwnerType == "Agency"));
         if (agency == null)
         {
             throw new NotFoundException("Agency", request.Id);

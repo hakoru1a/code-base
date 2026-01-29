@@ -24,6 +24,7 @@ using TLBIOMASS.Domain.WeighingTickets;
 using TLBIOMASS.Domain.Companies;
 using TLBIOMASS.Domain.Companies.ValueObjects;
 using TLBIOMASS.Domain.Payments;
+using TLBIOMASS.Domain.BankAccounts;
 using System.Linq;
 
 using TLBIOMASS.Domain.WeighingTicketCancels;
@@ -50,13 +51,14 @@ public static class MapsterConfig
         ConfigureReceiverMappings();
         ConfigureCompanyMappings();
         ConfigureWeighingTicketMappings();
+        ConfigurePaymentDetailMappings();
         ConfigureWeighingTicketCancelMappings();
         ConfigureBankAccountMappings();
     }
 
     private static void ConfigureBankAccountMappings()
     {
-        TypeAdapterConfig<Domain.BankAccounts.BankAccount, BankAccountResponseDto>.NewConfig();
+        TypeAdapterConfig<BankAccount, BankAccountResponseDto>.NewConfig();
     }
 
     private static void ConfigurePaymentDetailMappings()
@@ -134,8 +136,8 @@ public static class MapsterConfig
             .Map(d => d.Phone, s => s.Contact != null ? s.Contact.Phone : null)
             .Map(d => d.Email, s => s.Contact != null ? s.Contact.Email : null)
             .Map(d => d.Address, s => s.Contact != null ? s.Contact.Address : null)
-            .Map(d => d.BankAccount, s => s.Bank != null ? s.Bank.BankAccount : null)
-            .Map(d => d.BankName, s => s.Bank != null ? s.Bank.BankName : null)
+            .Map(d => d.BankAccount, s => s.BankAccounts.Where(x => x.IsDefault).Select(x => x.AccountNumber).FirstOrDefault())
+            .Map(d => d.BankName, s => s.BankAccounts.Where(x => x.IsDefault).Select(x => x.BankName).FirstOrDefault())
             .Map(d => d.IdentityCard, s => s.Identity != null ? s.Identity.IdentityNumber : null)
             .Map(d => d.IssuePlace, s => s.Identity != null ? s.Identity.IssuePlace : null)
             .Map(d => d.IssueDate, s => s.Identity != null ? s.Identity.IssueDate : null);
@@ -144,7 +146,6 @@ public static class MapsterConfig
             .ConstructUsing(src => Agency.Create(
                 src.Name,
                 new ContactInfo(src.Phone, src.Email, src.Address, null),
-                new BankInfo(src.BankAccount, src.BankName),
                 new IdentityInfo(src.IdentityCard, src.IssuePlace, src.IssueDate, null),
                 src.IsActive));
     }
@@ -155,8 +156,8 @@ public static class MapsterConfig
             .Map(d => d.Phone, s => s.Contact != null ? s.Contact.Phone : null)
             .Map(d => d.Email, s => s.Contact != null ? s.Contact.Email : null)
             .Map(d => d.Address, s => s.Contact != null ? s.Contact.Address : null)
-            .Map(d => d.BankAccount, s => s.Bank != null ? s.Bank.BankAccount : null)
-            .Map(d => d.BankName, s => s.Bank != null ? s.Bank.BankName : null)
+            .Map(d => d.BankAccount, s => s.BankAccounts.Where(x => x.IsDefault).Select(x => x.AccountNumber).FirstOrDefault())
+            .Map(d => d.BankName, s => s.BankAccounts.Where(x => x.IsDefault).Select(x => x.BankName).FirstOrDefault())
             .Map(d => d.IdentityCardNo, s => s.Identity != null ? s.Identity.IdentityNumber : null)
             .Map(d => d.IssuePlace, s => s.Identity != null ? s.Identity.IssuePlace : null)
             .Map(d => d.IssueDate, s => s.Identity != null ? s.Identity.IssueDate : null)
@@ -166,7 +167,6 @@ public static class MapsterConfig
             .ConstructUsing(src => Landowner.Create(
                 src.Name,
                 new ContactInfo(src.Phone, src.Email, src.Address, null),
-                new BankInfo(src.BankAccount, src.BankName),
                 new IdentityInfo(src.IdentityCardNo, src.IssuePlace, src.IssueDate, src.DateOfBirth),
                 src.IsActive));
     }
@@ -198,12 +198,24 @@ public static class MapsterConfig
 
     private static void ConfigureReceiverMappings()
     {
-        TypeAdapterConfig<Receiver, ReceiverResponseDto>.NewConfig();
+        TypeAdapterConfig<Receiver, ReceiverResponseDto>.NewConfig()
+            .Map(d => d.Phone, s => s.Contact != null ? s.Contact.Phone : null)
+            .Map(d => d.Email, s => s.Contact != null ? s.Contact.Email : null)
+            .Map(d => d.Address, s => s.Contact != null ? s.Contact.Address : null)
+            .Map(d => d.Note, s => s.Contact != null ? s.Contact.Note : null)
+            .Map(d => d.IdentityNumber, s => s.Identity != null ? s.Identity.IdentityNumber : null)
+            .Map(d => d.IssuedDate, s => s.Identity != null ? s.Identity.IssueDate : null)
+            .Map(d => d.IssuedPlace, s => s.Identity != null ? s.Identity.IssuePlace : null)
+            .Map(d => d.DateOfBirth, s => s.Identity != null ? s.Identity.DateOfBirth : null)
+            .Map(d => d.BankAccount, s => s.BankAccounts.Where(x => x.IsDefault).Select(x => x.AccountNumber).FirstOrDefault())
+            .Map(d => d.BankName, s => s.BankAccounts.Where(x => x.IsDefault).Select(x => x.BankName).FirstOrDefault())
+            .Map(d => d.CreatedDate, s => s.CreatedAt)
+            .Map(d => d.LastModifiedDate, s => s.UpdatedAt);
+
         TypeAdapterConfig<ReceiverCreateDto, Receiver>.NewConfig()
             .ConstructUsing(src => Receiver.Create(
                 src.Name,
                 new ContactInfo(src.Phone, null, src.Address, src.Note),
-                new BankInfo(src.BankAccount, src.BankName),
                 new IdentityInfo(src.IdentityNumber, src.IssuedPlace, src.IssuedDate, src.DateOfBirth),
                 src.IsDefault,
                 src.IsActive));

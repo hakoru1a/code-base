@@ -19,7 +19,7 @@ public class GetLandownersQueryHandler : IRequestHandler<GetLandownersQuery, Lis
 
     public async Task<List<LandownerResponseDto>> Handle(GetLandownersQuery request, CancellationToken cancellationToken)
     {
-        var query = _repository.FindAll();
+        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == "Landowner"));
 
         if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
         {
@@ -27,8 +27,7 @@ public class GetLandownersQueryHandler : IRequestHandler<GetLandownersQuery, Lis
             query = query.Where(c => c.Name.ToLower().Contains(search) ||
                                (c.Contact != null && c.Contact.Phone != null && c.Contact.Phone.Contains(search)) ||
                                (c.Contact != null && c.Contact.Address != null && c.Contact.Address.ToLower().Contains(search)) ||
-                               (c.Bank != null && c.Bank.BankAccount != null && c.Bank.BankAccount.Contains(search)) ||
-                               (c.Bank != null && c.Bank.BankName != null && c.Bank.BankName.ToLower().Contains(search)) ||
+                               (c.BankAccounts.Any(ba => ba.AccountNumber.Contains(search) || ba.BankName.ToLower().Contains(search))) ||
                                (c.Identity != null && c.Identity.IdentityNumber != null && c.Identity.IdentityNumber.Contains(search)));
         }
 

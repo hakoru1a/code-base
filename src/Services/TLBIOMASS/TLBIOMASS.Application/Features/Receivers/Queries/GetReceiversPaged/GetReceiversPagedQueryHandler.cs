@@ -19,7 +19,7 @@ public class GetReceiversPagedQueryHandler : IRequestHandler<GetReceiversPagedQu
 
     public async Task<PagedList<ReceiverResponseDto>> Handle(GetReceiversPagedQuery request, CancellationToken cancellationToken)
     {
-        var query = _repository.FindAll();
+        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == "Receiver"));
 
         query = ApplyFilter(query, request.Filter);
         query = ApplySort(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
@@ -42,8 +42,7 @@ public class GetReceiversPagedQueryHandler : IRequestHandler<GetReceiversPagedQu
             query = query.Where(c => c.Name.ToLower().Contains(search) ||
                                (c.Contact != null && c.Contact.Phone != null && c.Contact.Phone.Contains(search)) ||
                                (c.Contact != null && c.Contact.Address != null && c.Contact.Address.ToLower().Contains(search)) ||
-                               (c.Bank != null && c.Bank.BankAccount != null && c.Bank.BankAccount.Contains(search)) ||
-                               (c.Bank != null && c.Bank.BankName != null && c.Bank.BankName.ToLower().Contains(search)) ||
+                               (c.BankAccounts.Any(ba => ba.AccountNumber.Contains(search) || ba.BankName.ToLower().Contains(search))) ||
                                (c.Identity != null && c.Identity.IdentityNumber != null && c.Identity.IdentityNumber.Contains(search)));
         }
 
@@ -72,8 +71,8 @@ public class GetReceiversPagedQueryHandler : IRequestHandler<GetReceiversPagedQu
                 ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Address : null)
                 : query.OrderBy(x => x.Contact != null ? x.Contact.Address : null),
             "bankname" => isDescending
-                ? query.OrderByDescending(x => x.Bank != null ? x.Bank.BankName : null)
-                : query.OrderBy(x => x.Bank != null ? x.Bank.BankName : null),
+                ? query.OrderByDescending(x => x.BankAccounts.Where(ba => ba.IsDefault).Select(ba => ba.BankName).FirstOrDefault())
+                : query.OrderBy(x => x.BankAccounts.Where(ba => ba.IsDefault).Select(ba => ba.BankName).FirstOrDefault()),
             "isdefault" => isDescending
                 ? query.OrderByDescending(x => x.IsDefault)
                 : query.OrderBy(x => x.IsDefault),

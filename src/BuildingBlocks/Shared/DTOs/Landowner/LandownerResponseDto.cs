@@ -1,4 +1,5 @@
 using Shared.DTOs;
+using Shared.DTOs.BankAccount;
 
 namespace Shared.DTOs.Landowner;
 
@@ -15,4 +16,5 @@ public class LandownerResponseDto : BaseResponseDto<int>
     public DateTime? IssueDate { get; set; }
     public DateTime? DateOfBirth { get; set; }
     public bool IsActive { get; set; }
+    public List<BankAccountResponseDto>? BankAccounts { get; set; }
 }

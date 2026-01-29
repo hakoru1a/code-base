@@ -17,7 +17,7 @@ public class GetLandownerByIdQueryHandler : IRequestHandler<GetLandownerByIdQuer
 
     public async Task<LandownerResponseDto?> Handle(GetLandownerByIdQuery request, CancellationToken cancellationToken)
     {
-        var landowner = await _repository.GetByIdAsync(request.Id);
+        var landowner = await _repository.GetByIdAsync(request.Id, cancellationToken, x => x.BankAccounts.Where(b => b.OwnerType == "Landowner"));
         if (landowner == null)
         {
             throw new NotFoundException("Landowner", request.Id);

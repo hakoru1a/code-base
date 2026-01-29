@@ -1,4 +1,5 @@
 using Shared.DTOs;
+using Shared.DTOs.BankAccount;
 
 namespace Shared.DTOs.Agency;
 
@@ -14,4 +15,5 @@ public class AgencyResponseDto : BaseResponseDto<int>
     public string? IssuePlace { get; set; }
     public DateTime? IssueDate { get; set; }
     public bool IsActive { get; set; }
+    public List<BankAccountResponseDto>? BankAccounts { get; set; }
 }

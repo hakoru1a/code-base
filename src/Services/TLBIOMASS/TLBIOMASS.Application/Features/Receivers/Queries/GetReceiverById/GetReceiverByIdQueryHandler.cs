@@ -17,7 +17,7 @@ public class GetReceiverByIdQueryHandler : IRequestHandler<GetReceiverByIdQuery,
 
     public async Task<ReceiverResponseDto> Handle(GetReceiverByIdQuery request, CancellationToken cancellationToken)
     {
-        var receiver = await _repository.GetByIdAsync(request.Id);
+        var receiver = await _repository.GetByIdAsync(request.Id, cancellationToken, x => x.BankAccounts.Where(b => b.OwnerType == "Receiver"));
 
         if (receiver == null)
         {
