@@ -31,13 +31,11 @@ namespace TLBIOMASS.Application.Features.Agencies.Commands.CreateAgency
             // Create polymorphic BankAccount if provided and add to collection
             if (!string.IsNullOrWhiteSpace(request.BankAccount))
             {
-                agency.BankAccounts.Add(BankAccount.Create(
+                agency.AddBankAccount(
                     request.BankName ?? string.Empty,
                     request.BankAccount,
-                    OwnerType.Agency,
-                    0, // EF Core will map this after save
                     true
-                ));
+                );
             }
 
             await _repository.CreateWithoutSaveAsync(agency, cancellationToken);

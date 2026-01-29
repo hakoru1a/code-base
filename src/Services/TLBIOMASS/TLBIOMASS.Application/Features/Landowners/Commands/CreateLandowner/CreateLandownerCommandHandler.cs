@@ -30,13 +30,11 @@ namespace TLBIOMASS.Application.Features.Landowners.Commands.CreateLandowner
             // Create polymorphic BankAccount if provided and add to collection
             if (!string.IsNullOrWhiteSpace(request.BankAccount))
             {
-                landowner.BankAccounts.Add(BankAccount.Create(
+                landowner.AddBankAccount(
                     request.BankName ?? string.Empty,
                     request.BankAccount,
-                    OwnerType.Landowner,
-                    0, // EF will fill this after save
                     true
-                ));
+                );
             }
 
             await _repository.CreateWithoutSaveAsync(landowner, cancellationToken);

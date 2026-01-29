@@ -1,3 +1,5 @@
+using Shared.Domain.Enums;
+
 namespace Shared.DTOs.BankAccount;
 
 public class BankAccountSyncDto
@@ -6,4 +8,5 @@ public class BankAccountSyncDto
     public string BankName { get; set; } = string.Empty;
     public string AccountNumber { get; set; } = string.Empty;
     public bool IsDefault { get; set; }
+    public BankAccountAction Action { get; set; }
 }

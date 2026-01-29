@@ -1,17 +1,20 @@
 using Contracts.Domain;
 using Shared.Domain.ValueObjects;
+using Shared.Domain.Enums;
+using Shared.DTOs.BankAccount;
 using TLBIOMASS.Domain.BankAccounts;
+using TLBIOMASS.Domain.Common;
 
 namespace TLBIOMASS.Domain.Agencies;
 
-public class Agency : EntityAuditBase<int>
+public class Agency : BankAccountOwner
 {
     public string Name { get; private set; } = string.Empty;
     public ContactInfo? Contact { get; private set; }
     public IdentityInfo? Identity { get; private set; }
     public bool IsActive { get; private set; } = true;
 
-    public virtual ICollection<BankAccount> BankAccounts { get; private set; } = new List<BankAccount>();
+    protected override OwnerType OwnerType => OwnerType.Agency;
 
     protected Agency() { }
 

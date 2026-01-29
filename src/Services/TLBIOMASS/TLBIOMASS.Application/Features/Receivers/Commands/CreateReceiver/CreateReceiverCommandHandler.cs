@@ -31,13 +31,11 @@ public class CreateReceiverCommandHandler : IRequestHandler<CreateReceiverComman
         // Create polymorphic BankAccount if provided and add to collection
         if (!string.IsNullOrWhiteSpace(request.BankAccount))
         {
-            receiver.BankAccounts.Add(BankAccount.Create(
+            receiver.AddBankAccount(
                 request.BankName ?? string.Empty,
                 request.BankAccount,
-                OwnerType.Receiver,
-                0, // EF Core will map this after save
                 true // Always default for legacy sync
-            ));
+            );
         }
 
         await _repository.CreateWithoutSaveAsync(receiver, cancellationToken);

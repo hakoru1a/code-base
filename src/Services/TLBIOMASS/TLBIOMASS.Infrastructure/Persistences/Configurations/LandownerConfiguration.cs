@@ -50,5 +50,8 @@ public class LandownerConfiguration : IEntityTypeConfiguration<Landowner>
         builder.HasMany(x => x.BankAccounts)
             .WithOne()
             .HasForeignKey(x => x.OwnerId);
+
+        builder.Navigation(x => x.BankAccounts)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

@@ -41,11 +41,14 @@ public class ReceiverConfiguration : IEntityTypeConfiguration<Receiver>
         builder.Property(x => x.IsActive)
             .HasDefaultValue(true);
 
-        builder.Property(x => x.CreatedAt)
-            .IsRequired();
+        builder.Property(x => x.CreatedDate).HasColumnName("CreatedAt");
+        builder.Property(x => x.LastModifiedDate).HasColumnName("UpdatedAt");
 
         builder.HasMany(x => x.BankAccounts)
             .WithOne()
             .HasForeignKey(x => x.OwnerId);
+
+        builder.Navigation(x => x.BankAccounts)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

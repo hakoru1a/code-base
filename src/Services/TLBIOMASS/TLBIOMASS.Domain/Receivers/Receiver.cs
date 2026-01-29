@@ -1,20 +1,21 @@
 using Contracts.Domain;
 using Shared.Domain.ValueObjects;
+using Shared.Domain.Enums;
+using Shared.DTOs.BankAccount;
 using TLBIOMASS.Domain.BankAccounts;
+using TLBIOMASS.Domain.Common;
 
 namespace TLBIOMASS.Domain.Receivers;
 
-public class Receiver : EntityBase<int>
+public class Receiver : BankAccountOwner
 {
     public string Name { get; private set; } = string.Empty;
     public ContactInfo? Contact { get; private set; }
     public IdentityInfo? Identity { get; private set; }
     public bool IsDefault { get; private set; }
     public bool IsActive { get; private set; } = true;
-    public DateTime CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
 
-    public virtual ICollection<BankAccount> BankAccounts { get; private set; } = new List<BankAccount>();
+    protected override OwnerType OwnerType => OwnerType.Receiver;
 
     protected Receiver() { }
 
@@ -30,7 +31,6 @@ public class Receiver : EntityBase<int>
         Identity = identity;
         IsDefault = isDefault;
         IsActive = isActive;
-        CreatedAt = DateTime.UtcNow;
     }
 
     public static Receiver Create(
@@ -59,7 +59,6 @@ public class Receiver : EntityBase<int>
             IsDefault = isDefault.Value;
         if (isActive.HasValue)
             IsActive = isActive.Value;
-        UpdatedAt = DateTime.UtcNow;
     }
 
     public void Activate() => IsActive = true;
