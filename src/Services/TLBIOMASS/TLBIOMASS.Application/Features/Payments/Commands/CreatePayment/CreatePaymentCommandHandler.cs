@@ -73,7 +73,7 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
                 config = existingConfig;
                 
                 // Business Rule: Price cannot be changed after chốt (finalized)
-                if (item.FinalUnitPrice.HasValue && item.FinalUnitPrice.Value != config.UnitPrice)
+                if (item.FinalUnitPrice.HasValue && item.FinalUnitPrice.Value != (config.UnitPrice ?? 0))
                 {
                     var priceRule = new PriceCannotBeChangedAfterPaymentRule(true);
                     throw new BadRequestException($"Ticket {item.WeighingTicketId}: {priceRule.Message}");
@@ -100,11 +100,11 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
             decimal currentRemaining;
             if (latestDetailsMap.TryGetValue(item.WeighingTicketId, out var latest))
             {
-                currentRemaining = latest.PaymentAmount.RemainingAmount;
+                currentRemaining = latest.PaymentAmount.RemainingAmount ?? 0;
             }
             else
             {
-                currentRemaining = config.TotalPayableAmount;
+                currentRemaining = config.TotalPayableAmount ?? 0;
             }
 
             // 5. Create Detail
@@ -122,7 +122,7 @@ public class CreatePaymentCommandHandler : IRequestHandler<CreatePaymentCommand,
             results.Add(new PaymentResultDto 
             { 
                 WeighingTicketId = item.WeighingTicketId, 
-                RemainingAmount = detail.PaymentAmount.RemainingAmount 
+                RemainingAmount = detail.PaymentAmount.RemainingAmount ?? 0 
             });
 
             // Update tracking for multiple payments to same ticket in single batch

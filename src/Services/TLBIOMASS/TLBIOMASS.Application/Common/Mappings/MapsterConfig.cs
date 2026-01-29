@@ -65,6 +65,14 @@ public static class MapsterConfig
     {
         TypeAdapterConfig<PaymentDetail, PaymentDetailResponseDto>
             .NewConfig()
+            .Map(dest => dest.PaymentCode, src => src.Info != null ? src.Info.PaymentCode : null)
+            .Map(dest => dest.PaymentDate, src => src.Info != null ? src.Info.PaymentDate : default)
+            .Map(dest => dest.CustomerPaymentDate, src => src.Info != null ? src.Info.CustomerPaymentDate : null)
+            .Map(dest => dest.Note, src => src.Info != null ? src.Info.Note : null)
+            .Map(dest => dest.Amount, src => src.PaymentAmount != null ? src.PaymentAmount.Amount ?? 0 : 0)
+            .Map(dest => dest.RemainingAmount, src => src.PaymentAmount != null ? src.PaymentAmount.RemainingAmount ?? 0 : 0)
+            .Map(dest => dest.IsPaid, src => src.ProcessStatus != null && src.ProcessStatus.IsPaid)
+            .Map(dest => dest.IsLocked, src => src.ProcessStatus != null && src.ProcessStatus.IsLocked)
             .Map(dest => dest.TicketNumber, src => src.WeighingTicket != null ? src.WeighingTicket.TicketNumber : null);
     }
 
@@ -173,7 +181,14 @@ public static class MapsterConfig
 
     private static void ConfigureMaterialMappings()
     {
-        TypeAdapterConfig<Material, MaterialResponseDto>.NewConfig();
+        TypeAdapterConfig<Material, MaterialResponseDto>.NewConfig()
+            .Map(d => d.Name, s => s.Spec != null ? s.Spec.Name : string.Empty)
+            .Map(d => d.Unit, s => s.Spec != null ? s.Spec.Unit : string.Empty)
+            .Map(d => d.Description, s => s.Spec != null ? s.Spec.Description : null)
+            .Map(d => d.ProposedImpurityDeduction, s => s.Spec != null ? s.Spec.ProposedImpurityDeduction : null)
+            .Map(d => d.CreatedDate, s => s.CreatedAt)
+            .Map(d => d.LastModifiedDate, s => s.UpdatedAt);
+
         TypeAdapterConfig<MaterialCreateDto, Material>.NewConfig()
             .ConstructUsing(src => Material.Create(
                 new MaterialSpec(src.Name, src.Unit, src.Description, src.ProposedImpurityDeduction),

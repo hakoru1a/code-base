@@ -15,11 +15,11 @@ public class WeighingTicketResponseDto : BaseResponseDto<int>
     public string TicketType { get; set; } = string.Empty;
     public string CustomerName { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
-    public int WeightIn { get; set; }
-    public int WeightOut { get; set; }
-    public int NetWeight { get; set; }
-    public int ImpurityDeduction { get; set; }
-    public int PayableWeight { get; set; }
+    public int? WeightIn { get; set; }
+    public int? WeightOut { get; set; }
+    public int? NetWeight { get; set; }
+    public int? ImpurityDeduction { get; set; }
+    public int? PayableWeight { get; set; }
     public long Price { get; set; }
     public long TotalAmount { get; set; }
     public DateTime? FirstWeighingTime { get; set; }

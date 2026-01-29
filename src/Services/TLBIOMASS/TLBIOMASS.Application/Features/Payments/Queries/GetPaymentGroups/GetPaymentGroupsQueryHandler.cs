@@ -63,7 +63,7 @@ public class GetPaymentGroupsQueryHandler : IRequestHandler<GetPaymentGroupsQuer
                 PaymentDate = g.Key.PaymentDate,
                 AgencyId = g.Key.AgencyId,
                 AgencyName = g.Key.AgencyName,
-                TotalAmount = g.Sum(x => x.PaymentAmount.Amount),
+                TotalAmount = g.Sum(x => x.PaymentAmount.Amount ?? 0),
                 TicketCount = g.Select(x => x.WeighingTicketId).Distinct().Count()
             });
 

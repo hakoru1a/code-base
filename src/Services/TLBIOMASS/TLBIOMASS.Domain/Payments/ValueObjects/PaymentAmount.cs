@@ -1,5 +1,5 @@
 namespace TLBIOMASS.Domain.Payments.ValueObjects;
 
 public record PaymentAmount(
-    decimal Amount,
-    decimal RemainingAmount);
+    decimal? Amount,
+    decimal? RemainingAmount);

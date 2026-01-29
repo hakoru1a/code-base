@@ -15,12 +15,10 @@ public class WeighingTicketPaymentConfiguration : IEntityTypeConfiguration<Weigh
         builder.Property(x => x.Id).HasColumnName("ID");
         
         builder.Property(x => x.UnitPrice)
-            .HasColumnType("decimal(18,2)")
-            .IsRequired();
+            .HasColumnType("decimal(18,2)");
             
         builder.Property(x => x.TotalPayableAmount)
-            .HasColumnType("decimal(18,2)")
-            .IsRequired();
+            .HasColumnType("decimal(18,2)");
             
         builder.Property(x => x.Note)
             .HasMaxLength(500);

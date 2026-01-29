@@ -41,8 +41,8 @@ public class WeighingTicket : EntityBase<int>
 
     // Calculated properties (Not mapped to DB)
     public decimal RemainingAmount => PaymentDetails.Any() 
-        ? PaymentDetails.OrderByDescending(pd => pd.CreatedDate).ThenByDescending(pd => pd.Id).First().PaymentAmount.RemainingAmount 
-        : (FinalPayment != null ? FinalPayment.TotalPayableAmount : (decimal)TotalAmount);
+        ? PaymentDetails.OrderByDescending(pd => pd.CreatedDate).ThenByDescending(pd => pd.Id).First().PaymentAmount.RemainingAmount ?? 0 
+        : (FinalPayment != null ? FinalPayment.TotalPayableAmount ?? 0 : (decimal)TotalAmount);
 
     public bool IsPaid => PaymentDetails.Any();
 
