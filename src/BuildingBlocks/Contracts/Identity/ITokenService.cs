@@ -1,4 +1,3 @@
-using Shared.DTOs.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Contracts.Identity
 {
-    public interface ITokenService
+    public interface ITokenService<TokenResponse, TokenRequest>
     {
         TokenResponse GetToken(TokenRequest token);
     }

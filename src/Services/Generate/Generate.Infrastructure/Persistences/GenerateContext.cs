@@ -1,4 +1,4 @@
-﻿using Contracts.Common.Events;
+using Contracts.Common.Events;
 using Contracts.Common.Interface;
 using Contracts.Domain.Interface;
 using Generate.Domain.Categories;
@@ -45,7 +45,7 @@ namespace Generate.Infrastructure.Persistences
                 .ToList();
 
             var domainEvents = domainEntities
-                .SelectMany(x => x.DomainEvents)
+                .SelectMany(x => x.DomainEvents.Cast<BaseEvent>())
                 .ToList();
 
             domainEntities.ForEach(entity => entity.ClearDomainEvents());

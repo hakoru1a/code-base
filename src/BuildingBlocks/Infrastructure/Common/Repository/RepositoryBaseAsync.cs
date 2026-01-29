@@ -8,8 +8,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Contracts.Common;
 using Contracts.Domain;
-using Shared.SeedWork;
 
 namespace Infrastructure.Common.Repository
 {

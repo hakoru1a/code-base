@@ -20,9 +20,9 @@ namespace TLBIOMASS.Application.Features.Agencies.Commands.UpdateAgency
         public async Task<bool> Handle(UpdateAgencyCommand request, CancellationToken cancellationToken)
         {
             // Include BankAccounts and ENABLE TRACKING
-        var agency = await _repository.FindAll(trackChanges: true)
-            .Include(x => x.BankAccounts)
-            .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
+            var agency = await _repository.FindAll(trackChanges: true)
+                .Include(x => x.BankAccounts)
+                .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (agency == null)
         {
@@ -42,9 +42,9 @@ namespace TLBIOMASS.Application.Features.Agencies.Commands.UpdateAgency
             agency.ApplyBankAccountChange(bankAccountDto);
         }
 
-        await _repository.SaveChangesAsync(cancellationToken);
+            await _repository.SaveChangesAsync(cancellationToken);
 
-        return true;
+            return true;
         }
     }
 }

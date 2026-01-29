@@ -1,12 +1,10 @@
-using Shared.DTOs.Authorization;
-
 namespace Contracts.Identity
 {
     /// <summary>
     /// Unified service for accessing user context across Gateway and Services
     /// Replaces the complex chain of UserClaimsCache + ClaimsPrincipalExtensions + UserContextAccessor
     /// </summary>
-    public interface IUserContextService
+    public interface IUserContextService<UserClaimsContext>
     {
         /// <summary>
         /// Get current user context from HTTP context

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Identity
 {
-    public class TokenService : ITokenService
+    public class TokenService : ITokenService<TokenResponse, TokenRequest>
     {
         private readonly JwtSettings _jwtSettings;
 

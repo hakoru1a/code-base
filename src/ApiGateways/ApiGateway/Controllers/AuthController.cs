@@ -9,6 +9,7 @@ using Shared.SeedWork;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Net;
+using Shared.DTOs.Authorization;
 
 namespace ApiGateway.Controllers;
 
@@ -25,7 +26,7 @@ public class AuthController : ControllerBase
     private readonly IPkceService _pkceService;
     private readonly IOAuthClient _oauthClient;
     private readonly ITemporaryTokenService _temporaryTokenService;
-    private readonly IUserContextService _userContextService;
+    private readonly IUserContextService<UserClaimsContext> _userContextService;
     private readonly OAuthOptions _oauthOptions;
     private readonly ILogger<AuthController> _logger;
 
@@ -33,7 +34,7 @@ public class AuthController : ControllerBase
         IPkceService pkceService,
         IOAuthClient oauthClient,
         ITemporaryTokenService temporaryTokenService,
-        IUserContextService userContextService,
+        IUserContextService<UserClaimsContext> userContextService,
         IOptions<OAuthOptions> oauthOptions,
         ILogger<AuthController> logger)
     {

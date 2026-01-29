@@ -10,7 +10,7 @@ namespace Infrastructure.Identity
     /// Unified implementation of IUserContextService
     /// Consolidates all user context logic into a single, simple service
     /// </summary>
-    public class UserContextService : IUserContextService
+    public class UserContextService : IUserContextService<UserClaimsContext>
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
 
