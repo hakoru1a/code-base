@@ -23,11 +23,6 @@ namespace TLBIOMASS.Application.Features.Landowners.Commands.UpdateLandowner
             RuleFor(x => x.Address)
                 .MaximumLength(255).WithMessage("Address must not exceed 255 characters");
 
-            RuleFor(x => x.BankAccount)
-                .MaximumLength(50).WithMessage("Bank account must not exceed 50 characters");
-
-            RuleFor(x => x.BankName)
-                .MaximumLength(20).WithMessage("Bank name must not exceed 20 characters");
 
             RuleFor(x => x.IdentityCardNo)
                 .MaximumLength(20).WithMessage("Identity card must not exceed 20 characters");

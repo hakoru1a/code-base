@@ -10,6 +10,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
     public void Configure(EntityTypeBuilder<Customer> builder)
     {
         builder.ToTable("khachhang");
+        builder.Ignore("Status");
 
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id)

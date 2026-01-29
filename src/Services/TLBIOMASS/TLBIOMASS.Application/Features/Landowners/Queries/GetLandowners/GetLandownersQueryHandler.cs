@@ -1,15 +1,14 @@
-using System.Linq;
 using MediatR;
 using TLBIOMASS.Domain.Landowners.Interfaces;
 using Shared.DTOs.Landowner;
-using Shared.SeedWork;
 using Mapster;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using TLBIOMASS.Domain.Landowners;
-using TLBIOMASS.Domain.Landowners.Specifications;
 
 namespace TLBIOMASS.Application.Features.Landowners.Queries.GetLandowners;
 
-public class GetLandownersQueryHandler : IRequestHandler<GetLandownersQuery, PagedList<LandownerResponseDto>>
+public class GetLandownersQueryHandler : IRequestHandler<GetLandownersQuery, List<LandownerResponseDto>>
 {
     private readonly ILandownerRepository _repository;
 
@@ -18,78 +17,25 @@ public class GetLandownersQueryHandler : IRequestHandler<GetLandownersQuery, Pag
         _repository = repository;
     }
 
-    public async Task<PagedList<LandownerResponseDto>> Handle(GetLandownersQuery request, CancellationToken cancellationToken)
+    public async Task<List<LandownerResponseDto>> Handle(GetLandownersQuery request, CancellationToken cancellationToken)
     {
-        var query = _repository.FindAll();
+        var query = _repository.FindAll(false, x => x.BankAccounts.Where(b => b.OwnerType == "Landowner"));
 
-        query = ApplyFilter(query, request.Filter);
-
-        if (!string.IsNullOrEmpty(request.Filter.Search))
+        if (!string.IsNullOrEmpty(request.Filter.SearchTerms))
         {
-            var spec = new LandownerSearchSpecification(request.Filter.Search);
-            query = query.Where(spec.ToExpression());
+            var search = request.Filter.SearchTerms.Trim().ToLower();
+            query = query.Where(c => c.Name.ToLower().Contains(search) ||
+                               (c.Contact != null && c.Contact.Phone != null && c.Contact.Phone.Contains(search)) ||
+                               (c.Contact != null && c.Contact.Address != null && c.Contact.Address.ToLower().Contains(search)) ||
+                               (c.BankAccounts.Any(ba => ba.AccountNumber.Contains(search) || ba.BankName.ToLower().Contains(search))) ||
+                               (c.Identity != null && c.Identity.IdentityNumber != null && c.Identity.IdentityNumber.Contains(search)));
         }
 
-        if (request.Filter.IsActive.HasValue)
-        {
-            var spec = new LandownerIsActiveSpecification(request.Filter.IsActive.Value);
-            query = query.Where(spec.ToExpression());
-        }
+        // Apply sorting (defaults to CreatedDate desc)
+        query = query.OrderByDescending(x => x.CreatedDate);
 
-        query = ApplySort(query, request.Filter.OrderBy, request.Filter.OrderByDirection);
+        var items = await query.ToListAsync(cancellationToken);
 
-        var pagedItems = await _repository.GetPageAsync(query, request.Filter.PageNumber, request.Filter.PageSize, cancellationToken);
-
-        return new PagedList<LandownerResponseDto>(
-            pagedItems.Adapt<List<LandownerResponseDto>>(),
-            pagedItems.GetMetaData().TotalItems,
-            request.Filter.PageNumber, request.Filter.PageSize);
-    }
-
-    private static IQueryable<Landowner> ApplyFilter(IQueryable<Landowner> query, LandownerPagedFilterDto filter)
-    {
-        if (filter == null) return query;
-
-        if (filter.IsActive.HasValue)
-            query = query.Where(x => x.IsActive == filter.IsActive.Value);
-
-        return query;
-    }
-
-    private static IQueryable<Landowner> ApplySort(IQueryable<Landowner> query, string? orderBy, string? direction)
-    {
-        if (string.IsNullOrWhiteSpace(orderBy))
-            return query.OrderBy(x => x.Id);
-
-        var isDescending = direction?.ToLower() == "desc";
-
-        return orderBy.ToLower() switch
-        {
-            "name" => isDescending
-                ? query.OrderByDescending(x => x.Name)
-                : query.OrderBy(x => x.Name),
-            "phone" => isDescending
-                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Phone : null)
-                : query.OrderBy(x => x.Contact != null ? x.Contact.Phone : null),
-            "email" => isDescending
-                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Email : null)
-                : query.OrderBy(x => x.Contact != null ? x.Contact.Email : null),
-            "address" => isDescending
-                ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Address : null)
-                : query.OrderBy(x => x.Contact != null ? x.Contact.Address : null),
-            "bankname" => isDescending
-                ? query.OrderByDescending(x => x.Bank != null ? x.Bank.BankName : null)
-                : query.OrderBy(x => x.Bank != null ? x.Bank.BankName : null),
-            "isactive" => isDescending
-                ? query.OrderByDescending(x => x.IsActive)
-                : query.OrderBy(x => x.IsActive),
-            "createddate" => isDescending
-                ? query.OrderByDescending(x => x.CreatedDate)
-                : query.OrderBy(x => x.CreatedDate),
-            "lastmodifieddate" => isDescending
-                ? query.OrderByDescending(x => x.LastModifiedDate)
-                : query.OrderBy(x => x.LastModifiedDate),
-            _ => query.OrderBy(x => x.Id)
-        };
+        return items.Adapt<List<LandownerResponseDto>>();
     }
 }

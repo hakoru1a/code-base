@@ -31,14 +31,12 @@ public class MaterialRegion : EntityAuditBase<int>
         OwnerId = ownerId;
     }
 
-    public void AddMaterial(Material material, double? areaHa = null)
+    public void AddMaterial(int materialId, double? areaHa = null)
     {
-        if (material == null) throw new ArgumentNullException(nameof(material));
-
-        if (_regionMaterials.Any(x => x.MaterialId == material.Id))
+        if (_regionMaterials.Any(x => x.MaterialId == materialId))
             return;
 
-        _regionMaterials.Add(new RegionMaterial(this, material, areaHa));
+        _regionMaterials.Add(new RegionMaterial(this, materialId, areaHa));
     }
 
     public void RemoveMaterial(int materialId)

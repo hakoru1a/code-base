@@ -24,13 +24,9 @@ public class LandownerConfiguration : IEntityTypeConfiguration<Landowner>
             c.Property(x => x.Phone).HasMaxLength(50).HasColumnName("Phone");
             c.Property(x => x.Email).HasMaxLength(100).HasColumnName("Email");
             c.Property(x => x.Address).HasMaxLength(255).HasColumnName("Address");
+            c.Ignore(x => x.Note);
         });
 
-        builder.OwnsOne(x => x.Bank, b =>
-        {
-            b.Property(x => x.BankAccount).HasMaxLength(50).HasColumnName("BankAccount");
-            b.Property(x => x.BankName).HasMaxLength(20).HasColumnName("BankName");
-        });
 
         builder.OwnsOne(x => x.Identity, i =>
         {
@@ -49,5 +45,10 @@ public class LandownerConfiguration : IEntityTypeConfiguration<Landowner>
         builder.Property(x => x.CreatedBy).HasColumnName("Created_By");
         builder.Property(x => x.LastModifiedDate).HasColumnName("Last_Updated_At");
         builder.Property(x => x.LastModifiedBy).HasColumnName("Last_Updated_By");
+        builder.Ignore("Status");
+
+        builder.HasMany(x => x.BankAccounts)
+            .WithOne()
+            .HasForeignKey(x => x.OwnerId);
     }
 }

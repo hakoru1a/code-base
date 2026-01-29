@@ -11,7 +11,11 @@ using TLBIOMASS.Domain.Customers;
 using TLBIOMASS.Domain.Landowners;
 using TLBIOMASS.Domain.MaterialRegions;
 using TLBIOMASS.Domain.Materials;
+using TLBIOMASS.Domain.Payments;
 using TLBIOMASS.Domain.Receivers;
+using TLBIOMASS.Domain.WeighingTicketCancels;
+using TLBIOMASS.Domain.WeighingTickets;
+using TLBIOMASS.Domain.BankAccounts;
 
 namespace TLBIOMASS.Infrastructure.Persistences
 {
@@ -33,6 +37,11 @@ namespace TLBIOMASS.Infrastructure.Persistences
         public DbSet<Receiver> Receivers { get; set; }
         public DbSet<Agency> Agencies { get; set; }
         public DbSet<Material> Materials { get; set; }
+        public DbSet<WeighingTicket> WeighingTickets { get; set; }
+        public DbSet<WeighingTicketCancel> WeighingTicketCancels { get; set; }
+        public DbSet<WeighingTicketPayment> WeighingTicketPayments { get; set; }
+        public DbSet<PaymentDetail> PaymentDetails { get; set; }
+        public DbSet<BankAccount> BankAccounts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

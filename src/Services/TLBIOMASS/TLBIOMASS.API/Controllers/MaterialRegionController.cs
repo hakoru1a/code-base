@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using TLBIOMASS.Application.Features.MaterialRegions.Commands.CreateMaterialRegion;
 using TLBIOMASS.Application.Features.MaterialRegions.Commands.UpdateMaterialRegion;
 using TLBIOMASS.Application.Features.MaterialRegions.Commands.DeleteMaterialRegion;
-using TLBIOMASS.Application.Features.MaterialRegions.Queries.GetAllMaterialRegions;
 using TLBIOMASS.Application.Features.MaterialRegions.Queries.GetMaterialRegions;
+using TLBIOMASS.Application.Features.MaterialRegions.Queries.GetMaterialRegionsPaged;
 using TLBIOMASS.Application.Features.MaterialRegions.Queries.GetMaterialRegionById;
 using Shared.DTOs.MaterialRegion;
 using Mapster;
@@ -31,8 +31,8 @@ namespace TLBIOMASS.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetList([FromQuery] MaterialRegionFilterDto filter)
         {
-            var query = new GetAllMaterialRegionsQuery { Filter = filter };
-            return await HandleGetAllAsync<GetAllMaterialRegionsQuery, MaterialRegionResponseDto>(query, EntityName);
+            var query = new GetMaterialRegionsQuery { Filter = filter };
+            return await HandleGetAllAsync<GetMaterialRegionsQuery, MaterialRegionResponseDto>(query, EntityName);
         }
 
         [HttpGet("paged")]
@@ -40,8 +40,8 @@ namespace TLBIOMASS.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetPagedList([FromQuery] MaterialRegionPagedFilterDto filter)
         {
-            var query = new GetMaterialRegionsQuery { Filter = filter };
-            return await HandleGetPagedAsync<GetMaterialRegionsQuery, MaterialRegionResponseDto>(
+            var query = new GetMaterialRegionsPagedQuery { Filter = filter };
+            return await HandleGetPagedAsync<GetMaterialRegionsPagedQuery, MaterialRegionResponseDto>(
                 query, EntityName, filter.PageNumber, filter.PageSize);
         }
 

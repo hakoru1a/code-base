@@ -6,6 +6,7 @@ public class CreateReceiverCommand : IRequest<long>
 {
     public string Name { get; set; } = string.Empty;
     public string? Phone { get; set; }
+    public string? Email { get; set; }
     public string? BankAccount { get; set; }
     public string? BankName { get; set; }
     public string? IdentityNumber { get; set; }

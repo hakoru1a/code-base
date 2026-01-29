@@ -5,7 +5,6 @@ using Shared.DTOs.Customer;
 using Shared.SeedWork;
 using TLBIOMASS.Domain.Customers;
 using TLBIOMASS.Domain.Customers.Interfaces;
-using TLBIOMASS.Domain.Customers.Specifications;
 
 namespace TLBIOMASS.Application.Features.Customers.Queries.GetCustomersPaged;
 
@@ -24,18 +23,6 @@ public class GetCustomersPagedQueryHandler : IRequestHandler<GetCustomersPagedQu
         var query = _customerRepository.FindAll();
 
         query = ApplyFilter(query, filter);
-
-        if (!string.IsNullOrEmpty(filter.Search))
-        {
-            var searchSpec = new CustomerSearchSpecification(filter.Search);
-            query = query.Where(searchSpec.ToExpression());
-        }
-
-        if (filter.IsActive.HasValue)
-        {
-            var activeSpec = new CustomerIsActiveSpecification(filter.IsActive.Value);
-            query = query.Where(activeSpec.ToExpression());
-        }
 
         query = ApplySort(query, filter.OrderBy, filter.OrderByDirection);
 
@@ -59,8 +46,15 @@ public class GetCustomersPagedQueryHandler : IRequestHandler<GetCustomersPagedQu
     {
         if (filter == null) return query;
 
-        if (filter.IsActive.HasValue)
-            query = query.Where(x => x.IsActive == filter.IsActive.Value);
+        if (!string.IsNullOrEmpty(filter.Search))
+        {
+            var search = filter.Search.Trim().ToLower();
+            query = query.Where(c => c.Name.ToLower().Contains(search) ||
+                               (c.Contact != null && c.Contact.Phone != null && c.Contact.Phone.Contains(search)) ||
+                               (c.Contact != null && c.Contact.Email != null && c.Contact.Email.ToLower().Contains(search)) ||
+                               (c.Contact != null && c.Contact.Address != null && c.Contact.Address.ToLower().Contains(search)) ||
+                               (c.TaxCode != null && c.TaxCode.ToLower().Contains(search)));
+        }
 
         return query;
     }

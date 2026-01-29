@@ -5,4 +5,4 @@ public record MaterialSpec(
     string Name,
     string Unit,
     string? Description = null,
-    decimal ProposedImpurityDeduction = 0);
+    decimal? ProposedImpurityDeduction = 0);

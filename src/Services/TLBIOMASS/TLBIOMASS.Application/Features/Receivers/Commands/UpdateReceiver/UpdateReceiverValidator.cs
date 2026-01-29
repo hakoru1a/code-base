@@ -15,11 +15,6 @@ namespace TLBIOMASS.Application.Features.Receivers.Commands.UpdateReceiver
             RuleFor(x => x.Phone)
                 .MaximumLength(50).WithMessage("Phone must not exceed 50 characters");
 
-            RuleFor(x => x.BankAccount)
-                .MaximumLength(100).WithMessage("Bank account must not exceed 100 characters");
-
-            RuleFor(x => x.BankName)
-                .MaximumLength(255).WithMessage("Bank name must not exceed 255 characters");
 
             RuleFor(x => x.IdentityNumber)
                 .MaximumLength(20).WithMessage("Identity number must not exceed 20 characters");

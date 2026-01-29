@@ -1,10 +1,10 @@
 using MediatR;
 using Shared.DTOs.MaterialRegion;
-using Shared.SeedWork;
 
 namespace TLBIOMASS.Application.Features.MaterialRegions.Queries.GetMaterialRegions;
 
-public class GetMaterialRegionsQuery : IRequest<PagedList<MaterialRegionResponseDto>>
+public class GetMaterialRegionsQuery : IRequest<List<MaterialRegionResponseDto>>
 {
-    public MaterialRegionPagedFilterDto Filter { get; set; } = new();
+    public MaterialRegionFilterDto Filter { get; set; } = new();
 }
+

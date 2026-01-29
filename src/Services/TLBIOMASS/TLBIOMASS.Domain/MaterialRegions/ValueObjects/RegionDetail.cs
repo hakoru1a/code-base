@@ -6,7 +6,7 @@ public record RegionDetail(
     string? Address,
     double Latitude,
     double Longitude,
-    decimal AreaHa,
+    decimal? AreaHa,
     string? CertificateId = null)
 {
     public GeoLocation Location => new(Latitude, Longitude);

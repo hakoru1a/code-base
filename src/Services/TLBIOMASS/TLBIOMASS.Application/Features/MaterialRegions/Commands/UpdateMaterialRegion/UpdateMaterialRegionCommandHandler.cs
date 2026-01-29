@@ -37,18 +37,23 @@ public class UpdateMaterialRegionCommandHandler : IRequestHandler<UpdateMaterial
         
         if (request.RegionMaterials.Any())
         {
-            var materialIds = request.RegionMaterials.Select(x => x.MaterialId).ToList();
-            var materials = await _materialRepository.FindAll()
-                .Where(x => materialIds.Contains(x.Id))
+            var requestMaterialIds = request.RegionMaterials.Select(x => x.MaterialId).Distinct().ToList();
+            
+            // Validate existence
+            var existingMaterialIds = await _materialRepository.FindAll()
+                .Where(x => requestMaterialIds.Contains(x.Id))
+                .Select(x => x.Id)
                 .ToListAsync(cancellationToken);
+
+            if (existingMaterialIds.Count != requestMaterialIds.Count)
+            {
+                var missingIds = requestMaterialIds.Except(existingMaterialIds);
+                throw new BadRequestException($"Materials with IDs [{string.Join(", ", missingIds)}] do not exist.");
+            }
 
             foreach (var rmDto in request.RegionMaterials)
             {
-                var material = materials.FirstOrDefault(x => x.Id == rmDto.MaterialId);
-                if (material != null)
-                {
-                    region.AddMaterial(material, rmDto.AreaHa);
-                }
+                region.AddMaterial(rmDto.MaterialId, rmDto.AreaHa);
             }
         }
 

@@ -1,5 +1,6 @@
 using Contracts.Domain;
 using Shared.Domain.ValueObjects;
+using TLBIOMASS.Domain.BankAccounts;
 
 namespace TLBIOMASS.Domain.Receivers;
 
@@ -7,26 +8,25 @@ public class Receiver : EntityBase<int>
 {
     public string Name { get; private set; } = string.Empty;
     public ContactInfo? Contact { get; private set; }
-    public BankInfo? Bank { get; private set; }
     public IdentityInfo? Identity { get; private set; }
     public bool IsDefault { get; private set; }
     public bool IsActive { get; private set; } = true;
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 
+    public virtual ICollection<BankAccount> BankAccounts { get; private set; } = new List<BankAccount>();
+
     protected Receiver() { }
 
     private Receiver(
         string name,
         ContactInfo? contact,
-        BankInfo? bank,
         IdentityInfo? identity,
         bool isDefault,
         bool isActive)
     {
         Name = name;
         Contact = contact;
-        Bank = bank;
         Identity = identity;
         IsDefault = isDefault;
         IsActive = isActive;
@@ -36,18 +36,16 @@ public class Receiver : EntityBase<int>
     public static Receiver Create(
         string name,
         ContactInfo? contact = null,
-        BankInfo? bank = null,
         IdentityInfo? identity = null,
         bool isDefault = false,
         bool isActive = true)
     {
-        return new Receiver(name, contact, bank, identity, isDefault, isActive);
+        return new Receiver(name, contact, identity, isDefault, isActive);
     }
 
     public void Update(
         string name,
         ContactInfo? contact = null,
-        BankInfo? bank = null,
         IdentityInfo? identity = null,
         bool? isDefault = null,
         bool? isActive = null)
@@ -55,8 +53,6 @@ public class Receiver : EntityBase<int>
         Name = name;
         if (contact != null)
             Contact = contact;
-        if (bank != null)
-            Bank = bank;
         if (identity != null)
             Identity = identity;
         if (isDefault.HasValue)

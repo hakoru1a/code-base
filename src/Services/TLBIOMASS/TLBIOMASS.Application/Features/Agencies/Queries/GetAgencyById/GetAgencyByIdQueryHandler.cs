@@ -1,6 +1,7 @@
 using MediatR;
 using TLBIOMASS.Domain.Agencies.Interfaces;
 using Shared.DTOs.Agency;
+using Contracts.Exceptions;
 using Mapster;
 
 namespace TLBIOMASS.Application.Features.Agencies.Queries.GetAgencyById;
@@ -16,7 +17,11 @@ public class GetAgencyByIdQueryHandler : IRequestHandler<GetAgencyByIdQuery, Age
 
     public async Task<AgencyResponseDto?> Handle(GetAgencyByIdQuery request, CancellationToken cancellationToken)
     {
-        var agency = await _repository.GetByIdAsync(request.Id);
-        return agency?.Adapt<AgencyResponseDto>();
+        var agency = await _repository.GetByIdAsync(request.Id, cancellationToken, x => x.BankAccounts.Where(b => b.OwnerType == "Agency"));
+        if (agency == null)
+        {
+            throw new NotFoundException("Agency", request.Id);
+        }
+        return agency.Adapt<AgencyResponseDto>();
     }
 }

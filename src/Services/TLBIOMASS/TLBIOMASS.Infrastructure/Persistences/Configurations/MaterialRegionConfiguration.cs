@@ -10,6 +10,7 @@ public class MaterialRegionConfiguration : IEntityTypeConfiguration<MaterialRegi
     public void Configure(EntityTypeBuilder<MaterialRegion> builder)
     {
         builder.ToTable("materialregion");
+        builder.Ignore("Status");
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("RegionID");

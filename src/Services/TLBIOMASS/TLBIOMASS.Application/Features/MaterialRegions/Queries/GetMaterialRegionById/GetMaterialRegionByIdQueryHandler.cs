@@ -3,6 +3,7 @@ using TLBIOMASS.Domain.MaterialRegions.Interfaces;
 using Shared.DTOs.MaterialRegion;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
+using Contracts.Exceptions;
 
 namespace TLBIOMASS.Application.Features.MaterialRegions.Queries.GetMaterialRegionById;
 
@@ -22,6 +23,11 @@ public class GetMaterialRegionByIdQueryHandler : IRequestHandler<GetMaterialRegi
             .ThenInclude(x => x.Material)
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
             
-        return region?.Adapt<MaterialRegionResponseDto>();
+        if (region == null)
+        {
+            throw new NotFoundException("MaterialRegion", request.Id);
+        }
+
+        return region.Adapt<MaterialRegionResponseDto>();
     }
 }

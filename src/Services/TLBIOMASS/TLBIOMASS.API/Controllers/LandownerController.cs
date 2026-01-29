@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using TLBIOMASS.Application.Features.Landowners.Commands.CreateLandowner;
 using TLBIOMASS.Application.Features.Landowners.Commands.UpdateLandowner;
 using TLBIOMASS.Application.Features.Landowners.Commands.DeleteLandowner;
+using TLBIOMASS.Application.Features.Landowners.Queries.GetLandownersPaged;
 using TLBIOMASS.Application.Features.Landowners.Queries.GetLandowners;
-using TLBIOMASS.Application.Features.Landowners.Queries.GetAllLandowners;
 using TLBIOMASS.Application.Features.Landowners.Queries.GetLandownerById;
 using Shared.DTOs.Landowner;
 using Mapster;
@@ -31,8 +31,8 @@ namespace TLBIOMASS.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetList([FromQuery] LandownerFilterDto filter)
         {
-            var query = new GetAllLandownersQuery { Filter = filter };
-            return await HandleGetAllAsync<GetAllLandownersQuery, LandownerResponseDto>(query, EntityName);
+            var query = new GetLandownersQuery { Filter = filter };
+            return await HandleGetAllAsync<GetLandownersQuery, LandownerResponseDto>(query, EntityName);
         }
 
         [HttpGet("paged")]
@@ -40,9 +40,9 @@ namespace TLBIOMASS.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetPagedList([FromQuery] LandownerPagedFilterDto filter)
         {
-            var query = new GetLandownersQuery { Filter = filter };
+            var query = new GetLandownersPagedQuery { Filter = filter };
 
-            return await HandleGetPagedAsync<GetLandownersQuery, LandownerResponseDto>(
+            return await HandleGetPagedAsync<GetLandownersPagedQuery, LandownerResponseDto>(
                 query, EntityName, filter.PageNumber, filter.PageSize);
         }
 
