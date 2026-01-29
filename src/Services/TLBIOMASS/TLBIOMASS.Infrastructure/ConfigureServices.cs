@@ -13,6 +13,7 @@ using TLBIOMASS.Domain.WeighingTicketCancels.Interfaces;
 using TLBIOMASS.Domain.WeighingTickets.Interfaces;
 using TLBIOMASS.Infrastructure.Persistences;
 using TLBIOMASS.Infrastructure.Repositories;
+using TLBIOMASS.Domain.BankAccounts.Interfaces; // Add this if missing
 
 namespace TLBIOMASS.Infrastructure
 {
@@ -26,6 +27,7 @@ namespace TLBIOMASS.Infrastructure
             services.AddScoped<ICompanyRepository, CompanyRepository>();
             services.AddScoped<IReceiverRepository, ReceiverRepository>();
             services.AddScoped<IAgencyRepository, AgencyRepository>();
+            services.AddScoped<IBankAccountRepository, BankAccountRepository>();
             services.AddScoped<IMaterialRepository, MaterialRepository>();
             services.AddScoped<ILandownerRepository, LandownerRepository>();
             services.AddScoped<IMaterialRegionRepository, MaterialRegionRepository>();

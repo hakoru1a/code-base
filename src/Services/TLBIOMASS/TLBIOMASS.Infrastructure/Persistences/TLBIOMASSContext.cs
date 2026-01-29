@@ -15,6 +15,7 @@ using TLBIOMASS.Domain.Payments;
 using TLBIOMASS.Domain.Receivers;
 using TLBIOMASS.Domain.WeighingTicketCancels;
 using TLBIOMASS.Domain.WeighingTickets;
+using TLBIOMASS.Domain.BankAccounts;
 
 namespace TLBIOMASS.Infrastructure.Persistences
 {
@@ -40,6 +41,7 @@ namespace TLBIOMASS.Infrastructure.Persistences
         public DbSet<WeighingTicketCancel> WeighingTicketCancels { get; set; }
         public DbSet<WeighingTicketPayment> WeighingTicketPayments { get; set; }
         public DbSet<PaymentDetail> PaymentDetails { get; set; }
+        public DbSet<BankAccount> BankAccounts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -9,6 +9,7 @@ using Shared.DTOs.Company;
 using Shared.DTOs.WeighingTicket;
 using Shared.DTOs.Receiver;
 using Shared.DTOs.Payment;
+using Shared.DTOs.BankAccount;
 using Shared.DTOs.WeighingTicketCancel;
 using TLBIOMASS.Domain.Agencies;
 using TLBIOMASS.Domain.Customers;
@@ -49,8 +50,13 @@ public static class MapsterConfig
         ConfigureReceiverMappings();
         ConfigureCompanyMappings();
         ConfigureWeighingTicketMappings();
-        ConfigurePaymentDetailMappings();
         ConfigureWeighingTicketCancelMappings();
+        ConfigureBankAccountMappings();
+    }
+
+    private static void ConfigureBankAccountMappings()
+    {
+        TypeAdapterConfig<Domain.BankAccounts.BankAccount, BankAccountResponseDto>.NewConfig();
     }
 
     private static void ConfigurePaymentDetailMappings()
