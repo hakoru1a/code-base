@@ -1,6 +1,7 @@
 using Infrastructure.Authorization.Interfaces;
 using Contracts.Identity;
 using Microsoft.AspNetCore.Http;
+using Shared.DTOs.Authorization;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
@@ -23,11 +24,11 @@ namespace Infrastructure.Middlewares
             _logger = logger;
         }
 
-        public async Task InvokeAsync(HttpContext context, IPolicyEvaluator policyEvaluator, IUserContextService userContextService)
+        public async Task InvokeAsync(HttpContext context, IPolicyEvaluator policyEvaluator, IUserContextService<UserClaimsContext> userContextService)
         {
             // Check if policy is required for this endpoint
             // This is set by RequirePolicyAttribute or can be set manually
-            if (context.Items.TryGetValue("RequiredPolicy", out var policyNameObj) && 
+            if (context.Items.TryGetValue("RequiredPolicy", out var policyNameObj) &&
                 policyNameObj is string policyName)
             {
                 var userContext = userContextService.GetCurrentUser();
@@ -72,7 +73,7 @@ namespace Infrastructure.Middlewares
                 {
                     context.Items[$"PolicyFilterContext:{policyName}"] = result.FilterContext;
                     context.Items["PolicyFilterContext"] = result.FilterContext; // For backward compatibility
-                    
+
                     _logger.LogDebug(
                         "[POLICY FILTER] Policy {PolicyName} returned filter context for user {UserId}: {FilterType}",
                         policyName, userContext.UserId, result.FilterContext.GetType().Name);
@@ -129,9 +130,9 @@ namespace Infrastructure.Middlewares
         /// Returns consistent error response
         /// </summary>
         private async Task HandlePolicyDenied(
-            HttpContext context, 
-            string policyName, 
-            string userId, 
+            HttpContext context,
+            string policyName,
+            string userId,
             string? reason)
         {
             context.Response.StatusCode = StatusCodes.Status403Forbidden;

@@ -1,8 +1,8 @@
+using Contracts.Common;
 using Contracts.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Storage;
-using Shared.SeedWork;
 using System.Linq.Expressions;
 
 namespace Contracts.Common.Interface

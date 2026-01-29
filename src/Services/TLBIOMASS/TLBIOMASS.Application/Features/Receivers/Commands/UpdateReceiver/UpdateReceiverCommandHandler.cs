@@ -37,21 +37,23 @@ public class UpdateReceiverCommandHandler : IRequestHandler<UpdateReceiverComman
             request.IsActive);
 
         // Smart Sync BankAccounts
+        var bankAccounts = receiver.BankAccounts ?? throw new InvalidOperationException("BankAccounts must be loaded when updating receiver.");
+
         var requestIds = request.BankAccounts.Where(x => x.Id > 0).Select(x => x.Id).ToList();
-        var existingIds = receiver.BankAccounts?.Select(x => x.Id).ToList() ?? new List<int>();
+        var existingIds = bankAccounts.Select(x => x.Id).ToList();
 
         // 1. Delete: IDs in DB but NOT in request
         var idsToDelete = existingIds.Except(requestIds).ToList();
         foreach (var id in idsToDelete)
         {
-            var toRemove = receiver.BankAccounts.First(x => x.Id == id);
-            receiver.BankAccounts.Remove(toRemove);
+            var toRemove = bankAccounts.First(x => x.Id == id);
+            bankAccounts.Remove(toRemove);
         }
 
         // 2. Update: IDs in both DB and request
         foreach (var dto in request.BankAccounts.Where(x => x.Id > 0))
         {
-            var existing = receiver.BankAccounts.FirstOrDefault(x => x.Id == dto.Id);
+            var existing = bankAccounts.FirstOrDefault(x => x.Id == dto.Id);
             if (existing != null)
             {
                 existing.Update(dto.BankName, dto.AccountNumber, dto.IsDefault);
@@ -61,7 +63,7 @@ public class UpdateReceiverCommandHandler : IRequestHandler<UpdateReceiverComman
         // 3. Create: IDs = 0
         foreach (var dto in request.BankAccounts.Where(x => x.Id == 0))
         {
-            receiver.BankAccounts.Add(BankAccount.Create(
+            bankAccounts.Add(BankAccount.Create(
                 dto.BankName,
                 dto.AccountNumber,
                 "Receiver",
@@ -71,7 +73,7 @@ public class UpdateReceiverCommandHandler : IRequestHandler<UpdateReceiverComman
         }
 
         // Ensure only one default bank account
-        var defaults = receiver.BankAccounts.Where(x => x.IsDefault).ToList();
+        var defaults = bankAccounts.Where(x => x.IsDefault).ToList();
         if (defaults.Count > 1)
         {
             foreach (var acc in defaults.SkipLast(1))

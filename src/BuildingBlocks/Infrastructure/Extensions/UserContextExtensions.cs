@@ -1,6 +1,7 @@
 using Contracts.Identity;
 using Infrastructure.Identity;
 using Microsoft.Extensions.DependencyInjection;
+using Shared.DTOs.Authorization;
 
 namespace Infrastructure.Extensions
 {
@@ -17,7 +18,7 @@ namespace Infrastructure.Extensions
         public static IServiceCollection AddUserContextService(this IServiceCollection services)
         {
             services.AddHttpContextAccessor();
-            services.AddScoped<IUserContextService, UserContextService>();
+            services.AddScoped<IUserContextService<UserClaimsContext>, UserContextService>();
             return services;
         }
     }

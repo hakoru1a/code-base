@@ -36,21 +36,23 @@ public class UpdateLandownerCommandHandler : IRequestHandler<UpdateLandownerComm
             request.IsActive);
 
         // Smart Sync BankAccounts
+        var bankAccounts = landowner.BankAccounts ?? throw new InvalidOperationException("BankAccounts must be loaded when updating landowner.");
+
         var requestIds = request.BankAccounts.Where(x => x.Id > 0).Select(x => x.Id).ToList();
-        var existingIds = landowner.BankAccounts?.Select(x => x.Id).ToList() ?? new List<int>();
+        var existingIds = bankAccounts.Select(x => x.Id).ToList();
 
         // 1. Delete: IDs in DB but NOT in request
         var idsToDelete = existingIds.Except(requestIds).ToList();
         foreach (var id in idsToDelete)
         {
-            var toRemove = landowner.BankAccounts.First(x => x.Id == id);
-            landowner.BankAccounts.Remove(toRemove);
+            var toRemove = bankAccounts.First(x => x.Id == id);
+            bankAccounts.Remove(toRemove);
         }
 
         // 2. Update: IDs in both DB and request
         foreach (var dto in request.BankAccounts.Where(x => x.Id > 0))
         {
-            var existing = landowner.BankAccounts.FirstOrDefault(x => x.Id == dto.Id);
+            var existing = bankAccounts.FirstOrDefault(x => x.Id == dto.Id);
             if (existing != null)
             {
                 existing.Update(dto.BankName, dto.AccountNumber, dto.IsDefault);
@@ -60,7 +62,7 @@ public class UpdateLandownerCommandHandler : IRequestHandler<UpdateLandownerComm
         // 3. Create: IDs = 0
         foreach (var dto in request.BankAccounts.Where(x => x.Id == 0))
         {
-            landowner.BankAccounts.Add(BankAccount.Create(
+            bankAccounts.Add(BankAccount.Create(
                 dto.BankName,
                 dto.AccountNumber,
                 "Landowner",
@@ -70,7 +72,7 @@ public class UpdateLandownerCommandHandler : IRequestHandler<UpdateLandownerComm
         }
 
         // Ensure only one default
-        var defaults = landowner.BankAccounts.Where(x => x.IsDefault).ToList();
+        var defaults = bankAccounts.Where(x => x.IsDefault).ToList();
         if (defaults.Count > 1)
         {
             // Keep only the last one as default
@@ -80,7 +82,6 @@ public class UpdateLandownerCommandHandler : IRequestHandler<UpdateLandownerComm
             }
         }
 
-       
         await _repository.SaveChangesAsync(cancellationToken);
 
         return true;

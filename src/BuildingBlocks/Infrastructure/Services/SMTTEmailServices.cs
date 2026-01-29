@@ -7,7 +7,7 @@ using Shared.Configurations;
 using Shared.Services.Email;
 namespace Infrastructure.Services
 {
-    public class SMTTEmailServices : ISMTPEmailServices
+    public class SMTTEmailServices : ISMTPEmailServices<MailRequest>
     {
         private readonly ILogger _logger;
 

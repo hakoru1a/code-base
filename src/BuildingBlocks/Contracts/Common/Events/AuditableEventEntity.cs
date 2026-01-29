@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 
 namespace Contracts.Common.Events
 {
-    public abstract class AuditableEventEntity<T> : EventEntity<T>, IAuditable<T>
+    public abstract class AuditableEventEntity<T, TEvent> : EventEntity<T, TEvent>, IAuditable<T>
+        where TEvent : class
     {
         public new DateTimeOffset CreatedDate { get; set; }
         public new DateTimeOffset? LastModifiedDate { get; set; }

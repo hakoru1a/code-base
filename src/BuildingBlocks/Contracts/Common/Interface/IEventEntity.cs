@@ -1,24 +1,25 @@
-using Contracts.Common.Events;
+using System.Collections;
 using Contracts.Domain.Interface;
-using Shared.Interfaces.Event;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Contracts.Common.Interface
 {
+    /// <summary>
+    /// Marker for entities that have domain events. Used for ChangeTracker.Entries&lt;IEventEntity&gt;().
+    /// </summary>
     public interface IEventEntity
     {
-        void AddDomainEvent(BaseEvent domainEvent);
-        void RemoveDomainEvent(BaseEvent domainEvent);
+        IEnumerable<object> DomainEvents { get; }
         void ClearDomainEvents();
-        IReadOnlyCollection<BaseEvent> DomainEvents { get; }
     }
 
-    public interface IEventEntity<T> : IEnityBase<T>, IEventEntity
+    /// <summary>
+    /// Entity with domain events. T = entity id type, TEvent = domain event type.
+    /// </summary>
+    public interface IEventEntity<T, TEvent> : IEnityBase<T>, IEventEntity
     {
-
+        void AddDomainEvent(TEvent domainEvent);
+        void RemoveDomainEvent(TEvent domainEvent);
+        new void ClearDomainEvents();
+        new IReadOnlyCollection<TEvent> DomainEvents { get; }
     }
 }

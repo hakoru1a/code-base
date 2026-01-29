@@ -58,7 +58,7 @@ namespace TLBIOMASS.Infrastructure.Persistences
                 .ToList();
 
             var domainEvents = domainEntities
-                .SelectMany(x => x.DomainEvents)
+                .SelectMany(x => x.DomainEvents.Cast<BaseEvent>())
                 .ToList();
 
             domainEntities.ForEach(entity => entity.ClearDomainEvents());
