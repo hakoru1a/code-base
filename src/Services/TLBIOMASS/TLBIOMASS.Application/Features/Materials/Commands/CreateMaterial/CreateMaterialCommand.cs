@@ -1,3 +1,4 @@
+using Contracts.Domain.Enums;
 using MediatR;
 
 namespace TLBIOMASS.Application.Features.Materials.Commands.CreateMaterial;
@@ -8,5 +9,5 @@ public class CreateMaterialCommand : IRequest<long>
     public string Unit { get; set; } = string.Empty;
     public string? Description { get; set; }
     public decimal ProposedImpurityDeduction { get; set; }
-    public bool IsActive { get; set; } = true;
+    public EntityStatus Status { get; set; } = EntityStatus.Active;
 }

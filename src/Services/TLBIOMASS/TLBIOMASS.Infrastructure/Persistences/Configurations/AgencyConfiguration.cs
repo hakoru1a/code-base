@@ -34,15 +34,14 @@ public class AgencyConfiguration : IEntityTypeConfiguration<Agency>
             i.Ignore(x => x.DateOfBirth);
         });
 
-        builder.Property(x => x.IsActive)
-            .HasDefaultValue(true)
-            .HasColumnName("IsActive");
+        builder.Property(x => x.Status)
+            .HasConversion<int>()
+            .HasColumnName("Status");
 
         builder.Property(x => x.CreatedDate).HasColumnName("Created_At");
         builder.Property(x => x.CreatedBy).HasColumnName("Created_By");
         builder.Property(x => x.LastModifiedDate).HasColumnName("Last_Updated_At");
         builder.Property(x => x.LastModifiedBy).HasColumnName("Last_Updated_By");
-        builder.Ignore("Status");
 
         builder.HasMany(x => x.BankAccounts)
             .WithOne()

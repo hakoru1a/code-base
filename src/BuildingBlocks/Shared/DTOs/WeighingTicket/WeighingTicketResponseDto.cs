@@ -1,5 +1,6 @@
 using Shared.DTOs.Receiver;
 using Shared.DTOs.Material;
+using Contracts.Domain.Enums;
 
 namespace Shared.DTOs.WeighingTicket;
 
@@ -33,6 +34,7 @@ public class WeighingTicketResponseDto : BaseResponseDto<int>
     public string? Note { get; set; }
     public string? QualityStatus { get; set; }
     public string? CreatedByString { get; set; }
+    public EntityStatus Status { get; set; }
 
     // Payment Info
     public decimal? FinalUnitPrice { get; set; }

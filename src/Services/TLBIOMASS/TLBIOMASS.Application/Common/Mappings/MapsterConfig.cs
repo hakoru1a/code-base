@@ -164,7 +164,7 @@ public static class MapsterConfig
                 src.Name,
                 new ContactInfo(src.Phone, src.Email, src.Address, null),
                 new IdentityInfo(src.IdentityCard, src.IssuePlace, src.IssueDate, null),
-                src.IsActive));
+                src.Status));
     }
 
     private static void ConfigureLandownerMappings()
@@ -183,7 +183,7 @@ public static class MapsterConfig
                 src.Name,
                 new ContactInfo(src.Phone, src.Email, src.Address, null),
                 new IdentityInfo(src.IdentityCardNo, src.IssuePlace, src.IssueDate, src.DateOfBirth),
-                src.IsActive));
+                src.Status));
     }
 
     private static void ConfigureMaterialMappings()
@@ -199,7 +199,7 @@ public static class MapsterConfig
         TypeAdapterConfig<MaterialCreateDto, Material>.NewConfig()
             .ConstructUsing(src => Material.Create(
                 new MaterialSpec(src.Name, src.Unit, src.Description, src.ProposedImpurityDeduction),
-                src.IsActive));
+                src.Status));
     }
 
     private static void ConfigureMaterialRegionMappings()
@@ -210,7 +210,11 @@ public static class MapsterConfig
             .Map(d => d.Latitude, s => s.Detail.Latitude)
             .Map(d => d.Longitude, s => s.Detail.Longitude)
             .Map(d => d.AreaHa, s => s.Detail.AreaHa)
-            .Map(d => d.CertificateID, s => s.Detail.CertificateId);
+            .Map(d => d.CertificateID, s => s.Detail.CertificateId)
+            .Map(d => d.OwnerName, s => s.Owner != null ? s.Owner.Name : string.Empty);
+
+        TypeAdapterConfig<RegionMaterial, RegionMaterialDto>.NewConfig()
+            .Map(dest => dest.MaterialName, src => src.Material != null && src.Material.Spec != null ? src.Material.Spec.Name : string.Empty);
 
         TypeAdapterConfig<MaterialRegionCreateDto, MaterialRegion>.NewConfig()
             .ConstructUsing(src => MaterialRegion.Create(
@@ -229,8 +233,8 @@ public static class MapsterConfig
             .Map(d => d.IssuedDate, s => s.Identity != null ? s.Identity.IssueDate : null)
             .Map(d => d.IssuedPlace, s => s.Identity != null ? s.Identity.IssuePlace : null)
             .Map(d => d.DateOfBirth, s => s.Identity != null ? s.Identity.DateOfBirth : null)
-            .Map(d => d.CreatedDate, s => s.CreatedAt)
-            .Map(d => d.LastModifiedDate, s => s.UpdatedAt);
+            .Map(d => d.CreatedDate, s => s.CreatedDate)
+            .Map(d => d.LastModifiedDate, s => s.LastModifiedDate);
 
         TypeAdapterConfig<ReceiverCreateDto, Receiver>.NewConfig()
             .ConstructUsing(src => Receiver.Create(
@@ -238,7 +242,7 @@ public static class MapsterConfig
                 new ContactInfo(src.Phone, null, src.Address, src.Note),
                 new IdentityInfo(src.IdentityNumber, src.IssuedPlace, src.IssuedDate, src.DateOfBirth),
                 src.IsDefault,
-                src.IsActive));
+                src.Status));
 
         TypeAdapterConfig<ReceiverUpdateDto, UpdateReceiverCommand>.NewConfig()
             .Map(dest => dest.BankAccounts, src => src.BankAccounts);

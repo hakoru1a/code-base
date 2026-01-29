@@ -10,7 +10,6 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
     public void Configure(EntityTypeBuilder<Customer> builder)
     {
         builder.ToTable("khachhang");
-        builder.Ignore("Status");
 
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Id)
@@ -34,9 +33,9 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
             .HasColumnName("ma_so_thue")
             .HasMaxLength(50);
 
-        builder.Property(c => c.IsActive)
-            .HasColumnName("is_active")
-            .HasDefaultValue(true);
+        builder.Property(c => c.Status)
+            .HasColumnName("Status")
+            .HasConversion<int>();
 
         builder.Property(c => c.CreatedDate)
             .HasColumnName("created_at")
@@ -55,7 +54,7 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         builder.HasIndex(c => c.TaxCode)
             .HasDatabaseName("idx_khachhang_mst");
 
-        builder.HasIndex(c => c.IsActive)
-            .HasDatabaseName("idx_khachhang_active");
+        builder.HasIndex(c => c.Status)
+            .HasDatabaseName("idx_khachhang_status");
     }
 }

@@ -1,8 +1,9 @@
 using Shared.DTOs;
+using Contracts.Domain.Enums;
 
 namespace Shared.DTOs.Receiver;
 
 public class ReceiverPagedFilterDto : BaseFilterDto
 {
-    public bool? IsActive { get; set; }
+    public EntityStatus? Status { get; set; }
 }

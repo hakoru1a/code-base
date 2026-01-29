@@ -19,6 +19,7 @@ public class GetMaterialRegionByIdQueryHandler : IRequestHandler<GetMaterialRegi
     public async Task<MaterialRegionResponseDto?> Handle(GetMaterialRegionByIdQuery request, CancellationToken cancellationToken)
     {
         var region = await _repository.FindAll()
+            .Include(x => x.Owner)
             .Include(x => x.RegionMaterials)
             .ThenInclude(x => x.Material)
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);

@@ -11,7 +11,9 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Company>
     public void Configure(EntityTypeBuilder<Company> builder)
     {
         builder.ToTable("companies");
-        builder.Ignore("Status");
+        builder.Property(x => x.Status)
+            .HasConversion<int>()
+            .HasColumnName("Status");
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("ID");

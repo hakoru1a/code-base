@@ -1,4 +1,5 @@
 using MediatR;
+using Contracts.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Landowners.Commands.CreateLandowner
 {
@@ -14,6 +15,6 @@ namespace TLBIOMASS.Application.Features.Landowners.Commands.CreateLandowner
         public string? IssuePlace { get; set; }
         public DateTime? IssueDate { get; set; }
         public DateTime? DateOfBirth { get; set; }
-        public bool IsActive { get; set; } = true;
+        public EntityStatus Status { get; set; } = EntityStatus.Active;
     }
 }

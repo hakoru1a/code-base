@@ -1,9 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using TLBIOMASS.Domain.Landowners.Interfaces;
-using TLBIOMASS.Domain.BankAccounts;
 using Shared.Domain.ValueObjects;
-using Shared.Domain.Enums;
 using Contracts.Exceptions;
 
 namespace TLBIOMASS.Application.Features.Landowners.Commands.UpdateLandowner;
@@ -34,13 +32,10 @@ public class UpdateLandownerCommandHandler : IRequestHandler<UpdateLandownerComm
             request.Name,
             new ContactInfo(request.Phone, request.Email, request.Address, null),
             new IdentityInfo(request.IdentityCardNo, request.IssuePlace, request.IssueDate, request.DateOfBirth),
-            request.IsActive);
+            request.Status);
 
-        // Explicit Sync BankAccounts using Domain Logic
-        foreach (var bankAccountDto in request.BankAccounts)
-        {
-            landowner.ApplyBankAccountChange(bankAccountDto);
-        }
+        // Explicit Sync BankAccounts using Domain Logic (Composition)
+        landowner.SyncBankAccounts(request.BankAccounts);
        
         await _repository.SaveChangesAsync(cancellationToken);
 

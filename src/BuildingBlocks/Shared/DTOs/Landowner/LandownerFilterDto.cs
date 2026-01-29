@@ -1,8 +1,9 @@
 using Shared.SeedWork;
+using Contracts.Domain.Enums;
 
 namespace Shared.DTOs.Landowner;
 
 public class LandownerFilterDto : RequestParameter
 {
-    public bool? IsActive { get; set; }
+    public EntityStatus? Status { get; set; }
 }

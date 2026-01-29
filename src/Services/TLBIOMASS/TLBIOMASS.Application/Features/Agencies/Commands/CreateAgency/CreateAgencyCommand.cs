@@ -1,4 +1,5 @@
 using MediatR;
+using Contracts.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Agencies.Commands.CreateAgency
 {
@@ -13,6 +14,6 @@ namespace TLBIOMASS.Application.Features.Agencies.Commands.CreateAgency
         public string? IdentityCard { get; set; }
         public string? IssuePlace { get; set; }
         public DateTime? IssueDate { get; set; }
-        public bool IsActive { get; set; } = true;
+        public EntityStatus Status { get; set; } = EntityStatus.Active;
     }
 }

@@ -21,6 +21,7 @@ public class GetMaterialRegionsPagedQueryHandler : IRequestHandler<GetMaterialRe
     public async Task<PagedList<MaterialRegionResponseDto>> Handle(GetMaterialRegionsPagedQuery request, CancellationToken cancellationToken)
     {
         var query = _repository.FindAll()
+            .Include(x => x.Owner)
             .Include(x => x.RegionMaterials)
             .ThenInclude(x => x.Material)
             .AsQueryable();

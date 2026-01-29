@@ -1,5 +1,6 @@
 using Contracts.Domain;
 using TLBIOMASS.Domain.Materials;
+using TLBIOMASS.Domain.Landowners;
 using TLBIOMASS.Domain.MaterialRegions.ValueObjects;
 
 namespace TLBIOMASS.Domain.MaterialRegions;
@@ -8,6 +9,7 @@ public class MaterialRegion : EntityAuditBase<int>
 {
     public RegionDetail Detail { get; private set; } = null!;
     public int OwnerId { get; private set; }
+    public virtual Landowner? Owner { get; private set; }
 
     private readonly List<RegionMaterial> _regionMaterials = new();
     public virtual IReadOnlyList<RegionMaterial> RegionMaterials => _regionMaterials.AsReadOnly();

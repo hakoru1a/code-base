@@ -1,3 +1,5 @@
+using Contracts.Domain.Enums;
+
 namespace Shared.DTOs.Customer;
 
 public class CustomerUpdateDto
@@ -9,5 +11,5 @@ public class CustomerUpdateDto
     public string? Email { get; set; }
     public string? TaxCode { get; set; }
     public string? Note { get; set; }
-    public bool IsActive { get; set; } = true;
+    public EntityStatus Status { get; set; } = EntityStatus.Active;
 }

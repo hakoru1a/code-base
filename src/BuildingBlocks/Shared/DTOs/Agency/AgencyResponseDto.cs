@@ -1,5 +1,6 @@
 using Shared.DTOs;
 using Shared.DTOs.BankAccount;
+using Contracts.Domain.Enums;
 
 namespace Shared.DTOs.Agency;
 
@@ -12,6 +13,6 @@ public class AgencyResponseDto : BaseResponseDto<int>
     public string? IdentityCard { get; set; }
     public string? IssuePlace { get; set; }
     public DateTime? IssueDate { get; set; }
-    public bool IsActive { get; set; }
+    public EntityStatus Status { get; set; }
     public List<BankAccountResponseDto>? BankAccounts { get; set; }
 }

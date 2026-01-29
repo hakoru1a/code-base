@@ -10,7 +10,6 @@ public class ReceiverConfiguration : IEntityTypeConfiguration<Receiver>
     public void Configure(EntityTypeBuilder<Receiver> builder)
     {
         builder.ToTable("receivers");
-        builder.Ignore("Status");
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Name)
@@ -38,11 +37,14 @@ public class ReceiverConfiguration : IEntityTypeConfiguration<Receiver>
         builder.Property(x => x.IsDefault)
             .HasDefaultValue(false);
 
-        builder.Property(x => x.IsActive)
-            .HasDefaultValue(true);
+        builder.Property(x => x.Status)
+            .HasConversion<int>()
+            .HasColumnName("Status");
 
         builder.Property(x => x.CreatedDate).HasColumnName("CreatedAt");
+        builder.Property(x => x.CreatedBy).HasColumnName("Created_By");
         builder.Property(x => x.LastModifiedDate).HasColumnName("UpdatedAt");
+        builder.Property(x => x.LastModifiedBy).HasColumnName("Last_Updated_By");
 
         builder.HasMany(x => x.BankAccounts)
             .WithOne()

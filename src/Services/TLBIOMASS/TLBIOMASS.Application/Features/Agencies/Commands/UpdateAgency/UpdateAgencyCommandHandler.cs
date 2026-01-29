@@ -1,9 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using TLBIOMASS.Domain.Agencies.Interfaces;
-using TLBIOMASS.Domain.BankAccounts;
 using Shared.Domain.ValueObjects;
-using Shared.Domain.Enums;
 using Contracts.Exceptions;
 
 namespace TLBIOMASS.Application.Features.Agencies.Commands.UpdateAgency
@@ -34,17 +32,14 @@ namespace TLBIOMASS.Application.Features.Agencies.Commands.UpdateAgency
             request.Name,
             new ContactInfo(request.Phone, request.Email, request.Address, null),
             new IdentityInfo(request.IdentityCard, request.IssuePlace, request.IssueDate, null),
-            request.IsActive);
+            request.Status);
 
-        // Explicit Sync BankAccounts using Domain Logic
-        foreach (var bankAccountDto in request.BankAccounts)
-        {
-            agency.ApplyBankAccountChange(bankAccountDto);
-        }
+        // Explicit Sync BankAccounts using Domain Logic (Composition)
+        agency.SyncBankAccounts(request.BankAccounts);
 
-            await _repository.SaveChangesAsync(cancellationToken);
+        await _repository.SaveChangesAsync(cancellationToken);
 
-            return true;
+        return true;
         }
     }
 }

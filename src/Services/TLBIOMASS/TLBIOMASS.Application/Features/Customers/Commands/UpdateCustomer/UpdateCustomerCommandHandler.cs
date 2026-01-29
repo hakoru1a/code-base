@@ -29,16 +29,11 @@ public class UpdateCustomerCommandHandler : IRequestHandler<UpdateCustomerComman
         customer.Update(
             request.Name,
             new ContactInfo(request.Phone, request.Email, request.Address, request.Note),
-            request.TaxCode);
+            request.TaxCode,
+            request.Status);
 
         // Check tax code uniqueness via Domain Rule
         customer.CheckTaxCodeUnique(_customerRepository);
-
-        // Update Active status
-        if (request.IsActive)
-            customer.Activate();
-        else
-            customer.Deactivate();
 
         await _customerRepository.UpdateAsync(customer, cancellationToken);
         await _customerRepository.SaveChangesAsync(cancellationToken);

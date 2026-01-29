@@ -1,5 +1,6 @@
 using Shared.DTOs;
 using Shared.DTOs.Agency;
+using Contracts.Domain.Enums;
 
 namespace Shared.DTOs.Payment;
 
@@ -16,6 +17,7 @@ public class PaymentDetailResponseDto : BaseResponseDto<int>
     public bool IsPaid { get; set; }
     public bool IsLocked { get; set; }
     public DateTime? CustomerPaymentDate { get; set; }
+    public EntityStatus Status { get; set; }
     
     // Joined info
     public string? TicketNumber { get; set; }

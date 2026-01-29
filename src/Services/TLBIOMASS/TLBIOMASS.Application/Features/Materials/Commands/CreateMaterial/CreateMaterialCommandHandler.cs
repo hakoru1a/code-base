@@ -19,7 +19,7 @@ public class CreateMaterialCommandHandler : IRequestHandler<CreateMaterialComman
     {
         var material = Material.Create(
             new MaterialSpec(request.Name, request.Unit, request.Description, request.ProposedImpurityDeduction),
-            request.IsActive);
+            request.Status);
 
         //material.AddDomainEvent(new MaterialCreatedEvent(material.Id, material.Name));
 

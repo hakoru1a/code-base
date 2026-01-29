@@ -2,9 +2,12 @@ using System.Linq;
 using Mapster;
 using MediatR;
 using Shared.DTOs.Customer;
+using Shared.DTOs;
 using Shared.SeedWork;
 using TLBIOMASS.Domain.Customers;
 using TLBIOMASS.Domain.Customers.Interfaces;
+using Shared.Domain.Enums;
+using Contracts.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Customers.Queries.GetCustomersPaged;
 
@@ -46,6 +49,9 @@ public class GetCustomersPagedQueryHandler : IRequestHandler<GetCustomersPagedQu
     {
         if (filter == null) return query;
 
+        if (filter.Status.HasValue)
+            query = query.Where(c => c.Status == filter.Status.Value);
+
         if (!string.IsNullOrEmpty(filter.Search))
         {
             var search = filter.Search.Trim().ToLower();
@@ -83,9 +89,9 @@ public class GetCustomersPagedQueryHandler : IRequestHandler<GetCustomersPagedQu
             "address" => isDescending
                 ? query.OrderByDescending(x => x.Contact != null ? x.Contact.Address : null)
                 : query.OrderBy(x => x.Contact != null ? x.Contact.Address : null),
-            "isactive" => isDescending
-                ? query.OrderByDescending(x => x.IsActive)
-                : query.OrderBy(x => x.IsActive),
+            "status" => isDescending
+                ? query.OrderByDescending(x => x.Status)
+                : query.OrderBy(x => x.Status),
             "createddate" => isDescending
                 ? query.OrderByDescending(x => x.CreatedDate)
                 : query.OrderBy(x => x.CreatedDate),
@@ -96,4 +102,3 @@ public class GetCustomersPagedQueryHandler : IRequestHandler<GetCustomersPagedQu
         };
     }
 }
-

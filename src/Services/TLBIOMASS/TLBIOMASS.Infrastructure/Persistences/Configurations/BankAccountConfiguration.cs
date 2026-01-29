@@ -39,6 +39,9 @@ public class BankAccountConfiguration : IEntityTypeConfiguration<BankAccount>
         builder.Property(x => x.LastModifiedDate).HasColumnName("Last_Updated_At");
         builder.Property(x => x.LastModifiedBy).HasColumnName("Last_Updated_By");
 
-        builder.Ignore("Status");
+        builder.Property(x => x.Status)
+            .HasConversion<int>()
+            .HasColumnName("Status")
+            .IsRequired();
     }
 }

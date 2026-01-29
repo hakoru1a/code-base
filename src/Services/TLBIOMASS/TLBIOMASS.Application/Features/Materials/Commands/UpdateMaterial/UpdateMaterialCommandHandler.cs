@@ -25,7 +25,7 @@ public class UpdateMaterialCommandHandler : IRequestHandler<UpdateMaterialComman
 
         material.Update(
             new MaterialSpec(request.Name, request.Unit, request.Description, request.ProposedImpurityDeduction),
-            request.IsActive);
+            request.Status);
 
         await _repository.UpdateAsync(material);
         await _repository.SaveChangesAsync(cancellationToken);

@@ -20,6 +20,11 @@ public class GetCustomersQueryHandler : IRequestHandler<GetCustomersQuery, List<
         var filter = request.Filter;
         var query = _customerRepository.FindAll();
 
+        if (filter.Status.HasValue)
+        {
+            query = query.Where(c => c.Status == filter.Status.Value);
+        }
+
         if (!string.IsNullOrEmpty(filter.Search))
         {
             var search = filter.Search.Trim().ToLower();

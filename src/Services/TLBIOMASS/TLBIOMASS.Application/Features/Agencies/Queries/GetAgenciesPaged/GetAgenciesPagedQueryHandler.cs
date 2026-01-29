@@ -6,6 +6,7 @@ using Shared.SeedWork;
 using Mapster;
 using TLBIOMASS.Domain.Agencies;
 using Shared.Domain.Enums;
+using Contracts.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Agencies.Queries.GetAgenciesPaged;
 
@@ -39,6 +40,9 @@ public class GetAgenciesPagedQueryHandler : IRequestHandler<GetAgenciesPagedQuer
         if (!string.IsNullOrWhiteSpace(filter.Name))
             query = query.Where(x => x.Name.Contains(filter.Name));
 
+        if (filter.Status.HasValue)
+            query = query.Where(x => x.Status == filter.Status.Value);
+
         if (!string.IsNullOrWhiteSpace(filter.SearchTerms))
         {
             var search = filter.SearchTerms.Trim().ToLower();
@@ -68,9 +72,9 @@ public class GetAgenciesPagedQueryHandler : IRequestHandler<GetAgenciesPagedQuer
                 ? query.OrderByDescending(x => x.BankAccounts.Where(ba => ba.IsDefault).Select(ba => ba.BankName).FirstOrDefault())
                 : query.OrderBy(x => x.BankAccounts.Where(ba => ba.IsDefault).Select(ba => ba.BankName).FirstOrDefault()),
 
-            "isactive" => isDescending
-                ? query.OrderByDescending(x => x.IsActive)
-                : query.OrderBy(x => x.IsActive),
+            "status" => isDescending
+                ? query.OrderByDescending(x => x.Status)
+                : query.OrderBy(x => x.Status),
 
             "createdate" => isDescending
                 ? query.OrderByDescending(x => x.CreatedDate)
@@ -84,4 +88,3 @@ public class GetAgenciesPagedQueryHandler : IRequestHandler<GetAgenciesPagedQuer
         };
     }
 }
-

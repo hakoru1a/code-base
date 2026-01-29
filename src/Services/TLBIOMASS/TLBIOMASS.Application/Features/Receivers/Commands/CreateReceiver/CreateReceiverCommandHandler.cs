@@ -1,22 +1,17 @@
 using MediatR;
 using TLBIOMASS.Domain.Receivers;
 using TLBIOMASS.Domain.Receivers.Interfaces;
-using TLBIOMASS.Domain.BankAccounts;
-using TLBIOMASS.Domain.BankAccounts.Interfaces;
 using Shared.Domain.ValueObjects;
-using Shared.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Receivers.Commands.CreateReceiver;
 
 public class CreateReceiverCommandHandler : IRequestHandler<CreateReceiverCommand, long>
 {
     private readonly IReceiverRepository _repository;
-    private readonly IBankAccountRepository _bankAccountRepository;
 
-    public CreateReceiverCommandHandler(IReceiverRepository repository, IBankAccountRepository bankAccountRepository)
+    public CreateReceiverCommandHandler(IReceiverRepository repository)
     {
         _repository = repository;
-        _bankAccountRepository = bankAccountRepository;
     }
 
     public async Task<long> Handle(CreateReceiverCommand request, CancellationToken cancellationToken)
@@ -26,7 +21,7 @@ public class CreateReceiverCommandHandler : IRequestHandler<CreateReceiverComman
             new ContactInfo(request.Phone, request.Email, request.Address, request.Note),
             new IdentityInfo(request.IdentityNumber, request.IssuedPlace, request.IssuedDate, request.DateOfBirth),
             request.IsDefault,
-            request.IsActive);
+            request.Status);
 
         // Create polymorphic BankAccount if provided and add to collection
         if (!string.IsNullOrWhiteSpace(request.BankAccount))

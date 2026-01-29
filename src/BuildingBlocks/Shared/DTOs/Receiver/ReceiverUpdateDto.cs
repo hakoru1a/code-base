@@ -1,4 +1,5 @@
 using Shared.DTOs.BankAccount;
+using Contracts.Domain.Enums;
 
 namespace Shared.DTOs.Receiver;
 
@@ -13,7 +14,7 @@ public class ReceiverUpdateDto
     public string? IssuedPlace { get; set; }
     public string? Address { get; set; }
     public bool IsDefault { get; set; }
-    public bool IsActive { get; set; }
+    public EntityStatus Status { get; set; }
     public string? Note { get; set; }
     public DateTime? DateOfBirth { get; set; }
     public List<BankAccountSyncDto> BankAccounts { get; set; } = new();

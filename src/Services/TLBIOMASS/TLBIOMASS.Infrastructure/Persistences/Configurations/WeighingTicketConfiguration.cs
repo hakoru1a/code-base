@@ -12,7 +12,10 @@ public class WeighingTicketConfiguration : IEntityTypeConfiguration<WeighingTick
     public void Configure(EntityTypeBuilder<WeighingTicket> builder)
     {
         builder.ToTable("phieucan"); 
-        builder.Ignore("Status");
+        builder.Property(x => x.Status)
+            .HasConversion<int>()
+            .HasColumnName("Status");
+            
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id");
 

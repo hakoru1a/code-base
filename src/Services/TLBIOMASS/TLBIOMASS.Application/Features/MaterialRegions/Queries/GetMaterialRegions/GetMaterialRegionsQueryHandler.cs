@@ -30,8 +30,13 @@ public class GetMaterialRegionsQueryHandler : IRequestHandler<GetMaterialRegions
                                (x.Detail.CertificateId != null && x.Detail.CertificateId.ToLower().Contains(search)));
         }
 
-        // 2. Fetch and Adapt (No sorting)
-        var entities = await query.ToListAsync(cancellationToken);
+        // 2. Fetch with Includes and Adapt
+        var entities = await query
+            .Include(x => x.Owner)
+            .Include(x => x.RegionMaterials)
+            .ThenInclude(x => x.Material)
+            .ToListAsync(cancellationToken);
+            
         return entities.Adapt<List<MaterialRegionResponseDto>>();
     }
 }

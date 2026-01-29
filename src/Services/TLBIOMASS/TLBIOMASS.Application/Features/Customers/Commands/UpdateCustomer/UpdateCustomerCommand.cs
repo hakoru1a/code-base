@@ -1,4 +1,5 @@
 using MediatR;
+using Contracts.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Customers.Commands.UpdateCustomer;
 
@@ -11,5 +12,5 @@ public class UpdateCustomerCommand : IRequest<bool>
     public string? Email { get; set; }
     public string? TaxCode { get; set; }
     public string? Note { get; set; }
-    public bool IsActive { get; set; } = true;
+    public EntityStatus Status { get; set; } = EntityStatus.Active;
 }

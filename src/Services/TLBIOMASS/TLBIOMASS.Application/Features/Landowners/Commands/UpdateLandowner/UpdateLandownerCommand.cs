@@ -1,5 +1,6 @@
 using MediatR;
 using Shared.DTOs.BankAccount;
+using Contracts.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Landowners.Commands.UpdateLandowner;
 
@@ -14,6 +15,6 @@ public class UpdateLandownerCommand : IRequest<bool>
     public string? IssuePlace { get; set; }
     public DateTime? IssueDate { get; set; }
     public DateTime? DateOfBirth { get; set; }
-    public bool IsActive { get; set; }
+    public EntityStatus Status { get; set; }
     public List<BankAccountSyncDto> BankAccounts { get; set; } = new();
 }

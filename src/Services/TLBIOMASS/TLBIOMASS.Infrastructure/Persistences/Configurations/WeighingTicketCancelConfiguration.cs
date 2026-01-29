@@ -9,7 +9,9 @@ public class WeighingTicketCancelConfiguration : IEntityTypeConfiguration<Weighi
     public void Configure(EntityTypeBuilder<WeighingTicketCancel> builder)
     {
         builder.ToTable("weighing_ticket_cancels"); 
-        builder.Ignore("Status");
+        builder.Property(x => x.Status)
+            .HasConversion<int>()
+            .HasColumnName("Status");
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("ID");

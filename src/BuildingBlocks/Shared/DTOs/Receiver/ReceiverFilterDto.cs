@@ -1,8 +1,9 @@
 using Shared.SeedWork;
+using Contracts.Domain.Enums;
 
 namespace Shared.DTOs.Receiver;
 
 public class ReceiverFilterDto : RequestParameter
 {
-    public bool? IsActive { get; set; }
+    public EntityStatus? Status { get; set; }
 }

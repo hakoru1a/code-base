@@ -1,3 +1,5 @@
+using Contracts.Domain.Enums;
+
 namespace Shared.DTOs.Receiver;
 
 public class ReceiverCreateDto
@@ -11,7 +13,7 @@ public class ReceiverCreateDto
     public string? IssuedPlace { get; set; }
     public string? Address { get; set; }
     public bool IsDefault { get; set; }
-    public bool IsActive { get; set; } = true;
+    public EntityStatus Status { get; set; } = EntityStatus.Active;
     public string? Note { get; set; }
     public DateTime? DateOfBirth { get; set; }
 }

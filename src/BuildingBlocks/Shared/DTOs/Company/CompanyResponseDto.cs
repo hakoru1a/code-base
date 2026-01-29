@@ -1,4 +1,5 @@
 using Shared.DTOs;
+using Contracts.Domain.Enums;
 
 namespace Shared.DTOs.Company;
 
@@ -14,4 +15,5 @@ public class CompanyResponseDto : BaseResponseDto<int>
     public string? IdentityCardNo { get; set; }
     public string? IssuePlace { get; set; }
     public DateTime? IssueDate { get; set; }
+    public EntityStatus Status { get; set; }
 }

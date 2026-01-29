@@ -11,6 +11,7 @@ using TLBIOMASS.Application.Features.Customers.Queries.GetCustomerById;
 using TLBIOMASS.Application.Features.Customers.Queries.GetCustomers;
 using TLBIOMASS.Application.Features.Customers.Queries.GetCustomersPaged;
 using Mapster;
+using Contracts.Domain.Enums;
 
 namespace TLBIOMASS.API.Controllers;
 
@@ -85,24 +86,5 @@ public class CustomerController : ApiControllerBase<CustomerController>
         return await HandleDeleteAsync(command, id, EntityName);
     }
 
-    [HttpPatch("{id}/status")]
-    [ProducesResponseType(typeof(ApiSuccessResult<bool>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiErrorResult<bool>), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateStatus(int id, [FromQuery] bool isActive)
-    {
-        var getQuery = new GetCustomerByIdQuery { Id = id };
-        var customer = await Mediator.Send(getQuery);
-
-        if (customer == null)
-        {
-            return NotFound(new ApiErrorResult<bool>(ResponseMessages.ItemNotFound(EntityName, id)));
-        }
-
-        var command = customer.Adapt<UpdateCustomerCommand>();
-        command.IsActive = isActive;
-
-        var result = await Mediator.Send(command);
-        return Ok(new ApiSuccessResult<bool>(result, ResponseMessages.UpdateSuccess));
-    }
+    
 }

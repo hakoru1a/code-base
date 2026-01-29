@@ -6,6 +6,7 @@ using Shared.SeedWork;
 using Mapster;
 using TLBIOMASS.Domain.Landowners;
 using Shared.Domain.Enums;
+using Contracts.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Landowners.Queries.GetLandownersPaged;
 
@@ -37,6 +38,9 @@ public class GetLandownersPagedQueryHandler : IRequestHandler<GetLandownersPaged
     private static IQueryable<Landowner> ApplyFilter(IQueryable<Landowner> query, LandownerPagedFilterDto filter)
     {
         if (filter == null) return query;
+
+        if (filter.Status.HasValue)
+            query = query.Where(x => x.Status == filter.Status.Value);
 
         if (!string.IsNullOrWhiteSpace(filter.SearchTerms))
         {
@@ -75,9 +79,9 @@ public class GetLandownersPagedQueryHandler : IRequestHandler<GetLandownersPaged
             "bankname" => isDescending
                 ? query.OrderByDescending(x => x.BankAccounts.Where(ba => ba.IsDefault).Select(ba => ba.BankName).FirstOrDefault())
                 : query.OrderBy(x => x.BankAccounts.Where(ba => ba.IsDefault).Select(ba => ba.BankName).FirstOrDefault()),
-            "isactive" => isDescending
-                ? query.OrderByDescending(x => x.IsActive)
-                : query.OrderBy(x => x.IsActive),
+            "status" => isDescending
+                ? query.OrderByDescending(x => x.Status)
+                : query.OrderBy(x => x.Status),
             "createddate" => isDescending
                 ? query.OrderByDescending(x => x.CreatedDate)
                 : query.OrderBy(x => x.CreatedDate),
@@ -88,4 +92,3 @@ public class GetLandownersPagedQueryHandler : IRequestHandler<GetLandownersPaged
         };
     }
 }
-

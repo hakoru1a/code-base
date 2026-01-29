@@ -10,7 +10,9 @@ public class MaterialRegionConfiguration : IEntityTypeConfiguration<MaterialRegi
     public void Configure(EntityTypeBuilder<MaterialRegion> builder)
     {
         builder.ToTable("materialregion");
-        builder.Ignore("Status");
+        builder.Property(x => x.Status)
+            .HasConversion<int>()
+            .HasColumnName("Status");
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("RegionID");
@@ -28,6 +30,11 @@ public class MaterialRegionConfiguration : IEntityTypeConfiguration<MaterialRegi
         builder.Property(x => x.OwnerId)
             .IsRequired()
             .HasColumnName("OwnerID");
+
+        builder.HasOne(x => x.Owner)
+            .WithMany()
+            .HasForeignKey(x => x.OwnerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasMany(x => x.RegionMaterials)
             .WithOne(x => x.MaterialRegion)

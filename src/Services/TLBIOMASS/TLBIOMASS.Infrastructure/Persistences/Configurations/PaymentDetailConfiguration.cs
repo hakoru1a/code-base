@@ -9,7 +9,9 @@ public class PaymentDetailConfiguration : IEntityTypeConfiguration<PaymentDetail
     public void Configure(EntityTypeBuilder<PaymentDetail> builder)
     {
         builder.ToTable("payment_details");
-        builder.Ignore("Status");
+        builder.Property(x => x.Status)
+            .HasConversion<int>()
+            .HasColumnName("Status");
         
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("ID");

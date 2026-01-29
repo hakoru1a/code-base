@@ -1,5 +1,6 @@
 using Shared.DTOs;
 using Shared.DTOs.BankAccount;
+using Contracts.Domain.Enums;
 
 namespace Shared.DTOs.Landowner;
 
@@ -13,6 +14,6 @@ public class LandownerResponseDto : BaseResponseDto<int>
     public string? IssuePlace { get; set; }
     public DateTime? IssueDate { get; set; }
     public DateTime? DateOfBirth { get; set; }
-    public bool IsActive { get; set; }
+    public EntityStatus Status { get; set; }
     public List<BankAccountResponseDto>? BankAccounts { get; set; }
 }

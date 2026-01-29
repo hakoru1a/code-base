@@ -10,7 +10,6 @@ public class MaterialConfiguration : IEntityTypeConfiguration<Material>
     public void Configure(EntityTypeBuilder<Material> builder)
     {
         builder.ToTable("hanghoa");
-        builder.Ignore("Status");
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Id).HasColumnName("id");
@@ -23,9 +22,9 @@ public class MaterialConfiguration : IEntityTypeConfiguration<Material>
             s.Property(x => x.ProposedImpurityDeduction).HasColumnType("decimal(5,2)").HasColumnName("de_xuat_tru_tap_chat");
         });
 
-        builder.Property(x => x.IsActive)
-            .HasDefaultValue(true)
-            .HasColumnName("is_active");
+        builder.Property(x => x.Status)
+            .HasConversion<int>()
+            .HasColumnName("Status");
 
         builder.Property(x => x.CreatedAt)
             .IsRequired()

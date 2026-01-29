@@ -1,9 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using TLBIOMASS.Domain.Receivers.Interfaces;
-using TLBIOMASS.Domain.BankAccounts;
 using Shared.Domain.ValueObjects;
-using Shared.Domain.Enums;
 using Contracts.Exceptions;
 
 namespace TLBIOMASS.Application.Features.Receivers.Commands.UpdateReceiver;
@@ -35,13 +33,10 @@ public class UpdateReceiverCommandHandler : IRequestHandler<UpdateReceiverComman
             new ContactInfo(request.Phone, request.Email, request.Address, request.Note),
             new IdentityInfo(request.IdentityNumber, request.IssuedPlace, request.IssuedDate, request.DateOfBirth),
             request.IsDefault,
-            request.IsActive);
+            request.Status);
 
-        // Explicit Sync BankAccounts using Domain Logic
-        foreach (var bankAccountDto in request.BankAccounts)
-        {
-            receiver.ApplyBankAccountChange(bankAccountDto);
-        }
+        // Explicit Sync BankAccounts using Domain Logic (Composition)
+        receiver.SyncBankAccounts(request.BankAccounts);
 
         // EF Core tracks everything, one SaveChangesAsync = one Transaction
         await _repository.SaveChangesAsync(cancellationToken);

@@ -1,23 +1,17 @@
 using MediatR;
 using TLBIOMASS.Domain.Agencies;
 using TLBIOMASS.Domain.Agencies.Interfaces;
-using TLBIOMASS.Domain.BankAccounts;
-using TLBIOMASS.Domain.BankAccounts.Interfaces;
 using Shared.Domain.ValueObjects;
-using Shared.Events.Agency;
-using Shared.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Agencies.Commands.CreateAgency
 {
     public class CreateAgencyCommandHandler : IRequestHandler<CreateAgencyCommand, long>
     {
         private readonly IAgencyRepository _repository;
-        private readonly IBankAccountRepository _bankAccountRepository;
 
-        public CreateAgencyCommandHandler(IAgencyRepository repository, IBankAccountRepository bankAccountRepository)
+        public CreateAgencyCommandHandler(IAgencyRepository repository)
         {
             _repository = repository;
-            _bankAccountRepository = bankAccountRepository;
         }
 
         public async Task<long> Handle(CreateAgencyCommand request, CancellationToken cancellationToken)
@@ -26,7 +20,7 @@ namespace TLBIOMASS.Application.Features.Agencies.Commands.CreateAgency
                 request.Name,
                 new ContactInfo(request.Phone, request.Email, request.Address, null),
                 new IdentityInfo(request.IdentityCard, request.IssuePlace, request.IssueDate, null),
-                request.IsActive);
+                request.Status);
 
             // Create polymorphic BankAccount if provided and add to collection
             if (!string.IsNullOrWhiteSpace(request.BankAccount))

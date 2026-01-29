@@ -37,6 +37,11 @@ public class GetMaterialsPagedQueryHandler : IRequestHandler<GetMaterialsPagedQu
     {
         if (filter == null) return query;
 
+        if (filter.Status.HasValue)
+        {
+            query = query.Where(x => x.Status == filter.Status.Value);
+        }
+
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
             var search = filter.Search.Trim().ToLower();
@@ -65,9 +70,9 @@ public class GetMaterialsPagedQueryHandler : IRequestHandler<GetMaterialsPagedQu
             "description" => isDescending
                 ? query.OrderByDescending(x => x.Spec.Description)
                 : query.OrderBy(x => x.Spec.Description),
-            "isactive" => isDescending
-                ? query.OrderByDescending(x => x.IsActive)
-                : query.OrderBy(x => x.IsActive),
+            "status" => isDescending
+                ? query.OrderByDescending(x => x.Status)
+                : query.OrderBy(x => x.Status),
             "createdat" => isDescending
                 ? query.OrderByDescending(x => x.CreatedAt)
                 : query.OrderBy(x => x.CreatedAt),
@@ -78,4 +83,3 @@ public class GetMaterialsPagedQueryHandler : IRequestHandler<GetMaterialsPagedQu
         };
     }
 }
-

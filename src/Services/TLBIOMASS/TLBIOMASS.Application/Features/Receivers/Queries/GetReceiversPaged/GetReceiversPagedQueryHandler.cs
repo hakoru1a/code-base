@@ -6,6 +6,7 @@ using TLBIOMASS.Domain.Receivers.Interfaces;
 using Mapster;
 using TLBIOMASS.Domain.Receivers;
 using Shared.Domain.Enums;
+using Contracts.Domain.Enums;
 
 namespace TLBIOMASS.Application.Features.Receivers.Queries.GetReceiversPaged;
 
@@ -36,6 +37,9 @@ public class GetReceiversPagedQueryHandler : IRequestHandler<GetReceiversPagedQu
     private static IQueryable<Receiver> ApplyFilter(IQueryable<Receiver> query, ReceiverPagedFilterDto filter)
     {
         if (filter == null) return query;
+
+        if (filter.Status.HasValue)
+            query = query.Where(x => x.Status == filter.Status.Value);
 
         if (!string.IsNullOrWhiteSpace(filter.SearchTerms))
         {
@@ -77,17 +81,16 @@ public class GetReceiversPagedQueryHandler : IRequestHandler<GetReceiversPagedQu
             "isdefault" => isDescending
                 ? query.OrderByDescending(x => x.IsDefault)
                 : query.OrderBy(x => x.IsDefault),
-            "isactive" => isDescending
-                ? query.OrderByDescending(x => x.IsActive)
-                : query.OrderBy(x => x.IsActive),
+            "status" => isDescending
+                ? query.OrderByDescending(x => x.Status)
+                : query.OrderBy(x => x.Status),
             "createdat" => isDescending
-                ? query.OrderByDescending(x => x.CreatedAt)
-                : query.OrderBy(x => x.CreatedAt),
+                ? query.OrderByDescending(x => x.CreatedDate)
+                : query.OrderBy(x => x.CreatedDate),
             "updatedat" => isDescending
-                ? query.OrderByDescending(x => x.UpdatedAt)
-                : query.OrderBy(x => x.UpdatedAt),
+                ? query.OrderByDescending(x => x.LastModifiedDate)
+                : query.OrderBy(x => x.LastModifiedDate),
             _ => query.OrderBy(x => x.Id)
         };
     }
 }
-
